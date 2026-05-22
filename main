@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>JLL Movie Club – moderacja</title>
+    <!-- Firebase SDK (wersja compat) -->
+    <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -502,7 +505,7 @@
                     "textarea textarea";
             }
             .next-movie-card .poster {
-                max-height: 180px; /* nieco mniejsze na telefonie, ale dalej większe niż wcześniej */
+                max-height: 180px;
             }
         }
         @media (min-width: 481px) {
@@ -556,6 +559,20 @@
 </div>
 
 <script>
+    // ------------------------- FIREBASE -------------------------
+    // Twój config z konsoli
+    const firebaseConfig = {
+        apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE",
+        authDomain: "movie-club-f8ceb.firebaseapp.com",
+        projectId: "movie-club-f8ceb",
+        storageBucket: "movie-club-f8ceb.firebasestorage.app",
+        messagingSenderId: "17251318633",
+        appId: "1:17251318633:web:5080a0bc0243e1a91d1bf8",
+        measurementId: "G-6X15DJE6E0"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     const ADMIN_PASSWORD = "aadmin";
     const defaultMovies = [
         { id:"lobster_2026", date:"02.04.2026", title:"Lobster", poster:"https://via.placeholder.com/1200x300?text=Lobster", reviews:[
@@ -581,8 +598,35 @@
         ], sentimentalValue:"" }
     ];
     let movies = [];
-    function loadMovies() { const s = localStorage.getItem("jll_movies"); movies = s ? JSON.parse(s) : JSON.parse(JSON.stringify(defaultMovies)); saveMovies(); }
-    function saveMovies() { localStorage.setItem("jll_movies", JSON.stringify(movies)); }
+
+    // Funkcje zapisu/odczytu z Firestore
+    async function loadMoviesFromFirestore() {
+        const snapshot = await db.collection("movies").get();
+        if (snapshot.empty) {
+            movies = JSON.parse(JSON.stringify(defaultMovies));
+            await saveMoviesToFirestore();
+        } else {
+            movies = snapshot.docs.map(doc => doc.data());
+        }
+        // Po załadowaniu odśwież widok
+        renderHome();
+    }
+    async function saveMoviesToFirestore() {
+        const batch = db.batch();
+        const snapshot = await db.collection("movies").get();
+        snapshot.forEach(doc => batch.delete(doc.ref));
+        movies.forEach(movie => {
+            const docRef = db.collection("movies").doc(movie.id);
+            batch.set(docRef, movie);
+        });
+        await batch.commit();
+    }
+
+    // Reszta funkcji (escape, renderStars, avgWeighted, parseDate, getNextMovie, renderHome, renderMovie, showArrows, next, prev, delMovie, modale) – IDENTYCZNA jak poprzednio, ale używamy saveMoviesToFirestore zamiast localStorage
+    // Poniżej wklejam resztę skryptu (bez zmian, tylko wywołania saveMoviesToFirestore i loadMoviesFromFirestore)
+    // UWAGA: ze względu na długość, wklejam pozostałą część kodu – ale ona jest identyczna jak w ostatniej wersji offline, zamieniam jedynie localStorage na Firebase.
+    // Aby nie pominąć żadnej funkcji, doklejam cały dalszy kod.
+
     function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
     function renderStars(rating) {
         let starsHtml = `<span class="stars">`;
@@ -717,7 +761,6 @@
                 </div>
             </div>`;
         document.getElementById('mainContent').innerHTML = slide;
-        // obsługa akcji
         document.querySelectorAll('.approve-btn').forEach(btn => {
             btn.onclick = () => {
                 const idx = parseInt(btn.dataset.idx);
@@ -725,8 +768,7 @@
                 if(pwd === ADMIN_PASSWORD) {
                     movies[current].reviews[idx].approved = true;
                     movies[current].reviews[idx].timestamp = Date.now();
-                    saveMovies();
-                    renderMovie();
+                    saveMoviesToFirestore().then(() => renderMovie());
                 } else alert("Złe hasło");
             };
         });
@@ -737,8 +779,7 @@
                 if(pwd === ADMIN_PASSWORD) {
                     movies[current].reviews[idx].verified = true;
                     movies[current].reviews[idx].timestamp = Date.now();
-                    saveMovies();
-                    renderMovie();
+                    saveMoviesToFirestore().then(() => renderMovie());
                 } else alert("Złe hasło");
             };
         });
@@ -748,12 +789,10 @@
                 const pwd = prompt("Hasło admina, aby usunąć recenzję:");
                 if(pwd === ADMIN_PASSWORD) {
                     movies[current].reviews.splice(idx,1);
-                    saveMovies();
-                    renderMovie();
+                    saveMoviesToFirestore().then(() => renderMovie());
                 } else alert("Złe hasło");
             };
         });
-        // dodawanie nowej recenzji
         let selStars = 0;
         const starsSpans = document.querySelectorAll('#starSelector .star-select');
         starsSpans.forEach((s,i) => { s.onclick = () => { selStars = i+1; starsSpans.forEach((ss,j) => ss.classList.toggle('selected', j<=i)); }; });
@@ -772,8 +811,7 @@
                 verified: false,
                 timestamp: Date.now()
             });
-            saveMovies();
-            renderMovie();
+            saveMoviesToFirestore().then(() => renderMovie());
             authorInput.value = '';
             textarea.value = '';
             selStars = 0;
@@ -791,7 +829,9 @@
     function showArrows(show) { document.getElementById('prevArrow').style.display = show ? 'flex' : 'none'; document.getElementById('nextArrow').style.display = show ? 'flex' : 'none'; }
     function next() { if(view==='movie' && movies.length) { current = (current+1)%movies.length; renderMovie(); } }
     function prev() { if(view==='movie' && movies.length) { current = (current-1+movies.length)%movies.length; renderMovie(); } }
-    function delMovie() { if(view!=='movie') return; if(prompt("Hasło admina, aby USUNĄĆ film:")===ADMIN_PASSWORD) { movies.splice(current,1); saveMovies(); if(movies.length===0) renderHome(); else { if(current>=movies.length) current=movies.length-1; renderMovie(); } } else alert("Złe hasło"); }
+    function delMovie() { if(view!=='movie') return; if(prompt("Hasło admina, aby USUNĄĆ film:")===ADMIN_PASSWORD) { movies.splice(current,1); saveMoviesToFirestore().then(() => { if(movies.length===0) renderHome(); else { if(current>=movies.length) current=movies.length-1; renderMovie(); } }); } else alert("Złe hasło"); }
+
+    // Obsługa modal (dodawanie filmu, edycja) – również z Firebase
     const addModal = document.getElementById('movieModal'), editModal = document.getElementById('editMovieModal');
     document.getElementById('openModalBtn').onclick = () => addModal.style.display = 'flex';
     document.getElementById('cancelModalBtn').onclick = () => addModal.style.display = 'none';
@@ -800,12 +840,13 @@
     window.onclick = (e) => { if(e.target===addModal) addModal.style.display='none'; if(e.target===editModal) editModal.style.display='none'; };
     document.getElementById('posterFile').onchange = (e) => { const f = e.target.files[0]; if(f && f.type.startsWith('image/')) { const r = new FileReader(); r.onload = (ev) => document.getElementById('newPosterUrl').value = ev.target.result; r.readAsDataURL(f); } };
     document.getElementById('editPosterFile').onchange = (e) => { const f = e.target.files[0]; if(f && f.type.startsWith('image/')) { const r = new FileReader(); r.onload = (ev) => document.getElementById('editPosterUrl').value = ev.target.result; r.readAsDataURL(f); } };
-    document.getElementById('saveMovieBtn').onclick = () => { if(prompt("Hasło admina:")!==ADMIN_PASSWORD) { alert("Złe hasło"); return; } const t = document.getElementById('newTitle').value.trim(); if(!t) return alert("Tytuł wymagany"); movies.push({ id:Date.now(), date:document.getElementById('newDate').value.split('-').reverse().join('.'), title:t, poster:document.getElementById('newPosterUrl').value.trim(), reviews:[], sentimentalValue:document.getElementById('newSentimental').value.trim() }); saveMovies(); current=movies.length-1; view='movie'; renderMovie(); showArrows(true); addModal.style.display='none'; document.getElementById('newTitle').value=''; document.getElementById('newPosterUrl').value=''; document.getElementById('newSentimental').value=''; document.getElementById('posterFile').value=''; };
-    document.getElementById('saveEditBtn').onclick = () => { if(prompt("Hasło admina:")!==ADMIN_PASSWORD) { alert("Złe hasło"); return; } const nt = document.getElementById('editTitle').value.trim(); if(!nt) return alert("Tytuł nie może być pusty"); movies[current].title = nt; movies[current].poster = document.getElementById('editPosterUrl').value.trim(); movies[current].sentimentalValue = document.getElementById('editSentimental').value.trim(); saveMovies(); if(view==='movie') renderMovie(); else renderHome(); editModal.style.display='none'; };
+    document.getElementById('saveMovieBtn').onclick = () => { if(prompt("Hasło admina:")!==ADMIN_PASSWORD) { alert("Złe hasło"); return; } const t = document.getElementById('newTitle').value.trim(); if(!t) return alert("Tytuł wymagany"); movies.push({ id:Date.now(), date:document.getElementById('newDate').value.split('-').reverse().join('.'), title:t, poster:document.getElementById('newPosterUrl').value.trim(), reviews:[], sentimentalValue:document.getElementById('newSentimental').value.trim() }); saveMoviesToFirestore().then(() => { current=movies.length-1; view='movie'; renderMovie(); showArrows(true); addModal.style.display='none'; document.getElementById('newTitle').value=''; document.getElementById('newPosterUrl').value=''; document.getElementById('newSentimental').value=''; document.getElementById('posterFile').value=''; }); };
+    document.getElementById('saveEditBtn').onclick = () => { if(prompt("Hasło admina:")!==ADMIN_PASSWORD) { alert("Złe hasło"); return; } const nt = document.getElementById('editTitle').value.trim(); if(!nt) return alert("Tytuł nie może być pusty"); movies[current].title = nt; movies[current].poster = document.getElementById('editPosterUrl').value.trim(); movies[current].sentimentalValue = document.getElementById('editSentimental').value.trim(); saveMoviesToFirestore().then(() => { if(view==='movie') renderMovie(); else renderHome(); editModal.style.display='none'; }); };
     document.getElementById('homeLogo').onclick = () => { view = 'home'; renderHome(); };
     document.getElementById('prevArrow').onclick = prev; document.getElementById('nextArrow').onclick = next;
     window.addEventListener('keydown', (e) => { if(view==='movie') { if(e.key==='ArrowLeft') prev(); if(e.key==='ArrowRight') next(); } });
-    loadMovies(); renderHome();
+    // Start
+    loadMoviesFromFirestore();
 </script>
 </body>
 </html>
