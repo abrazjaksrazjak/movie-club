@@ -2,6 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
+    <!-- Zabezpieczenie przed zoomem na telefonie + safe area dla notcha -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>JLL Movie Club – live ranking</title>
     <!-- Firebase SDK (compat) -->
@@ -18,7 +19,8 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            padding: 1rem;
+            /* Uwzględnij bezpieczny obszar (notch) */
+            padding: env(safe-area-inset-top) 1rem 1rem 1rem;
         }
         .club-header {
             display: flex;
@@ -67,6 +69,20 @@
             min-height: 0;
             display: flex;
             flex-direction: column;
+            position: relative;
+        }
+        .loading-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.7);
+            padding: 0.8rem 1.2rem;
+            border-radius: 30px;
+            color: #d4af37;
+            font-size: 0.8rem;
+            z-index: 10;
+            backdrop-filter: blur(4px);
         }
         .carousel-container {
             background: #111;
@@ -527,7 +543,9 @@
         <button class="icon-btn" id="openModalBtn">+</button>
     </div>
 </div>
-<div id="mainContent"></div>
+<div id="mainContent">
+    <div class="loading-indicator">Ładowanie danych...</div>
+</div>
 <div class="nav-arrow nav-arrow-left" id="prevArrow">←</div>
 <div class="nav-arrow nav-arrow-right" id="nextArrow">→</div>
 
@@ -561,10 +579,9 @@
 
 <script>
     // ======================= KONFIGURACJA FIREBASE =======================
-    // 🔴 Uwaga: Natychmiast zablokuj ten klucz w Google Cloud Console!
-    //    Wygeneruj nowy i wklej go tutaj.
+    // 🔴 ZABLOKUJ STARY KLUCZ W KONSOLI GOOGLE I WPISZ NOWY!
     const firebaseConfig = {
-        apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE",
+        apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE",   // ZASTĄP NOWYM KLUCZEM
         authDomain: "movie-club-f8ceb.firebaseapp.com",
         projectId: "movie-club-f8ceb",
         storageBucket: "movie-club-f8ceb.firebasestorage.app",
@@ -575,7 +592,6 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    // Anonimowe logowanie – wymagane dla reguł bezpieczeństwa
     auth.signInAnonymously().catch(error => console.error("Błąd logowania anonimowego:", error));
 
     // ======================= DANE DOMYŚLNE =======================
@@ -603,14 +619,18 @@
         ], sentimentalValue:"" }
     ];
 
-    // ======================= ZMIENNE GLOBALNE =======================
-    let movies = [];           // aktualna lista filmów (synchronizowana z Firestore)
-    let current = 0;          // indeks aktualnie wyświetlanego filmu w trybie 'movie'
-    let view = 'home';        // 'home' lub 'movie'
-    let unsubscribe = null;   // funkcja anulująca nasłuchiwanie
+    let movies = [];
+    let current = 0;
+    let view = 'home';
+    let unsubscribe = null;
     const ADMIN_PASSWORD = "aadmin";
+    let loadingTimeout = null;
 
-    // ======================= FUNKCJE POMOCNICZE =======================
+    function showLoading(show) {
+        const loadingDiv = document.querySelector('.loading-indicator');
+        if (loadingDiv) loadingDiv.style.display = show ? 'flex' : 'none';
+    }
+
     function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
     function renderStars(rating) {
         let starsHtml = `<span class="stars">`;
@@ -643,7 +663,6 @@
         document.getElementById('nextArrow').style.display = show ? 'flex' : 'none'; 
     }
 
-    // ======================= RENDEROWANIE WIDOKÓW =======================
     function renderHome() {
         const next = getNextMovie();
         const posterUrlNext = next && next.poster ? next.poster : '';
@@ -688,6 +707,7 @@
             };
         }
         showArrows(false);
+        showLoading(false);
     }
 
     function renderMovie() {
@@ -755,8 +775,8 @@
                 </div>
             </div>`;
         document.getElementById('mainContent').innerHTML = slide;
+        showLoading(false);
         
-        // Obsługa akcji na recenzjach (zatwierdzanie, verified, usuwanie)
         document.querySelectorAll('.approve-btn').forEach(btn => {
             btn.onclick = async () => {
                 const idx = parseInt(btn.dataset.idx);
@@ -793,7 +813,6 @@
             };
         });
         
-        // Dodawanie nowej recenzji (pending)
         let selStars = 0;
         const starsSpans = document.querySelectorAll('#starSelector .star-select');
         starsSpans.forEach((s,i) => { s.onclick = () => { selStars = i+1; starsSpans.forEach((ss,j) => ss.classList.toggle('selected', j<=i)); }; });
@@ -826,7 +845,6 @@
             }
         });
         
-        // Edycja filmu (tytuł, plakat, cytat)
         document.getElementById('editBtn').onclick = () => { 
             document.getElementById('editTitle').value = m.title; 
             document.getElementById('editPosterUrl').value = m.poster||''; 
@@ -836,20 +854,17 @@
         document.getElementById('avgBox').onclick = () => { view = 'home'; renderHome(); };
     }
 
-    // ======================= NAWIGACJA =======================
     function next() { if(view==='movie' && movies.length) { current = (current+1)%movies.length; renderMovie(); } }
     function prev() { if(view==='movie' && movies.length) { current = (current-1+movies.length)%movies.length; renderMovie(); } }
     
-    // ======================= USUWANIE CAŁEGO FILMU =======================
     async function delMovie() {
         if(view!=='movie') return;
         if(prompt("Hasło admina, aby USUNĄĆ film:")===ADMIN_PASSWORD) {
             await db.collection("movies").doc(movies[current].id).delete();
-            // Po usunięciu dokumentu, listener automatycznie zaktualizuje movies i wywoła odpowiedni widok
         } else alert("Złe hasło");
     }
     
-    // ======================= MODALE – dodawanie / edycja =======================
+    // MODALE
     const addModal = document.getElementById('movieModal'), editModal = document.getElementById('editMovieModal');
     document.getElementById('openModalBtn').onclick = () => addModal.style.display = 'flex';
     document.getElementById('cancelModalBtn').onclick = () => addModal.style.display = 'none';
@@ -878,7 +893,6 @@
         document.getElementById('newPosterUrl').value=''; 
         document.getElementById('newSentimental').value=''; 
         document.getElementById('posterFile').value='';
-        // Po dodaniu, listener przełączy na nowy film
     };
     
     document.getElementById('saveEditBtn').onclick = async () => {
@@ -899,38 +913,52 @@
     document.getElementById('nextArrow').onclick = next;
     window.addEventListener('keydown', (e) => { if(view==='movie') { if(e.key==='ArrowLeft') prev(); if(e.key==='ArrowRight') next(); } });
     
-    // ======================= NASŁUCHIWANIE ZMIAN W FIRESTORE =======================
+    // NASŁUCHIWANIE ZMIAN Z WYSZUKIWANIEM DANYCH DOMYŚLNYCH
+    async function seedDefaultDataIfNeeded() {
+        const snapshot = await db.collection("movies").get();
+        if (snapshot.empty) {
+            for (const m of defaultMovies) {
+                await db.collection("movies").doc(m.id).set(m);
+            }
+        }
+    }
+    
     function startFirestoreListener() {
         if (unsubscribe) unsubscribe();
-        unsubscribe = db.collection("movies").onSnapshot(snapshot => {
-            const newMovies = [];
-            snapshot.forEach(doc => newMovies.push(doc.data()));
-            if (newMovies.length === 0 && movies.length === 0) {
-                // Pierwsze uruchomienie – wrzuć dane domyślne
-                defaultMovies.forEach(async m => await db.collection("movies").doc(m.id).set(m));
-                return;
-            }
-            movies = newMovies;
-            // Odśwież widok w zależności od aktualnego stanu
-            if (view === 'home') {
-                renderHome();
-            } else {
-                // Sprawdź czy bieżący film nadal istnieje
-                if (!movies.find(m => m.id === movies[current]?.id)) {
-                    // Jeśli usunięto bieżący film – przejdź do strony głównej lub pierwszego filmu
-                    current = 0;
+        showLoading(true);
+        seedDefaultDataIfNeeded().then(() => {
+            unsubscribe = db.collection("movies").onSnapshot(snapshot => {
+                const newMovies = [];
+                snapshot.forEach(doc => newMovies.push(doc.data()));
+                movies = newMovies;
+                if (movies.length === 0) {
                     view = 'home';
                     renderHome();
                 } else {
-                    // Upewnij się, że current jest w granicach
-                    if (current >= movies.length) current = movies.length - 1;
-                    renderMovie();
+                    if (view === 'home') {
+                        renderHome();
+                    } else {
+                        if (!movies.find(m => m.id === movies[current]?.id)) {
+                            current = 0;
+                            view = 'home';
+                            renderHome();
+                        } else {
+                            if (current >= movies.length) current = movies.length - 1;
+                            renderMovie();
+                        }
+                    }
                 }
-            }
-        }, error => console.error("Błąd nasłuchiwania Firestore:", error));
+                showLoading(false);
+            }, error => {
+                console.error("Błąd nasłuchiwania:", error);
+                showLoading(false);
+            });
+        }).catch(err => {
+            console.error("Błąd seedowania:", err);
+            showLoading(false);
+        });
     }
     
-    // ======================= START APLIKACJI =======================
     startFirestoreListener();
 </script>
 </body>
