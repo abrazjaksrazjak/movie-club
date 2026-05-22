@@ -2,9 +2,8 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <!-- Zabezpieczenie przed zoomem na telefonie + safe area dla notcha -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>JLL Movie Club – live ranking</title>
+    <title>JLL Movie Club – współdzielony ranking</title>
     <!-- Firebase SDK (compat) -->
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore-compat.js"></script>
@@ -19,8 +18,17 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            /* Uwzględnij bezpieczny obszar (notch) */
-            padding: env(safe-area-inset-top) 1rem 1rem 1rem;
+            align-items: center;
+            padding: env(safe-area-inset-top) 0 0 0;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 0 1rem 1rem 1rem;
         }
         .club-header {
             display: flex;
@@ -28,7 +36,7 @@
             align-items: center;
             margin-bottom: 1rem;
             flex-shrink: 0;
-            padding: 0 0.25rem;
+            width: 100%;
         }
         .club-header h1 {
             font-size: clamp(0.9rem, 5vw, 1.1rem);
@@ -36,7 +44,6 @@
             letter-spacing: 0.5px;
             color: #c0c0c0;
             cursor: pointer;
-            transition: 0.2s;
         }
         .club-header h1:hover { color: #d4af37; }
         .header-buttons {
@@ -56,20 +63,29 @@
             align-items: center;
             justify-content: center;
             border-radius: 10px;
-            transition: 0.2s;
         }
         .icon-btn:hover {
             color: #d4af37;
             background: rgba(212, 175, 55, 0.08);
-            transform: scale(1.05);
         }
-        .delete-movie-btn:hover { color: #e06c4e; background: rgba(224,108,78,0.08); }
+        .delete-movie-btn {
+            transition: 0.2s;
+        }
+        .delete-movie-btn.admin-active {
+            color: #d4af37;
+            background: rgba(212, 175, 55, 0.2);
+        }
+        .delete-movie-btn.admin-active:hover {
+            color: #f5d742;
+            background: rgba(212, 175, 55, 0.3);
+        }
         #mainContent {
             flex: 1;
             min-height: 0;
             display: flex;
             flex-direction: column;
             position: relative;
+            width: 100%;
         }
         .loading-indicator {
             position: absolute;
@@ -83,6 +99,35 @@
             font-size: 0.8rem;
             z-index: 10;
             backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -48%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+        .transition-fade {
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        .fade-out {
+            opacity: 0;
+            transform: scale(0.98);
+        }
+        .slide-transition {
+            transition: transform 0.25s ease, opacity 0.2s ease;
+        }
+        .slide-left {
+            transform: translateX(-30px);
+            opacity: 0;
+        }
+        .slide-right {
+            transform: translateX(30px);
+            opacity: 0;
+        }
+        .carousel-wrapper {
+            width: 100%;
+            position: relative;
+            flex: 1;
+            min-height: 0;
         }
         .carousel-container {
             background: #111;
@@ -196,12 +241,8 @@
             font-size: 0.9rem;
             line-height: 1;
         }
-        .star-filled {
-            color: #d4af37;
-        }
-        .star-empty {
-            color: #3d3d3d;
-        }
+        .star-filled { color: #d4af37; }
+        .star-empty { color: #3d3d3d; }
         .verified-check {
             color: #d4af37;
             font-size: 0.8rem;
@@ -338,9 +379,7 @@
             justify-content: center;
             white-space: nowrap;
             cursor: pointer;
-            transition: 0.2s;
         }
-        .avg-box:hover { background: #2a2a2a; transform: scale(1.02); }
         .nav-arrow {
             position: fixed;
             top: 50%;
@@ -348,7 +387,6 @@
             color: #7a7a7a;
             font-size: 1.8rem;
             cursor: pointer;
-            transition: 0.2s;
             user-select: none;
             z-index: 100;
             background: none;
@@ -358,12 +396,13 @@
         .nav-arrow:hover { color: #d4af37; transform: translateY(-50%) scale(1.1); background: rgba(212,175,55,0.05); }
         .nav-arrow-left { left: 4px; }
         .nav-arrow-right { right: 4px; }
+        /* Strona główna */
         .home-container {
             flex: 1;
             overflow-y: auto;
-            padding: 0 0.8rem;
             display: flex;
             flex-direction: column;
+            padding: 0;
         }
         .next-movie-card {
             background: #1a1a1a;
@@ -372,12 +411,12 @@
             margin-bottom: 1.5rem;
             text-align: center;
             cursor: pointer;
-            transition: 0.2s;
+            width: 100%;
         }
-        .next-movie-card:hover { background: #222; transform: translateY(-2px); }
+        .next-movie-card:hover { background: #222; }
         .next-movie-card .poster {
             width: 100%;
-            max-height: 240px;
+            max-height: 320px;
             object-fit: cover;
             border-radius: 6px;
             margin-bottom: 0.8rem;
@@ -391,7 +430,33 @@
         }
         .next-movie-card .title { font-size: 1.3rem; font-weight: 500; margin: 0.3rem 0; }
         .next-movie-card .date { font-size: 0.7rem; color: #8a8a8a; }
-        .ranking-list { display: flex; flex-direction: column; gap: 0.6rem; flex: 1; }
+        .ranking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin: 0.8rem 0 0.6rem 0;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .ranking-header h3 {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: #c0c0c0;
+        }
+        .propose-link {
+            cursor: pointer;
+            color: #d4af37;
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        .propose-link:hover {
+            color: #f5d742;
+        }
+        .ranking-section {
+            padding: 0 0.8rem;
+        }
+        .ranking-list { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
         .ranking-item {
             position: relative;
             background: #151515;
@@ -401,7 +466,6 @@
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            transition: 0.2s;
             border: 1px solid #252525;
             overflow: hidden;
             z-index: 1;
@@ -428,19 +492,33 @@
         .ranking-item:hover { background: #1f1f1f; transform: translateX(3px); }
         .ranking-title { font-size: 0.9rem; font-weight: 500; position: relative; z-index: 1; }
         .ranking-rating { color: #d4af37; font-size: 0.8rem; position: relative; z-index: 1; }
-        .home-container h3 {
-            font-size: 0.9rem;
-            font-weight: 400;
-            margin: 0.8rem 0 0.6rem 0;
-            color: #c0c0c0;
-            flex-shrink: 0;
+        .rating-system-link {
+            cursor: pointer;
+            color: #a0a0a0;
+            font-size: 0.75rem;
+            margin-left: 8px;
+            text-transform: uppercase;
+        }
+        .rating-system-link:hover {
+            color: #d4af37;
+        }
+        /* Modal informacyjny – bez punktorów, zwiększone odstępy */
+        .info-text {
+            margin: 1rem 0;
+            line-height: 1.5;
+        }
+        .info-text strong {
+            color: #d4af37;
+        }
+        .info-text p {
+            margin: 0.8rem 0;
         }
         .modal {
             display: none;
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             backdrop-filter: blur(5px);
             align-items: center;
             justify-content: center;
@@ -448,46 +526,126 @@
         }
         .modal-content {
             background: #141414;
-            max-width: 480px;
+            max-width: 550px;
             width: 90%;
-            border-radius: 10px;
-            padding: 1.2rem;
+            border-radius: 16px;
+            padding: 1.5rem;
             border: 1px solid #2c2c2c;
-            margin: 1rem;
+            animation: modalFadeIn 0.2s ease-out;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
         .modal-content h3 {
-            font-size: 1.1rem;
-            font-weight: 400;
-            margin-bottom: 0.8rem;
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
             color: #d4af37;
         }
         .modal-content input, .modal-content textarea {
             width: 100%;
             padding: 0.5rem;
-            margin: 0.4rem 0;
+            margin: 0.5rem 0;
             border: 1px solid #2c2c2c;
             border-radius: 10px;
             background: #1c1c1c;
             color: #eee;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
         }
         .modal-buttons {
             display: flex;
             justify-content: flex-end;
-            gap: 0.8rem;
-            margin-top: 0.8rem;
+            gap: 1rem;
+            margin-top: 1rem;
         }
         .modal-buttons button {
-            padding: 0.4rem 0.8rem;
-            border-radius: 10px;
             background: #2a2a2a;
             border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 30px;
             color: #eee;
             cursor: pointer;
         }
-        .modal-buttons button:last-child { background: #d4af37; color: #0a0a0a; }
-        .file-upload-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
-
+        .modal-buttons button:last-child {
+            background: #d4af37;
+            color: #0a0a0a;
+        }
+        .modal-buttons button:hover { background: #3a3a3a; }
+        .modal-buttons button:last-child:hover { background: #c99f1a; }
+        hr { border-color: #2c2c2c; margin: 1rem 0; }
+        .proposals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin: 1rem 0;
+        }
+        .proposal-item {
+            background: #1e1e2a;
+            border-radius: 10px;
+            padding: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #2c2c2c;
+        }
+        .proposal-info {
+            flex: 1;
+        }
+        .proposal-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .proposal-actions {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+        }
+        .proposal-vote {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #2a2a2a;
+            padding: 0.3rem 0.8rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .proposal-vote:hover {
+            background: #3a3a3a;
+        }
+        .proposal-vote.voted {
+            background: #d4af37;
+            color: #0a0a0a;
+            cursor: default;
+            opacity: 0.8;
+        }
+        .proposal-vote span:first-child {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .proposal-vote span:last-child {
+            font-size: 0.8rem;
+        }
+        .proposal-delete {
+            background: none;
+            border: none;
+            color: #a0a0a0;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0 0.2rem;
+        }
+        .proposal-delete:hover {
+            color: #e06c4e;
+        }
+        .admin-note {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
         @media (max-width: 480px) {
             .review-form-row {
                 display: grid;
@@ -522,7 +680,15 @@
                     "textarea textarea";
             }
             .next-movie-card .poster {
-                max-height: 180px;
+                max-height: 240px;
+            }
+            .ranking-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .proposal-item {
+                flex-wrap: wrap;
+                gap: 0.5rem;
             }
         }
         @media (min-width: 481px) {
@@ -536,430 +702,731 @@
     </style>
 </head>
 <body>
-<div class="club-header">
-    <h1 id="homeLogo">JLL MOVIE CLUB</h1>
-    <div class="header-buttons">
-        <button class="icon-btn delete-movie-btn" id="deleteMovieBtn">✕</button>
-        <button class="icon-btn" id="openModalBtn">+</button>
-    </div>
-</div>
-<div id="mainContent">
-    <div class="loading-indicator">Ładowanie danych...</div>
-</div>
-<div class="nav-arrow nav-arrow-left" id="prevArrow">←</div>
-<div class="nav-arrow nav-arrow-right" id="nextArrow">→</div>
-
-<div id="movieModal" class="modal">
-    <div class="modal-content">
-        <h3>Nowy film</h3>
-        <input type="text" id="newTitle" placeholder="Tytuł" required>
-        <input type="date" id="newDate" value="2026-05-22">
-        <div class="file-upload-row">
-            <input type="text" id="newPosterUrl" placeholder="URL plakatu">
-            <span style="color:#666;">lub</span>
-            <input type="file" id="posterFile" accept="image/*">
+    <div class="app-container">
+        <div class="club-header">
+            <h1 id="homeLogo">JLL MOVIE CLUB</h1>
+            <div class="header-buttons">
+                <button class="icon-btn delete-movie-btn" id="adminBtn">✕</button>
+                <button class="icon-btn" id="openModalBtn">+</button>
+            </div>
         </div>
-        <textarea id="newSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea>
-        <div class="modal-buttons"><button id="cancelModalBtn">Anuluj</button><button id="saveMovieBtn">Dodaj</button></div>
+        <div id="mainContent">
+            <div class="loading-indicator">Ładowanie danych...</div>
+        </div>
     </div>
-</div>
-<div id="editMovieModal" class="modal">
-    <div class="modal-content">
-        <h3>Edytuj film</h3>
-        <input type="text" id="editTitle" placeholder="Tytuł" required>
-        <div class="file-upload-row">
+    <div class="nav-arrow nav-arrow-left" id="prevArrow">←</div>
+    <div class="nav-arrow nav-arrow-right" id="nextArrow">→</div>
+
+    <!-- Modal dodawania filmu -->
+    <div id="movieModal" class="modal">
+        <div class="modal-content">
+            <h3>Nowy film</h3>
+            <input type="text" id="newTitle" placeholder="Tytuł" required>
+            <input type="date" id="newDate" value="2026-05-22">
+            <input type="text" id="newPosterUrl" placeholder="URL plakatu (opcjonalnie)">
+            <textarea id="newSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea>
+            <div class="modal-buttons"><button id="cancelModalBtn">Anuluj</button><button id="saveMovieBtn">Dodaj</button></div>
+        </div>
+    </div>
+
+    <!-- Modal edycji filmu -->
+    <div id="editMovieModal" class="modal">
+        <div class="modal-content">
+            <h3>Edytuj film</h3>
+            <input type="text" id="editTitle" placeholder="Tytuł" required>
+            <input type="date" id="editDate" placeholder="Data">
             <input type="text" id="editPosterUrl" placeholder="URL plakatu">
-            <span style="color:#666;">lub</span>
-            <input type="file" id="editPosterFile" accept="image/*">
+            <textarea id="editSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea>
+            <div class="modal-buttons"><button id="cancelEditBtn">Anuluj</button><button id="saveEditBtn">Zapisz</button></div>
         </div>
-        <textarea id="editSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea>
-        <div class="modal-buttons"><button id="cancelEditBtn">Anuluj</button><button id="saveEditBtn">Zapisz</button></div>
     </div>
-</div>
 
-<script>
-    // ======================= KONFIGURACJA FIREBASE =======================
-    // 🔴 ZABLOKUJ STARY KLUCZ W KONSOLI GOOGLE I WPISZ NOWY!
-    const firebaseConfig = {
-        apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE",   // ZASTĄP NOWYM KLUCZEM
-        authDomain: "movie-club-f8ceb.firebaseapp.com",
-        projectId: "movie-club-f8ceb",
-        storageBucket: "movie-club-f8ceb.firebasestorage.app",
-        messagingSenderId: "17251318633",
-        appId: "1:17251318633:web:5080a0bc0243e1a91d1bf8"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
+    <!-- Modal informacyjny (bez punktorów) -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <h3>Jak działa ranking i system oceniania?</h3>
+            <div class="info-text">
+                <p><strong>Nowe recenzje</strong> – są dodawane od razu, ale nie wliczają się do średniej i nie są widoczne w rankingu, dopóki nie zostaną zatwierdzone.</p>
+                <p><strong>JLL Verified</strong> – wyróżnienie przyznawane pracownikom JLL. Recenzje z tą etykietą liczą się podwójnie do średniej oceny filmu.</p>
+                <p><strong>Minimalna liczba ocen</strong> – film pojawia się w głównej liście rankingu dopiero po zebraniu co najmniej 3 zatwierdzonych recenzji. Filmy, które mają mniej opinii, są przesunięte na dół.</p>
+                <p><strong>Usunięcie/edycja recenzji</strong> – napisz do sam wiesz kogo ◡̈</p>
+            </div>
+            <div class="modal-buttons"><button id="closeInfoModalBtn">Zamknij</button></div>
+        </div>
+    </div>
 
-    auth.signInAnonymously().catch(error => console.error("Błąd logowania anonimowego:", error));
+    <!-- Modal propozycji filmów -->
+    <div id="proposeModal" class="modal">
+        <div class="modal-content">
+            <h3>Propozycje filmów</h3>
+            <div id="proposalsList" class="proposals-list">Ładowanie...</div>
+            <hr>
+            <h4>Zaproponuj nowy film</h4>
+            <input type="text" id="proposeTitle" placeholder="Tytuł filmu *" required>
+            <div class="modal-buttons"><button id="cancelProposeBtn">Anuluj</button><button id="submitProposeBtn">Dodaj propozycję</button></div>
+        </div>
+    </div>
 
-    // ======================= DANE DOMYŚLNE =======================
-    const defaultMovies = [
-        { id:"lobster_2026", date:"02.04.2026", title:"Lobster", poster:"https://via.placeholder.com/1200x300?text=Lobster", reviews:[
-            { author:"Sebuś", stars:4, comment:"Depresyjny obraz tamtych czasów i smutna rzeczywistość życia w ukryciu.", approved:true, verified:false, timestamp:Date.now() },
-            { author:"Maciek", stars:3, comment:"Hehe geje", approved:true, verified:false, timestamp:Date.now()+1 },
-            { author:"Kuba", stars:5, comment:"Piękny film, scenerie które sprawiały że chciało się go oglądać, jednak pełen żalu bólu.", approved:true, verified:false, timestamp:Date.now()+2 },
-            { author:"Maciej D", stars:4, comment:"Na tamte czasy to był bardzo odważny film.", approved:true, verified:false, timestamp:Date.now()+3 },
-            { author:"Daria", stars:5, comment:"Piękne obrazy kontrastujące z niełatwymi wyborami w życiu.", approved:true, verified:false, timestamp:Date.now()+4 },
-            { author:"Ola", stars:5, comment:"Piękny, poruszający film. Łezka się w oku zakręciła.", approved:true, verified:false, timestamp:Date.now()+5 }
-        ], sentimentalValue:"Odbierzemy go na tyle na ile sami jesteśmy wrażliwi." },
-        { id:"weapons_2026", date:"10.05.2026", title:"WEAPONS", poster:"https://via.placeholder.com/1200x300?text=WEAPONS", reviews:[
-            { author:"Sebuś", stars:4, comment:"Ciekawy koncept, ale trochę niedopracowany.", approved:true, verified:false, timestamp:Date.now() },
-            { author:"Daria", stars:5, comment:"Wizualnie oszałamiający.", approved:true, verified:false, timestamp:Date.now()+1 }
-        ], sentimentalValue:"" },
-        { id:"bugonia_2026", date:"17.05.2026", title:"BUGONIA", poster:"https://via.placeholder.com/1200x300?text=Bugonia", reviews:[
-            { author:"Sebuś", stars:5, comment:"Genialnie trzyma w napięciu. Lanthimos coraz lepszy z roku na rok.", approved:true, verified:false, timestamp:Date.now() },
-            { author:"Igor", stars:5, comment:"Zaskakujący. Bardzo dobrze się bawiłem.", approved:true, verified:false, timestamp:Date.now()+1 },
-            { author:"Daria", stars:5, comment:"Świetnie zagrane postaci. Uwierzyłam w nie od pierwszych scen.", approved:true, verified:false, timestamp:Date.now()+2 },
-            { author:"Grzegorz", stars:4, comment:"Dałbym czwórkę.", approved:true, verified:false, timestamp:Date.now()+3 },
-            { author:"Maciek", stars:5, comment:"Emma Stone jest nieziemska w tym filmie :)", approved:true, verified:false, timestamp:Date.now()+4 },
-            { author:"Kuba", stars:5, comment:"Trzyma w napięciu od pierwszej do ostatniej minuty (obejrzałem w całości).", approved:true, verified:false, timestamp:Date.now()+5 },
-            { author:"Ola", stars:5, comment:"Świetna gra aktorska. Bardzo ciekawy film, od początku, aż do końca.", approved:true, verified:false, timestamp:Date.now()+6 }
-        ], sentimentalValue:"" }
-    ];
+    <!-- Modal logowania admina -->
+    <div id="adminLoginModal" class="modal">
+        <div class="modal-content">
+            <h3>Logowanie administratora</h3>
+            <input type="password" id="adminPassword" placeholder="Hasło" autocomplete="off">
+            <div class="modal-buttons">
+                <button id="cancelAdminLoginBtn">Anuluj</button>
+                <button id="confirmAdminLoginBtn">Zaloguj</button>
+            </div>
+            <div class="admin-note">Hasło: aadmin</div>
+        </div>
+    </div>
 
-    let movies = [];
-    let current = 0;
-    let view = 'home';
-    let unsubscribe = null;
-    const ADMIN_PASSWORD = "aadmin";
-    let loadingTimeout = null;
+    <script>
+        // ======================= KONFIGURACJA FIREBASE =======================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE",   // ZASTĄP NOWYM KLUCZEM
+            authDomain: "movie-club-f8ceb.firebaseapp.com",
+            projectId: "movie-club-f8ceb",
+            storageBucket: "movie-club-f8ceb.firebasestorage.app",
+            messagingSenderId: "17251318633",
+            appId: "1:17251318633:web:5080a0bc0243e1a91d1bf8"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        auth.signInAnonymously().catch(error => console.error("Błąd logowania anonimowego:", error));
 
-    function showLoading(show) {
-        const loadingDiv = document.querySelector('.loading-indicator');
-        if (loadingDiv) loadingDiv.style.display = show ? 'flex' : 'none';
-    }
+        // ======================= DANE DOMYŚLNE =======================
+        const defaultMovies = [
+            { id:"lobster_2026", date:"02.04.2026", title:"Lobster", poster:"https://via.placeholder.com/1200x300?text=Lobster", reviews:[
+                { author:"Sebuś", stars:4, comment:"Depresyjny obraz tamtych czasów i smutna rzeczywistość życia w ukryciu.", approved:true, verified:false, timestamp:Date.now() },
+                { author:"Maciek", stars:3, comment:"Hehe geje", approved:true, verified:false, timestamp:Date.now()+1 },
+                { author:"Kuba", stars:5, comment:"Piękny film, scenerie które sprawiały że chciało się go oglądać, jednak pełen żalu bólu.", approved:true, verified:false, timestamp:Date.now()+2 },
+                { author:"Maciej D", stars:4, comment:"Na tamte czasy to był bardzo odważny film.", approved:true, verified:false, timestamp:Date.now()+3 },
+                { author:"Daria", stars:5, comment:"Piękne obrazy kontrastujące z niełatwymi wyborami w życiu.", approved:true, verified:false, timestamp:Date.now()+4 },
+                { author:"Ola", stars:5, comment:"Piękny, poruszający film. Łezka się w oku zakręciła.", approved:true, verified:false, timestamp:Date.now()+5 }
+            ], sentimentalValue:"Odbierzemy go na tyle na ile sami jesteśmy wrażliwi." },
+            { id:"weapons_2026", date:"10.05.2026", title:"WEAPONS", poster:"https://via.placeholder.com/1200x300?text=WEAPONS", reviews:[
+                { author:"Sebuś", stars:4, comment:"Ciekawy koncept, ale trochę niedopracowany.", approved:true, verified:false, timestamp:Date.now() },
+                { author:"Daria", stars:5, comment:"Wizualnie oszałamiający.", approved:true, verified:false, timestamp:Date.now()+1 }
+            ], sentimentalValue:"" },
+            { id:"bugonia_2026", date:"17.05.2026", title:"BUGONIA", poster:"https://via.placeholder.com/1200x300?text=Bugonia", reviews:[
+                { author:"Sebuś", stars:5, comment:"Genialnie trzyma w napięciu. Lanthimos coraz lepszy z roku na rok.", approved:true, verified:false, timestamp:Date.now() },
+                { author:"Igor", stars:5, comment:"Zaskakujący. Bardzo dobrze się bawiłem.", approved:true, verified:false, timestamp:Date.now()+1 },
+                { author:"Daria", stars:5, comment:"Świetnie zagrane postaci. Uwierzyłam w nie od pierwszych scen.", approved:true, verified:false, timestamp:Date.now()+2 },
+                { author:"Grzegorz", stars:4, comment:"Dałbym czwórkę.", approved:true, verified:false, timestamp:Date.now()+3 },
+                { author:"Maciek", stars:5, comment:"Emma Stone jest nieziemska w tym filmie :)", approved:true, verified:false, timestamp:Date.now()+4 },
+                { author:"Kuba", stars:5, comment:"Trzyma w napięciu od pierwszej do ostatniej minuty (obejrzałem w całości).", approved:true, verified:false, timestamp:Date.now()+5 },
+                { author:"Ola", stars:5, comment:"Świetna gra aktorska. Bardzo ciekawy film, od początku, aż do końca.", approved:true, verified:false, timestamp:Date.now()+6 }
+            ], sentimentalValue:"" }
+        ];
 
-    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
-    function renderStars(rating) {
-        let starsHtml = `<span class="stars">`;
-        for (let i = 1; i <= 5; i++) {
-            starsHtml += `<span class="star ${i <= rating ? 'star-filled' : 'star-empty'}">★</span>`;
+        let movies = [];
+        let current = 0;
+        let view = 'home';
+        let unsubscribeMovies = null;
+        let isAdmin = false;
+
+        const ADMIN_PASSWORD = "aadmin";
+
+        function setAdminMode(admin) {
+            isAdmin = admin;
+            if (admin) {
+                sessionStorage.setItem('movieclub_admin', 'true');
+                document.getElementById('adminBtn').classList.add('admin-active');
+                // zmień tekst przycisku na symbol admina
+                document.getElementById('adminBtn').textContent = '👑';
+            } else {
+                sessionStorage.removeItem('movieclub_admin');
+                document.getElementById('adminBtn').classList.remove('admin-active');
+                document.getElementById('adminBtn').textContent = '✕';
+            }
         }
-        starsHtml += `</span>`;
-        return starsHtml;
-    }
-    function avgWeighted(movie) {
-        let total = 0, weight = 0;
-        movie.reviews.forEach(r => {
-            if(!r.approved) return;
-            let w = r.verified ? 2 : 1;
-            total += r.stars * w;
-            weight += w;
-        });
-        if(weight === 0) return '—';
-        return (total / weight).toFixed(1);
-    }
-    function parseDate(dateStr) { let parts = dateStr.split('.'); return new Date(parts[2], parts[1]-1, parts[0]); }
-    function getNextMovie() {
-        let today = new Date(); today.setHours(0,0,0,0);
-        let future = movies.filter(m => parseDate(m.date) >= today);
-        if(future.length) return future.sort((a,b) => parseDate(a.date) - parseDate(b.date))[0];
-        return movies.length ? movies.reduce((a,b) => parseDate(a.date) - parseDate(b.date) > 0 ? a : b) : null;
-    }
-    function showArrows(show) { 
-        document.getElementById('prevArrow').style.display = show ? 'flex' : 'none'; 
-        document.getElementById('nextArrow').style.display = show ? 'flex' : 'none'; 
-    }
 
-    function renderHome() {
-        const next = getNextMovie();
-        const posterUrlNext = next && next.poster ? next.poster : '';
-        const nextPosterHtml = posterUrlNext ? `<img class="poster" src="${escapeHtml(posterUrlNext)}" onerror="this.style.display='none'">` : '<div class="poster" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#666;">🎬</div>';
-        document.getElementById('mainContent').innerHTML = `
-            <div class="home-container">
-                <div class="next-movie-card" id="nextMovieCard">
-                    ${nextPosterHtml}
-                    <h2>NAJBLIŻSZY SEANS</h2>
-                    <div class="title">${escapeHtml(next?.title || 'brak filmów')}</div>
-                    <div class="date">${escapeHtml(next?.date || '')}</div>
-                </div>
-                <h3>RANKING</h3>
-                <div class="ranking-list" id="rankingList"></div>
-            </div>`;
-        const rankingDiv = document.getElementById('rankingList');
-        if(rankingDiv) {
-            let sorted = [...movies].sort((a,b) => parseFloat(avgWeighted(b)) - parseFloat(avgWeighted(a)));
-            rankingDiv.innerHTML = sorted.map((m, idx) => {
-                const posterStyle = m.poster ? `background-image: url('${escapeHtml(m.poster)}'); background-size: cover;` : '';
-                const rating = avgWeighted(m);
-                const ratingText = rating !== '—' ? `${rating} ★` : '— ★';
-                return `<div class="ranking-item" data-idx="${movies.indexOf(m)}" style="${posterStyle}"><span class="ranking-title">${idx+1}. ${escapeHtml(m.title)}</span><span class="ranking-rating">${ratingText}</span></div>`;
-            }).join('');
-            document.querySelectorAll('.ranking-item').forEach(el => {
-                el.onclick = () => { 
-                    const idx = parseInt(el.dataset.idx);
-                    if(!isNaN(idx) && movies[idx]) {
-                        current = idx; 
-                        view = 'movie'; 
-                        renderMovie(); 
-                        showArrows(true); 
+        function checkAdminFromStorage() {
+            if (sessionStorage.getItem('movieclub_admin') === 'true') {
+                setAdminMode(true);
+            }
+        }
+
+        function showAdminLoginModal() {
+            document.getElementById('adminLoginModal').style.display = 'flex';
+            document.getElementById('adminPassword').value = '';
+        }
+
+        function isAdminAction() {
+            if (isAdmin) return true;
+            // jeśli nie admin, można zapytać o hasło (opcjonalnie)
+            const pwd = prompt("Hasło admina:");
+            if (pwd === ADMIN_PASSWORD) {
+                setAdminMode(true);
+                return true;
+            }
+            return false;
+        }
+
+        let isTransitioning = false;
+
+        function showLoading(show) {
+            const ld = document.querySelector('.loading-indicator');
+            if (ld) ld.style.display = show ? 'flex' : 'none';
+        }
+        function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+        function renderStars(rating) {
+            let starsHtml = `<span class="stars">`;
+            for (let i = 1; i <= 5; i++) {
+                starsHtml += `<span class="star ${i <= rating ? 'star-filled' : 'star-empty'}">★</span>`;
+            }
+            starsHtml += `</span>`;
+            return starsHtml;
+        }
+        function avgWeighted(movie) {
+            let total = 0, weight = 0;
+            movie.reviews.forEach(r => {
+                if(!r.approved) return;
+                let w = r.verified ? 2 : 1;
+                total += r.stars * w;
+                weight += w;
+            });
+            if(weight === 0) return '—';
+            return (total / weight).toFixed(1);
+        }
+        function countApprovedReviews(movie) {
+            return movie.reviews.filter(r => r.approved).length;
+        }
+        function parseDate(dateStr) { let parts = dateStr.split('.'); return new Date(parts[2], parts[1]-1, parts[0]); }
+        function getNextMovie() {
+            let today = new Date(); today.setHours(0,0,0,0);
+            let future = movies.filter(m => parseDate(m.date) >= today);
+            if(future.length) return future.sort((a,b) => parseDate(a.date) - parseDate(b.date))[0];
+            return movies.length ? movies.reduce((a,b) => parseDate(a.date) - parseDate(b.date) > 0 ? a : b) : null;
+        }
+        function showArrows(show) { 
+            document.getElementById('prevArrow').style.display = show ? 'flex' : 'none'; 
+            document.getElementById('nextArrow').style.display = show ? 'flex' : 'none'; 
+        }
+
+        async function animateViewTransition(callback) {
+            if (isTransitioning) return;
+            isTransitioning = true;
+            const container = document.getElementById('mainContent');
+            if (container) {
+                container.classList.add('transition-fade');
+                container.classList.add('fade-out');
+                await new Promise(r => setTimeout(r, 200));
+            }
+            await callback();
+            if (container) {
+                container.classList.remove('fade-out');
+                setTimeout(() => {
+                    container.classList.remove('transition-fade');
+                    isTransitioning = false;
+                }, 200);
+            } else {
+                isTransitioning = false;
+            }
+        }
+
+        async function animateSlideTransition(direction, callback) {
+            if (isTransitioning) return;
+            isTransitioning = true;
+            const container = document.getElementById('mainContent');
+            if (container) {
+                container.classList.add('slide-transition');
+                if (direction === 'left') container.classList.add('slide-left');
+                else if (direction === 'right') container.classList.add('slide-right');
+                await new Promise(r => setTimeout(r, 200));
+            }
+            await callback();
+            if (container) {
+                container.classList.remove('slide-left', 'slide-right');
+                setTimeout(() => {
+                    container.classList.remove('slide-transition');
+                    isTransitioning = false;
+                }, 200);
+            } else {
+                isTransitioning = false;
+            }
+        }
+
+        // ======================= RENDEROWANIE STRONY GŁÓWNEJ =======================
+        function renderHome() {
+            const next = getNextMovie();
+            const posterUrlNext = next && next.poster ? next.poster : '';
+            const nextPosterHtml = posterUrlNext ? `<img class="poster" src="${escapeHtml(posterUrlNext)}" onerror="this.style.display='none'">` : '<div class="poster" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#666;">🎬</div>';
+            document.getElementById('mainContent').innerHTML = `
+                <div class="home-container">
+                    <div class="next-movie-card" id="nextMovieCard">
+                        ${nextPosterHtml}
+                        <h2>NAJBLIŻSZY SEANS</h2>
+                        <div class="title">${escapeHtml(next?.title || 'brak filmów')}</div>
+                        <div class="date">${escapeHtml(next?.date || '')}</div>
+                    </div>
+                    <div class="ranking-section">
+                        <div class="ranking-header">
+                            <h3>RANKING <span class="rating-system-link" id="ratingSystemLink">(SYSTEM OCENIANIA)</span></h3>
+                            <span class="propose-link" id="openProposeBtn">PROPONUJ!</span>
+                        </div>
+                        <div class="ranking-list" id="rankingList"></div>
+                    </div>
+                </div>`;
+            
+            const rankingDiv = document.getElementById('rankingList');
+            if(rankingDiv) {
+                const threshold = 3;
+                const highRank = movies.filter(m => countApprovedReviews(m) >= threshold);
+                const lowRank = movies.filter(m => countApprovedReviews(m) < threshold);
+                const sortByAvg = (a,b) => parseFloat(avgWeighted(b)) - parseFloat(avgWeighted(a));
+                highRank.sort(sortByAvg);
+                lowRank.sort(sortByAvg);
+                const sortedMovies = [...highRank, ...lowRank];
+                rankingDiv.innerHTML = sortedMovies.map((m, idx) => {
+                    const posterStyle = m.poster ? `background-image: url('${escapeHtml(m.poster)}'); background-size: cover;` : '';
+                    const rating = avgWeighted(m);
+                    const hasEnoughReviews = countApprovedReviews(m) >= threshold;
+                    const ratingText = hasEnoughReviews ? (rating !== '—' ? `${rating} ★` : '— ★') : '–';
+                    let badge = '';
+                    if (!hasEnoughReviews) badge = ' <span style="font-size:0.7rem; color:#888;">(czeka na więcej ocen)</span>';
+                    return `<div class="ranking-item" data-idx="${movies.indexOf(m)}" style="${posterStyle}">
+                                <span class="ranking-title">${idx+1}. ${escapeHtml(m.title)}${badge}</span>
+                                <span class="ranking-rating">${ratingText}</span>
+                            </div>`;
+                }).join('');
+                document.querySelectorAll('.ranking-item').forEach(el => {
+                    el.onclick = () => {
+                        const idx = parseInt(el.dataset.idx);
+                        if(!isNaN(idx) && movies[idx]) {
+                            current = idx;
+                            view = 'movie';
+                            animateViewTransition(async () => {
+                                renderMovie();
+                                showArrows(true);
+                            });
+                        }
+                    };
+                });
+            }
+            document.getElementById('openProposeBtn').onclick = () => {
+                loadProposalsIntoModal();
+                document.getElementById('proposeModal').style.display = 'flex';
+            };
+            document.getElementById('cancelProposeBtn').onclick = () => document.getElementById('proposeModal').style.display = 'none';
+            document.getElementById('submitProposeBtn').onclick = async () => {
+                const title = document.getElementById('proposeTitle').value.trim();
+                if (!title) { alert("Podaj tytuł filmu"); return; }
+                const newProposal = { title: title, votes: 0, timestamp: Date.now() };
+                await db.collection("proposals").add(newProposal);
+                document.getElementById('proposeTitle').value = '';
+                loadProposalsIntoModal();
+            };
+            const nextCard = document.getElementById('nextMovieCard');
+            if(nextCard && next) {
+                nextCard.onclick = () => {
+                    const idx = movies.findIndex(m => m.id === next.id);
+                    if(idx !== -1) {
+                        current = idx;
+                        view = 'movie';
+                        animateViewTransition(async () => {
+                            renderMovie();
+                            showArrows(true);
+                        });
                     }
                 };
-            });
-        }
-        const nextCard = document.getElementById('nextMovieCard');
-        if(nextCard && next) {
-            nextCard.onclick = () => { 
-                const idx = movies.findIndex(m => m.id === next.id);
-                if(idx !== -1) { current = idx; view = 'movie'; renderMovie(); showArrows(true); }
+            }
+            document.getElementById('ratingSystemLink').onclick = () => {
+                document.getElementById('infoModal').style.display = 'flex';
             };
+            showArrows(false);
+            showLoading(false);
         }
-        showArrows(false);
-        showLoading(false);
-    }
 
-    function renderMovie() {
-        const m = movies[current];
-        if(!m) { renderHome(); return; }
-        const sortedReviews = [...m.reviews].sort((a,b) => {
-            if(a.verified !== b.verified) return a.verified ? -1 : 1;
-            if(a.approved !== b.approved) return a.approved ? -1 : 1;
-            return b.timestamp - a.timestamp;
-        });
-        let revHtml = '';
-        sortedReviews.forEach((r,i) => {
-            const origIndex = m.reviews.findIndex(orig => orig.timestamp === r.timestamp && orig.author === r.author);
-            const pendingClass = !r.approved ? 'pending' : '';
-            const verifiedMark = r.verified ? '<span class="verified-check">✓</span>' : '';
-            const actions = `
-                <div class="review-actions">
-                    ${!r.approved ? `<button class="review-action-btn approve-btn" data-idx="${origIndex}" title="Zatwierdź (admin)">✓</button>` : ''}
-                    ${r.approved && !r.verified ? `<button class="review-action-btn verify-btn" data-idx="${origIndex}" title="JLL Verified (admin)">⭐</button>` : ''}
-                    <button class="review-action-btn delete-review-btn" data-idx="${origIndex}" title="Usuń (admin)">✕</button>
-                </div>
-            `;
-            revHtml += `
-                <div class="review-row ${pendingClass}" data-idx="${origIndex}">
-                    <div class="review-left">
-                        <div style="display: flex; align-items: center; gap: 2px;">
-                            ${renderStars(r.stars)}
-                            ${verifiedMark}
-                        </div>
-                        <div class="review-author">${escapeHtml(r.author)}</div>
-                    </div>
-                    <div class="review-comment">${escapeHtml(r.comment)}</div>
-                    ${actions}
-                </div>
-            `;
-        });
-        const sentHtml = m.sentimentalValue ? `<div class="sentimental">✨ ${escapeHtml(m.sentimentalValue)}</div>` : '';
-        const posterUrl = m.poster && m.poster.trim() ? m.poster : '';
-        const posterImg = posterUrl ? `<img class="poster-img" src="${escapeHtml(posterUrl)}" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22300%22%3E%3Crect%20width%3D%221200%22%20height%3D%22300%22%20fill%3D%22%231a1a1a%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23888%22%20font-size%3D%2224%22%3Ebrak%20plakatu%3C%2Ftext%3E%3C%2Fsvg%3E'">` : `<div class="poster-img" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#888;">🎬 brak plakatu</div>`;
-        const avgVal = avgWeighted(m);
-        const avgDisplay = avgVal !== '—' ? `${avgVal} ★` : '— ★';
-        const slide = `
-            <div class="carousel-container">
-                <div class="slide">
-                    <div class="poster-wrapper">${posterImg}<div class="movie-title-overlay">${escapeHtml(m.title)}</div><button class="edit-movie-btn" id="editBtn">✎</button></div>
-                    <div class="movie-date">${escapeHtml(m.date)}</div>
-                    <div class="reviews-grid" id="reviewsGrid">${revHtml}</div>
-                    ${sentHtml}
-                    <div class="add-review">
-                        <div class="review-form-grid">
-                            <div class="review-form-row">
-                                <div class="review-form-left">
-                                    <input type="text" id="reviewAuthor" placeholder="Imię" maxlength="20">
-                                    <div class="rating-input" id="starSelector">
-                                        ${[1,2,3,4,5].map(n => `<span class="star-select" data-value="${n}">★</span>`).join('')}
-                                    </div>
+        async function loadProposalsIntoModal() {
+            const proposalsDiv = document.getElementById('proposalsList');
+            if (!proposalsDiv) return;
+            proposalsDiv.innerHTML = '<div style="text-align:center; padding:1rem;">Ładowanie propozycji...</div>';
+            try {
+                const snapshot = await db.collection("proposals").orderBy("votes", "desc").get();
+                const proposals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (proposals.length === 0) {
+                    proposalsDiv.innerHTML = '<div style="text-align:center; padding:1rem;">Brak propozycji. Bądź pierwszy!</div>';
+                    return;
+                }
+                const votedIds = JSON.parse(localStorage.getItem('proposal_votes') || '[]');
+                proposalsDiv.innerHTML = proposals.map(p => {
+                    const votedClass = votedIds.includes(p.id) ? 'voted' : '';
+                    const voteDisabled = votedIds.includes(p.id) ? 'disabled' : '';
+                    return `
+                        <div class="proposal-item" data-id="${p.id}">
+                            <div class="proposal-info">
+                                <div class="proposal-title">${escapeHtml(p.title)}</div>
+                            </div>
+                            <div class="proposal-actions">
+                                <div class="proposal-vote ${votedClass}" data-id="${p.id}" style="pointer-events: ${voteDisabled ? 'none' : 'auto'}">
+                                    <span>${p.votes || 0}</span>
+                                    <span>${votedIds.includes(p.id) ? '✓' : '+1'}</span>
                                 </div>
-                                <div class="review-form-middle">
-                                    <textarea id="reviewComment" placeholder="Napisz kilka słów o filmie (Enter aby dodać)" maxlength="256"></textarea>
-                                    <div class="avg-box" id="avgBox">${avgDisplay}</div>
+                                <button class="proposal-delete" data-id="${p.id}" title="Usuń">✕</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                // Głosowanie
+                document.querySelectorAll('.proposal-vote').forEach(el => {
+                    if (el.classList.contains('voted')) return;
+                    el.onclick = async (e) => {
+                        e.stopPropagation();
+                        const proposalId = el.dataset.id;
+                        let voted = JSON.parse(localStorage.getItem('proposal_votes') || '[]');
+                        if (voted.includes(proposalId)) {
+                            alert("Już oddałeś głos na tę propozycję.");
+                            return;
+                        }
+                        const proposalRef = db.collection("proposals").doc(proposalId);
+                        const proposalDoc = await proposalRef.get();
+                        if (!proposalDoc.exists) return;
+                        const currentVotes = proposalDoc.data().votes || 0;
+                        await proposalRef.update({ votes: currentVotes + 1 });
+                        voted.push(proposalId);
+                        localStorage.setItem('proposal_votes', JSON.stringify(voted));
+                        loadProposalsIntoModal();
+                    };
+                });
+                // Usuwanie propozycji (tylko admin)
+                document.querySelectorAll('.proposal-delete').forEach(btn => {
+                    btn.onclick = async (e) => {
+                        e.stopPropagation();
+                        if (!isAdmin) {
+                            if (!isAdminAction()) return;
+                        }
+                        const id = btn.dataset.id;
+                        await db.collection("proposals").doc(id).delete();
+                        loadProposalsIntoModal();
+                    };
+                });
+            } catch (error) {
+                console.error("Błąd ładowania propozycji:", error);
+                proposalsDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:#e06c4e;">Błąd ładowania. Sprawdź połączenie z Firebase.</div>';
+            }
+        }
+
+        // ======================= RENDEROWANIE SZCZEGÓŁÓW FILMU =======================
+        function renderMovie() {
+            const m = movies[current];
+            if(!m) { renderHome(); return; }
+            const sortedReviews = [...m.reviews].sort((a,b) => {
+                if(a.verified !== b.verified) return a.verified ? -1 : 1;
+                if(a.approved !== b.approved) return a.approved ? -1 : 1;
+                return b.timestamp - a.timestamp;
+            });
+            let revHtml = '';
+            sortedReviews.forEach((r,i) => {
+                const origIndex = m.reviews.findIndex(orig => orig.timestamp === r.timestamp && orig.author === r.author);
+                const pendingClass = !r.approved ? 'pending' : '';
+                const verifiedMark = r.verified ? '<span class="verified-check">✓</span>' : '';
+                const actions = `
+                    <div class="review-actions">
+                        ${!r.approved ? `<button class="review-action-btn approve-btn" data-idx="${origIndex}" title="Zatwierdź (admin)">✓</button>` : ''}
+                        ${r.approved && !r.verified ? `<button class="review-action-btn verify-btn" data-idx="${origIndex}" title="JLL Verified (admin)">⭐</button>` : ''}
+                        <button class="review-action-btn delete-review-btn" data-idx="${origIndex}" title="Usuń (admin)">✕</button>
+                    </div>
+                `;
+                revHtml += `
+                    <div class="review-row ${pendingClass}" data-idx="${origIndex}">
+                        <div class="review-left">
+                            <div style="display: flex; align-items: center; gap: 2px;">
+                                ${renderStars(r.stars)}
+                                ${verifiedMark}
+                            </div>
+                            <div class="review-author">${escapeHtml(r.author)}</div>
+                        </div>
+                        <div class="review-comment">${escapeHtml(r.comment)}</div>
+                        ${actions}
+                    </div>
+                `;
+            });
+            const sentHtml = m.sentimentalValue ? `<div class="sentimental">✨ ${escapeHtml(m.sentimentalValue)}</div>` : '';
+            const posterUrl = m.poster && m.poster.trim() ? m.poster : '';
+            const posterImg = posterUrl ? `<img class="poster-img" src="${escapeHtml(posterUrl)}" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22300%22%3E%3Crect%20width%3D%221200%22%20height%3D%22300%22%20fill%3D%22%231a1a1a%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23888%22%20font-size%3D%2224%22%3Ebrak%20plakatu%3C%2Ftext%3E%3C%2Fsvg%3E'">` : `<div class="poster-img" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#888;">🎬 brak plakatu</div>`;
+            const avgVal = avgWeighted(m);
+            const avgDisplay = avgVal !== '—' ? `${avgVal} ★` : '— ★';
+            const slide = `
+                <div class="carousel-wrapper">
+                    <div class="carousel-container">
+                        <div class="slide">
+                            <div class="poster-wrapper">${posterImg}<div class="movie-title-overlay">${escapeHtml(m.title)}</div><button class="edit-movie-btn" id="editBtn">✎</button></div>
+                            <div class="movie-date">${escapeHtml(m.date)}</div>
+                            <div class="reviews-grid" id="reviewsGrid">${revHtml}</div>
+                            ${sentHtml}
+                            <div class="add-review">
+                                <div class="review-form-grid">
+                                    <div class="review-form-row">
+                                        <div class="review-form-left">
+                                            <input type="text" id="reviewAuthor" placeholder="Imię" maxlength="20">
+                                            <div class="rating-input" id="starSelector">
+                                                ${[1,2,3,4,5].map(n => `<span class="star-select" data-value="${n}">★</span>`).join('')}
+                                            </div>
+                                        </div>
+                                        <div class="review-form-middle">
+                                            <textarea id="reviewComment" placeholder="Napisz kilka słów o filmie (Enter aby dodać)" maxlength="256"></textarea>
+                                            <div class="avg-box" id="avgBox">${avgDisplay}</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>`;
-        document.getElementById('mainContent').innerHTML = slide;
-        showLoading(false);
-        
-        document.querySelectorAll('.approve-btn').forEach(btn => {
-            btn.onclick = async () => {
-                const idx = parseInt(btn.dataset.idx);
-                const pwd = prompt("Hasło admina, aby zatwierdzić:");
-                if(pwd === ADMIN_PASSWORD) {
+                </div>`;
+            document.getElementById('mainContent').innerHTML = slide;
+            showLoading(false);
+            
+            // Obsługa akcji na recenzjach (z trybem admina)
+            document.querySelectorAll('.approve-btn').forEach(btn => {
+                btn.onclick = async () => {
+                    if (!isAdmin && !isAdminAction()) return;
+                    const idx = parseInt(btn.dataset.idx);
                     const updatedReviews = [...movies[current].reviews];
                     updatedReviews[idx].approved = true;
                     updatedReviews[idx].timestamp = Date.now();
                     await db.collection("movies").doc(movies[current].id).update({ reviews: updatedReviews });
-                } else alert("Złe hasło");
-            };
-        });
-        document.querySelectorAll('.verify-btn').forEach(btn => {
-            btn.onclick = async () => {
-                const idx = parseInt(btn.dataset.idx);
-                const pwd = prompt("Hasło admina, aby nadać JLL Verified:");
-                if(pwd === ADMIN_PASSWORD) {
+                };
+            });
+            document.querySelectorAll('.verify-btn').forEach(btn => {
+                btn.onclick = async () => {
+                    if (!isAdmin && !isAdminAction()) return;
+                    const idx = parseInt(btn.dataset.idx);
                     const updatedReviews = [...movies[current].reviews];
                     updatedReviews[idx].verified = true;
                     updatedReviews[idx].timestamp = Date.now();
                     await db.collection("movies").doc(movies[current].id).update({ reviews: updatedReviews });
-                } else alert("Złe hasło");
-            };
-        });
-        document.querySelectorAll('.delete-review-btn').forEach(btn => {
-            btn.onclick = async () => {
-                const idx = parseInt(btn.dataset.idx);
-                const pwd = prompt("Hasło admina, aby usunąć recenzję:");
-                if(pwd === ADMIN_PASSWORD) {
+                };
+            });
+            document.querySelectorAll('.delete-review-btn').forEach(btn => {
+                btn.onclick = async () => {
+                    if (!isAdmin && !isAdminAction()) return;
+                    const idx = parseInt(btn.dataset.idx);
                     const updatedReviews = [...movies[current].reviews];
                     updatedReviews.splice(idx,1);
                     await db.collection("movies").doc(movies[current].id).update({ reviews: updatedReviews });
-                } else alert("Złe hasło");
-            };
-        });
-        
-        let selStars = 0;
-        const starsSpans = document.querySelectorAll('#starSelector .star-select');
-        starsSpans.forEach((s,i) => { s.onclick = () => { selStars = i+1; starsSpans.forEach((ss,j) => ss.classList.toggle('selected', j<=i)); }; });
-        const textarea = document.getElementById('reviewComment');
-        const authorInput = document.getElementById('reviewAuthor');
-        async function addPendingReview() {
-            const a = authorInput.value.trim();
-            const c = textarea.value.trim();
-            if(!a) { alert("Podaj imię"); return; }
-            if(!selStars) { alert("Wybierz gwiazdki"); return; }
-            const newReview = {
-                author: a,
-                stars: selStars,
-                comment: c || "(bez komentarza)",
-                approved: false,
-                verified: false,
-                timestamp: Date.now()
-            };
-            const updatedReviews = [...movies[current].reviews, newReview];
-            await db.collection("movies").doc(movies[current].id).update({ reviews: updatedReviews });
-            authorInput.value = '';
-            textarea.value = '';
-            selStars = 0;
-            starsSpans.forEach(s => s.classList.remove('selected'));
-        }
-        textarea.addEventListener('keydown', (e) => {
-            if(e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                addPendingReview();
+                };
+            });
+            
+            let selStars = 0;
+            const starsSpans = document.querySelectorAll('#starSelector .star-select');
+            starsSpans.forEach((s,i) => { s.onclick = () => { selStars = i+1; starsSpans.forEach((ss,j) => ss.classList.toggle('selected', j<=i)); }; });
+            const textarea = document.getElementById('reviewComment');
+            const authorInput = document.getElementById('reviewAuthor');
+            async function addPendingReview() {
+                const a = authorInput.value.trim();
+                const c = textarea.value.trim();
+                if(!a) { alert("Podaj imię"); return; }
+                if(!selStars) { alert("Wybierz gwiazdki"); return; }
+                const newReview = {
+                    author: a,
+                    stars: selStars,
+                    comment: c || "(bez komentarza)",
+                    approved: false,
+                    verified: false,
+                    timestamp: Date.now()
+                };
+                const updatedReviews = [...movies[current].reviews, newReview];
+                await db.collection("movies").doc(movies[current].id).update({ reviews: updatedReviews });
+                authorInput.value = '';
+                textarea.value = '';
+                selStars = 0;
+                starsSpans.forEach(s => s.classList.remove('selected'));
             }
-        });
-        
-        document.getElementById('editBtn').onclick = () => { 
-            document.getElementById('editTitle').value = m.title; 
-            document.getElementById('editPosterUrl').value = m.poster||''; 
-            document.getElementById('editSentimental').value = m.sentimentalValue||''; 
-            document.getElementById('editMovieModal').style.display = 'flex'; 
-        };
-        document.getElementById('avgBox').onclick = () => { view = 'home'; renderHome(); };
-    }
-
-    function next() { if(view==='movie' && movies.length) { current = (current+1)%movies.length; renderMovie(); } }
-    function prev() { if(view==='movie' && movies.length) { current = (current-1+movies.length)%movies.length; renderMovie(); } }
-    
-    async function delMovie() {
-        if(view!=='movie') return;
-        if(prompt("Hasło admina, aby USUNĄĆ film:")===ADMIN_PASSWORD) {
-            await db.collection("movies").doc(movies[current].id).delete();
-        } else alert("Złe hasło");
-    }
-    
-    // MODALE
-    const addModal = document.getElementById('movieModal'), editModal = document.getElementById('editMovieModal');
-    document.getElementById('openModalBtn').onclick = () => addModal.style.display = 'flex';
-    document.getElementById('cancelModalBtn').onclick = () => addModal.style.display = 'none';
-    document.getElementById('deleteMovieBtn').onclick = delMovie;
-    document.getElementById('cancelEditBtn').onclick = () => editModal.style.display = 'none';
-    window.onclick = (e) => { if(e.target===addModal) addModal.style.display='none'; if(e.target===editModal) editModal.style.display='none'; };
-    
-    document.getElementById('posterFile').onchange = (e) => { const f = e.target.files[0]; if(f && f.type.startsWith('image/')) { const r = new FileReader(); r.onload = (ev) => document.getElementById('newPosterUrl').value = ev.target.result; r.readAsDataURL(f); } };
-    document.getElementById('editPosterFile').onchange = (e) => { const f = e.target.files[0]; if(f && f.type.startsWith('image/')) { const r = new FileReader(); r.onload = (ev) => document.getElementById('editPosterUrl').value = ev.target.result; r.readAsDataURL(f); } };
-    
-    document.getElementById('saveMovieBtn').onclick = async () => {
-        if(prompt("Hasło admina:")!==ADMIN_PASSWORD) { alert("Złe hasło"); return; }
-        const t = document.getElementById('newTitle').value.trim();
-        if(!t) return alert("Tytuł wymagany");
-        const newMovie = {
-            id: Date.now().toString(),
-            date: document.getElementById('newDate').value.split('-').reverse().join('.'),
-            title: t,
-            poster: document.getElementById('newPosterUrl').value.trim(),
-            reviews: [],
-            sentimentalValue: document.getElementById('newSentimental').value.trim()
-        };
-        await db.collection("movies").doc(newMovie.id).set(newMovie);
-        addModal.style.display='none';
-        document.getElementById('newTitle').value=''; 
-        document.getElementById('newPosterUrl').value=''; 
-        document.getElementById('newSentimental').value=''; 
-        document.getElementById('posterFile').value='';
-    };
-    
-    document.getElementById('saveEditBtn').onclick = async () => {
-        if(prompt("Hasło admina:")!==ADMIN_PASSWORD) { alert("Złe hasło"); return; }
-        const nt = document.getElementById('editTitle').value.trim();
-        if(!nt) return alert("Tytuł nie może być pusty");
-        const updateData = {
-            title: nt,
-            poster: document.getElementById('editPosterUrl').value.trim(),
-            sentimentalValue: document.getElementById('editSentimental').value.trim()
-        };
-        await db.collection("movies").doc(movies[current].id).update(updateData);
-        editModal.style.display='none';
-    };
-    
-    document.getElementById('homeLogo').onclick = () => { view = 'home'; renderHome(); };
-    document.getElementById('prevArrow').onclick = prev; 
-    document.getElementById('nextArrow').onclick = next;
-    window.addEventListener('keydown', (e) => { if(view==='movie') { if(e.key==='ArrowLeft') prev(); if(e.key==='ArrowRight') next(); } });
-    
-    // NASŁUCHIWANIE ZMIAN Z WYSZUKIWANIEM DANYCH DOMYŚLNYCH
-    async function seedDefaultDataIfNeeded() {
-        const snapshot = await db.collection("movies").get();
-        if (snapshot.empty) {
-            for (const m of defaultMovies) {
-                await db.collection("movies").doc(m.id).set(m);
-            }
-        }
-    }
-    
-    function startFirestoreListener() {
-        if (unsubscribe) unsubscribe();
-        showLoading(true);
-        seedDefaultDataIfNeeded().then(() => {
-            unsubscribe = db.collection("movies").onSnapshot(snapshot => {
-                const newMovies = [];
-                snapshot.forEach(doc => newMovies.push(doc.data()));
-                movies = newMovies;
-                if (movies.length === 0) {
-                    view = 'home';
+            textarea.addEventListener('keydown', (e) => {
+                if(e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    addPendingReview();
+                }
+            });
+            
+            document.getElementById('editBtn').onclick = () => { 
+                document.getElementById('editTitle').value = m.title; 
+                document.getElementById('editDate').value = m.date ? m.date.split('.').reverse().join('-') : '';
+                document.getElementById('editPosterUrl').value = m.poster||''; 
+                document.getElementById('editSentimental').value = m.sentimentalValue||''; 
+                document.getElementById('editMovieModal').style.display = 'flex'; 
+            };
+            document.getElementById('avgBox').onclick = () => {
+                view = 'home';
+                animateViewTransition(async () => {
                     renderHome();
-                } else {
-                    if (view === 'home') {
+                    showArrows(false);
+                });
+            };
+        }
+
+        // ======================= NAWIGACJA =======================
+        function next() {
+            if(view==='movie' && movies.length && !isTransitioning) {
+                animateSlideTransition('left', async () => {
+                    current = (current + 1) % movies.length;
+                    renderMovie();
+                });
+            }
+        }
+        function prev() {
+            if(view==='movie' && movies.length && !isTransitioning) {
+                animateSlideTransition('right', async () => {
+                    current = (current - 1 + movies.length) % movies.length;
+                    renderMovie();
+                });
+            }
+        }
+
+        // ======================= OPERACJE ADMINA =======================
+        async function delMovie() {
+            if(view!=='movie') return;
+            if (!isAdmin && !isAdminAction()) return;
+            await db.collection("movies").doc(movies[current].id).delete();
+        }
+        
+        // Obsługa przycisku "X" na głównej
+        function handleAdminButton() {
+            if (view === 'movie') {
+                delMovie();
+            } else {
+                showAdminLoginModal();
+            }
+        }
+
+        // Modale
+        const addModal = document.getElementById('movieModal');
+        const editModal = document.getElementById('editMovieModal');
+        const infoModal = document.getElementById('infoModal');
+        const proposeModal = document.getElementById('proposeModal');
+        const adminLoginModal = document.getElementById('adminLoginModal');
+        
+        document.getElementById('openModalBtn').onclick = () => {
+            if (!isAdmin && !isAdminAction()) return;
+            addModal.style.display = 'flex';
+        };
+        document.getElementById('cancelModalBtn').onclick = () => addModal.style.display = 'none';
+        document.getElementById('cancelEditBtn').onclick = () => editModal.style.display = 'none';
+        document.getElementById('closeInfoModalBtn').onclick = () => infoModal.style.display = 'none';
+        document.getElementById('cancelProposeBtn').onclick = () => proposeModal.style.display = 'none';
+        document.getElementById('cancelAdminLoginBtn').onclick = () => adminLoginModal.style.display = 'none';
+        
+        document.getElementById('confirmAdminLoginBtn').onclick = () => {
+            const pwd = document.getElementById('adminPassword').value;
+            if (pwd === ADMIN_PASSWORD) {
+                setAdminMode(true);
+                adminLoginModal.style.display = 'none';
+                alert("Jesteś teraz w trybie administratora.");
+            } else {
+                alert("Nieprawidłowe hasło.");
+            }
+        };
+        
+        window.onclick = (e) => { 
+            if(e.target===addModal) addModal.style.display='none'; 
+            if(e.target===editModal) editModal.style.display='none'; 
+            if(e.target===infoModal) infoModal.style.display='none';
+            if(e.target===proposeModal) proposeModal.style.display='none';
+            if(e.target===adminLoginModal) adminLoginModal.style.display='none';
+        };
+        
+        document.getElementById('saveMovieBtn').onclick = async () => {
+            if (!isAdmin && !isAdminAction()) return;
+            const t = document.getElementById('newTitle').value.trim();
+            if(!t) return alert("Tytuł wymagany");
+            const dateRaw = document.getElementById('newDate').value;
+            const date = dateRaw ? dateRaw.split('-').reverse().join('.') : '';
+            const poster = document.getElementById('newPosterUrl').value.trim();
+            const sentimental = document.getElementById('newSentimental').value.trim();
+            const newMovie = {
+                id: Date.now().toString(),
+                date: date,
+                title: t,
+                poster: poster,
+                reviews: [],
+                sentimentalValue: sentimental
+            };
+            await db.collection("movies").doc(newMovie.id).set(newMovie);
+            addModal.style.display='none';
+            document.getElementById('newTitle').value=''; 
+            document.getElementById('newPosterUrl').value=''; 
+            document.getElementById('newSentimental').value=''; 
+        };
+        
+        document.getElementById('saveEditBtn').onclick = async () => {
+            if (!isAdmin && !isAdminAction()) return;
+            const nt = document.getElementById('editTitle').value.trim();
+            if(!nt) return alert("Tytuł nie może być pusty");
+            const dateRaw = document.getElementById('editDate').value;
+            const date = dateRaw ? dateRaw.split('-').reverse().join('.') : '';
+            const updateData = {
+                title: nt,
+                date: date,
+                poster: document.getElementById('editPosterUrl').value.trim(),
+                sentimentalValue: document.getElementById('editSentimental').value.trim()
+            };
+            await db.collection("movies").doc(movies[current].id).update(updateData);
+            editModal.style.display='none';
+        };
+        
+        document.getElementById('homeLogo').onclick = () => {
+            view = 'home';
+            animateViewTransition(async () => {
+                renderHome();
+                showArrows(false);
+            });
+        };
+        
+        document.getElementById('adminBtn').onclick = handleAdminButton;
+        document.getElementById('prevArrow').onclick = prev;
+        document.getElementById('nextArrow').onclick = next;
+        window.addEventListener('keydown', (e) => { if(view==='movie' && !isTransitioning) { if(e.key==='ArrowLeft') prev(); if(e.key==='ArrowRight') next(); } });
+        
+        // ======================= INICJALIZACJA FIRESTORE =======================
+        async function seedDefaultDataIfNeeded() {
+            const snapshot = await db.collection("movies").get();
+            if (snapshot.empty) {
+                for (const m of defaultMovies) {
+                    await db.collection("movies").doc(m.id).set(m);
+                }
+            }
+        }
+        
+        function startFirestoreListener() {
+            if (unsubscribeMovies) unsubscribeMovies();
+            showLoading(true);
+            seedDefaultDataIfNeeded().then(() => {
+                unsubscribeMovies = db.collection("movies").onSnapshot(snapshot => {
+                    const newMovies = [];
+                    snapshot.forEach(doc => newMovies.push(doc.data()));
+                    movies = newMovies;
+                    if (movies.length === 0) {
+                        view = 'home';
                         renderHome();
                     } else {
-                        if (!movies.find(m => m.id === movies[current]?.id)) {
-                            current = 0;
-                            view = 'home';
+                        if (view === 'home') {
                             renderHome();
                         } else {
-                            if (current >= movies.length) current = movies.length - 1;
-                            renderMovie();
+                            if (!movies.find(m => m.id === movies[current]?.id)) {
+                                current = 0;
+                                view = 'home';
+                                renderHome();
+                            } else {
+                                if (current >= movies.length) current = movies.length - 1;
+                                renderMovie();
+                            }
                         }
                     }
-                }
-                showLoading(false);
-            }, error => {
-                console.error("Błąd nasłuchiwania:", error);
+                    showLoading(false);
+                }, error => {
+                    console.error("Błąd nasłuchiwania filmów:", error);
+                    showLoading(false);
+                });
+            }).catch(err => {
+                console.error("Błąd seedowania:", err);
                 showLoading(false);
             });
-        }).catch(err => {
-            console.error("Błąd seedowania:", err);
-            showLoading(false);
-        });
-    }
-    
-    startFirestoreListener();
-</script>
+        }
+        
+        checkAdminFromStorage();
+        startFirestoreListener();
+    </script>
 </body>
 </html>
