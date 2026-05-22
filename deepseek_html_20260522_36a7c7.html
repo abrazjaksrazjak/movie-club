@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>JLL Movie Club – moderacja</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0a;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            color: #e5e5e5;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+        }
+        .club-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-shrink: 0;
+            padding: 0 0.25rem;
+        }
+        .club-header h1 {
+            font-size: clamp(0.9rem, 5vw, 1.1rem);
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            color: #c0c0c0;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .club-header h1:hover { color: #d4af37; }
+        .header-buttons {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+        }
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: #a0a0a0;
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            transition: 0.2s;
+        }
+        .icon-btn:hover {
+            color: #d4af37;
+            background: rgba(212, 175, 55, 0.08);
+            transform: scale(1.05);
+        }
+        .delete-movie-btn:hover { color: #e06c4e; background: rgba(224,108,78,0.08); }
+        #mainContent {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .carousel-container {
+            background: #111;
+            border-radius: 10px;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.6);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #262626;
+        }
+        .slide {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+        .poster-wrapper {
+            width: 100%;
+            height: clamp(180px, 30vh, 280px);
+            position: relative;
+            overflow: hidden;
+            background: #1a1a1a;
+            flex-shrink: 0;
+        }
+        .poster-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .movie-title-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: clamp(1.2rem, 5vw, 2rem);
+            font-weight: 500;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.5), transparent);
+            padding: 0.3rem;
+            backdrop-filter: blur(2px);
+        }
+        .edit-movie-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            border: none;
+            color: #ccc;
+            font-size: 0.9rem;
+            width: 28px;
+            height: 28px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: 0.2s;
+        }
+        .poster-wrapper:hover .edit-movie-btn { opacity: 1; }
+        .edit-movie-btn:hover { background: #d4af37; color: #0a0a0a; transform: scale(1.05); }
+        .movie-date {
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: 300;
+            color: #8a8a8a;
+            margin: 0.5rem 0 0.8rem 0;
+            flex-shrink: 0;
+        }
+        .reviews-grid {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .reviews-grid::-webkit-scrollbar { width: 3px; }
+        .reviews-grid::-webkit-scrollbar-track { background: #1e1e1e; }
+        .reviews-grid::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 10px; }
+        .review-row {
+            display: flex;
+            gap: 0.8rem;
+            position: relative;
+            border-bottom: 1px solid #252525;
+            padding-bottom: 0.7rem;
+            flex-wrap: wrap;
+            transition: opacity 0.2s;
+        }
+        .review-row.pending { opacity: 0.6; }
+        .review-left {
+            flex: 0 0 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+        .stars {
+            display: inline-flex;
+            gap: 0;
+            align-items: center;
+        }
+        .star {
+            display: inline-block;
+            width: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+            line-height: 1;
+        }
+        .star-filled {
+            color: #d4af37;
+        }
+        .star-empty {
+            color: #3d3d3d;
+        }
+        .verified-check {
+            color: #d4af37;
+            font-size: 0.8rem;
+            margin-left: 4px;
+        }
+        .review-author {
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: #b0b0b0;
+        }
+        .review-comment {
+            flex: 1;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: #cfcfcf;
+            align-self: flex-end;
+            padding-right: 1.2rem;
+            min-width: 150px;
+        }
+        .review-actions {
+            position: absolute;
+            right: 0;
+            top: 0;
+            display: flex;
+            gap: 0.3rem;
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            padding: 0.1rem 0.2rem;
+            opacity: 0;
+            transition: 0.2s;
+        }
+        .review-row:hover .review-actions { opacity: 1; }
+        .review-action-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 0.7rem;
+            cursor: pointer;
+            padding: 0.1rem 0.2rem;
+            border-radius: 6px;
+        }
+        .review-action-btn:hover { background: #2a2a2a; color: #d4af37; }
+        .delete-review-btn:hover { color: #e06c4e; }
+        .sentimental {
+            margin: 0.6rem 1rem 0.6rem 1rem;
+            padding: 0.5rem 0.8rem;
+            background: #181818;
+            border-left: 2px solid #d4af37;
+            font-size: 0.7rem;
+            color: #b9a97c;
+            border-radius: 10px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .add-review {
+            background: #111;
+            border-top: 1px solid #262626;
+            padding: 0.8rem 1rem 1rem 1rem;
+            flex-shrink: 0;
+        }
+        .review-form-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        .review-form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            align-items: stretch;
+        }
+        .review-form-left {
+            flex: 0 0 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        .review-form-left input {
+            background: #1c1c1c;
+            border: 1px solid #2c2c2c;
+            border-radius: 10px;
+            padding: 0.4rem 0.5rem;
+            font-size: 0.7rem;
+            color: #eee;
+            width: 100%;
+            text-align: center;
+        }
+        .rating-input {
+            display: inline-flex;
+            gap: 0;
+            background: #1c1c1c;
+            padding: 0.2rem 0.4rem;
+            border-radius: 10px;
+            justify-content: center;
+        }
+        .star-select {
+            display: inline-block;
+            width: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+            cursor: pointer;
+            color: #4a4a4a;
+        }
+        .star-select.selected { color: #d4af37; }
+        .review-form-middle {
+            flex: 2;
+            min-width: 180px;
+            display: flex;
+            gap: 0.8rem;
+            align-items: stretch;
+        }
+        .review-form-middle textarea {
+            flex: 1;
+            background: #1c1c1c;
+            border: 1px solid #2c2c2c;
+            border-radius: 10px;
+            padding: 0.4rem 0.5rem;
+            font-size: 0.7rem;
+            color: #eee;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .avg-box {
+            background: #1c1c1c;
+            border: 1px solid #2c2c2c;
+            border-radius: 10px;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #d4af37;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .avg-box:hover { background: #2a2a2a; transform: scale(1.02); }
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7a7a7a;
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+            user-select: none;
+            z-index: 100;
+            background: none;
+            padding: 0.3rem;
+            border-radius: 10px;
+        }
+        .nav-arrow:hover { color: #d4af37; transform: translateY(-50%) scale(1.1); background: rgba(212,175,55,0.05); }
+        .nav-arrow-left { left: 4px; }
+        .nav-arrow-right { right: 4px; }
+        .home-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 0.8rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .next-movie-card {
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .next-movie-card:hover { background: #222; transform: translateY(-2px); }
+        .next-movie-card .poster {
+            width: 100%;
+            max-height: 240px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 0.8rem;
+            background: #0f0f0f;
+        }
+        .next-movie-card h2 {
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: #d4af37;
+            margin-bottom: 0.3rem;
+        }
+        .next-movie-card .title { font-size: 1.3rem; font-weight: 500; margin: 0.3rem 0; }
+        .next-movie-card .date { font-size: 0.7rem; color: #8a8a8a; }
+        .ranking-list { display: flex; flex-direction: column; gap: 0.6rem; flex: 1; }
+        .ranking-item {
+            position: relative;
+            background: #151515;
+            border-radius: 10px;
+            padding: 1rem 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid #252525;
+            overflow: hidden;
+            z-index: 1;
+            min-height: 70px;
+        }
+        .ranking-item::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: inherit;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.2;
+            z-index: -2;
+        }
+        .ranking-item::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, rgba(15,15,15,0.85) 0%, rgba(15,15,15,0.6) 30%, rgba(15,15,15,0.6) 70%, rgba(15,15,15,0.85) 100%);
+            z-index: -1;
+        }
+        .ranking-item:hover::before { opacity: 0.3; }
+        .ranking-item:hover { background: #1f1f1f; transform: translateX(3px); }
+        .ranking-title { font-size: 0.9rem; font-weight: 500; position: relative; z-index: 1; }
+        .ranking-rating { color: #d4af37; font-size: 0.8rem; position: relative; z-index: 1; }
+        .home-container h3 {
+            font-size: 0.9rem;
+            font-weight: 400;
+            margin: 0.8rem 0 0.6rem 0;
+            color: #c0c0c0;
+            flex-shrink: 0;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #141414;
+            max-width: 480px;
+            width: 90%;
+            border-radius: 10px;
+            padding: 1.2rem;
+            border: 1px solid #2c2c2c;
+            margin: 1rem;
+        }
+        .modal-content h3 {
+            font-size: 1.1rem;
+            font-weight: 400;
+            margin-bottom: 0.8rem;
+            color: #d4af37;
+        }
+        .modal-content input, .modal-content textarea {
+            width: 100%;
+            padding: 0.5rem;
+            margin: 0.4rem 0;
+            border: 1px solid #2c2c2c;
+            border-radius: 10px;
+            background: #1c1c1c;
+            color: #eee;
+            font-size: 0.8rem;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.8rem;
+            margin-top: 0.8rem;
+        }
+        .modal-buttons button {
+            padding: 0.4rem 0.8rem;
+            border-radius: 10px;
+            background: #2a2a2a;
+            border: none;
+            color: #eee;
+            cursor: pointer;
+        }
+        .modal-buttons button:last-child { background: #d4af37; color: #0a0a0a; }
+        .file-upload-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+
+        @media (max-width: 480px) {
+            .review-form-row {
+                display: grid;
+                grid-template-columns: 1fr auto;
+                gap: 0.4rem;
+                align-items: start;
+            }
+            .review-form-left {
+                grid-area: left;
+                flex: none;
+                width: auto;
+            }
+            .review-form-middle {
+                display: contents;
+            }
+            .review-form-middle textarea {
+                grid-area: textarea;
+                width: 100%;
+                margin-top: 0.2rem;
+            }
+            .avg-box {
+                grid-area: avg;
+                align-self: stretch;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 70px;
+            }
+            .review-form-row {
+                grid-template-areas:
+                    "left avg"
+                    "textarea textarea";
+            }
+            .next-movie-card .poster {
+                max-height: 180px; /* nieco mniejsze na telefonie, ale dalej większe niż wcześniej */
+            }
+        }
+        @media (min-width: 481px) {
+            .review-form-middle {
+                flex-direction: row;
+            }
+            .avg-box {
+                flex-shrink: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="club-header">
+    <h1 id="homeLogo">JLL MOVIE CLUB</h1>
+    <div class="header-buttons">
+        <button class="icon-btn delete-movie-btn" id="deleteMovieBtn">✕</button>
+        <button class="icon-btn" id="openModalBtn">+</button>
+    </div>
+</div>
+<div id="mainContent"></div>
+<div class="nav-arrow nav-arrow-left" id="prevArrow">←</div>
+<div class="nav-arrow nav-arrow-right" id="nextArrow">→</div>
+
+<div id="movieModal" class="modal">
+    <div class="modal-content">
+        <h3>Nowy film</h3>
+        <input type="text" id="newTitle" placeholder="Tytuł" required>
+        <input type="date" id="newDate" value="2026-05-22">
+        <div class="file-upload-row">
+            <input type="text" id="newPosterUrl" placeholder="URL plakatu">
+            <span style="color:#666;">lub</span>
+            <input type="file" id="posterFile" accept="image/*">
+        </div>
+        <textarea id="newSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea>
+        <div class="modal-buttons"><button id="cancelModalBtn">Anuluj</button><button id="saveMovieBtn">Dodaj</button></div>
+    </div>
+</div>
+<div id="editMovieModal" class="modal">
+    <div class="modal-content">
+        <h3>Edytuj film</h3>
+        <input type="text" id="editTitle" placeholder="Tytuł" required>
+        <div class="file-upload-row">
+            <input type="text" id="editPosterUrl" placeholder="URL plakatu">
+            <span style="color:#666;">lub</span>
+            <input type="file" id="editPosterFile" accept="image/*">
+        </div>
+        <textarea id="editSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea>
+        <div class="modal-buttons"><button id="cancelEditBtn">Anuluj</button><button id="saveEditBtn">Zapisz</button></div>
+    </div>
+</div>
+
+<script>
+    const ADMIN_PASSWORD = "aadmin";
+    const defaultMovies = [
+        { id:"lobster_2026", date:"02.04.2026", title:"Lobster", poster:"https://via.placeholder.com/1200x300?text=Lobster", reviews:[
+            { author:"Sebuś", stars:4, comment:"Depresyjny obraz tamtych czasów i smutna rzeczywistość życia w ukryciu.", approved:true, verified:false, timestamp:Date.now() },
+            { author:"Maciek", stars:3, comment:"Hehe geje", approved:true, verified:false, timestamp:Date.now()+1 },
+            { author:"Kuba", stars:5, comment:"Piękny film, scenerie które sprawiały że chciało się go oglądać, jednak pełen żalu bólu.", approved:true, verified:false, timestamp:Date.now()+2 },
+            { author:"Maciej D", stars:4, comment:"Na tamte czasy to był bardzo odważny film.", approved:true, verified:false, timestamp:Date.now()+3 },
+            { author:"Daria", stars:5, comment:"Piękne obrazy kontrastujące z niełatwymi wyborami w życiu.", approved:true, verified:false, timestamp:Date.now()+4 },
+            { author:"Ola", stars:5, comment:"Piękny, poruszający film. Łezka się w oku zakręciła.", approved:true, verified:false, timestamp:Date.now()+5 }
+        ], sentimentalValue:"Odbierzemy go na tyle na ile sami jesteśmy wrażliwi." },
+        { id:"weapons_2026", date:"10.05.2026", title:"WEAPONS", poster:"https://via.placeholder.com/1200x300?text=WEAPONS", reviews:[
+            { author:"Sebuś", stars:4, comment:"Ciekawy koncept, ale trochę niedopracowany.", approved:true, verified:false, timestamp:Date.now() },
+            { author:"Daria", stars:5, comment:"Wizualnie oszałamiający.", approved:true, verified:false, timestamp:Date.now()+1 }
+        ], sentimentalValue:"" },
+        { id:"bugonia_2026", date:"17.05.2026", title:"BUGONIA", poster:"https://via.placeholder.com/1200x300?text=Bugonia", reviews:[
+            { author:"Sebuś", stars:5, comment:"Genialnie trzyma w napięciu. Lanthimos coraz lepszy z roku na rok.", approved:true, verified:false, timestamp:Date.now() },
+            { author:"Igor", stars:5, comment:"Zaskakujący. Bardzo dobrze się bawiłem.", approved:true, verified:false, timestamp:Date.now()+1 },
+            { author:"Daria", stars:5, comment:"Świetnie zagrane postaci. Uwierzyłam w nie od pierwszych scen.", approved:true, verified:false, timestamp:Date.now()+2 },
+            { author:"Grzegorz", stars:4, comment:"Dałbym czwórkę.", approved:true, verified:false, timestamp:Date.now()+3 },
+            { author:"Maciek", stars:5, comment:"Emma Stone jest nieziemska w tym filmie :)", approved:true, verified:false, timestamp:Date.now()+4 },
+            { author:"Kuba", stars:5, comment:"Trzyma w napięciu od pierwszej do ostatniej minuty (obejrzałem w całości).", approved:true, verified:false, timestamp:Date.now()+5 },
+            { author:"Ola", stars:5, comment:"Świetna gra aktorska. Bardzo ciekawy film, od początku, aż do końca.", approved:true, verified:false, timestamp:Date.now()+6 }
+        ], sentimentalValue:"" }
+    ];
+    let movies = [];
+    function loadMovies() { const s = localStorage.getItem("jll_movies"); movies = s ? JSON.parse(s) : JSON.parse(JSON.stringify(defaultMovies)); saveMovies(); }
+    function saveMovies() { localStorage.setItem("jll_movies", JSON.stringify(movies)); }
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+    function renderStars(rating) {
+        let starsHtml = `<span class="stars">`;
+        for (let i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                starsHtml += `<span class="star star-filled">★</span>`;
+            } else {
+                starsHtml += `<span class="star star-empty">★</span>`;
+            }
+        }
+        starsHtml += `</span>`;
+        return starsHtml;
+    }
+    function avgWeighted(movie) {
+        let total = 0, weight = 0;
+        movie.reviews.forEach(r => {
+            if(!r.approved) return;
+            let w = r.verified ? 2 : 1;
+            total += r.stars * w;
+            weight += w;
+        });
+        if(weight === 0) return '—';
+        return (total / weight).toFixed(1);
+    }
+    function parseDate(dateStr) { let parts = dateStr.split('.'); return new Date(parts[2], parts[1]-1, parts[0]); }
+    function getNextMovie() {
+        let today = new Date(); today.setHours(0,0,0,0);
+        let future = movies.filter(m => parseDate(m.date) >= today);
+        if(future.length) return future.sort((a,b) => parseDate(a.date) - parseDate(b.date))[0];
+        return movies.length ? movies.reduce((a,b) => parseDate(a.date) - parseDate(b.date) > 0 ? a : b) : null;
+    }
+    let current = 0, view = 'home';
+    function renderHome() {
+        const next = getNextMovie();
+        const posterUrlNext = next && next.poster ? next.poster : '';
+        const nextPosterHtml = posterUrlNext ? `<img class="poster" src="${escapeHtml(posterUrlNext)}" onerror="this.style.display='none'">` : '<div class="poster" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#666;">🎬</div>';
+        document.getElementById('mainContent').innerHTML = `
+            <div class="home-container">
+                <div class="next-movie-card" id="nextMovieCard">
+                    ${nextPosterHtml}
+                    <h2>NAJBLIŻSZY SEANS</h2>
+                    <div class="title">${escapeHtml(next?.title || 'brak filmów')}</div>
+                    <div class="date">${escapeHtml(next?.date || '')}</div>
+                </div>
+                <h3>RANKING</h3>
+                <div class="ranking-list" id="rankingList"></div>
+            </div>`;
+        const rankingDiv = document.getElementById('rankingList');
+        if(rankingDiv) {
+            let sorted = [...movies].sort((a,b) => parseFloat(avgWeighted(b)) - parseFloat(avgWeighted(a)));
+            rankingDiv.innerHTML = sorted.map((m, idx) => {
+                const posterStyle = m.poster ? `background-image: url('${escapeHtml(m.poster)}'); background-size: cover;` : '';
+                const rating = avgWeighted(m);
+                const ratingText = rating !== '—' ? `${rating} ★` : '— ★';
+                return `<div class="ranking-item" data-idx="${movies.indexOf(m)}" style="${posterStyle}"><span class="ranking-title">${idx+1}. ${escapeHtml(m.title)}</span><span class="ranking-rating">${ratingText}</span></div>`;
+            }).join('');
+            document.querySelectorAll('.ranking-item').forEach(el => {
+                el.onclick = () => { current = parseInt(el.dataset.idx); view = 'movie'; renderMovie(); showArrows(true); };
+            });
+        }
+        const nextCard = document.getElementById('nextMovieCard');
+        if(nextCard && next) {
+            nextCard.onclick = () => { 
+                const idx = movies.findIndex(m => m.id === next.id);
+                if(idx !== -1) { current = idx; view = 'movie'; renderMovie(); showArrows(true); }
+            };
+        }
+        showArrows(false);
+    }
+    function renderMovie() {
+        const m = movies[current];
+        if(!m) { renderHome(); return; }
+        const sortedReviews = [...m.reviews].sort((a,b) => {
+            if(a.verified !== b.verified) return a.verified ? -1 : 1;
+            if(a.approved !== b.approved) return a.approved ? -1 : 1;
+            return b.timestamp - a.timestamp;
+        });
+        let revHtml = '';
+        sortedReviews.forEach((r,i) => {
+            const origIndex = m.reviews.findIndex(orig => orig.timestamp === r.timestamp && orig.author === r.author);
+            const pendingClass = !r.approved ? 'pending' : '';
+            const verifiedMark = r.verified ? '<span class="verified-check">✓</span>' : '';
+            const actions = `
+                <div class="review-actions">
+                    ${!r.approved ? `<button class="review-action-btn approve-btn" data-idx="${origIndex}" title="Zatwierdź (admin)">✓</button>` : ''}
+                    ${r.approved && !r.verified ? `<button class="review-action-btn verify-btn" data-idx="${origIndex}" title="JLL Verified (admin)">⭐</button>` : ''}
+                    <button class="review-action-btn delete-review-btn" data-idx="${origIndex}" title="Usuń (admin)">✕</button>
+                </div>
+            `;
+            revHtml += `
+                <div class="review-row ${pendingClass}" data-idx="${origIndex}">
+                    <div class="review-left">
+                        <div style="display: flex; align-items: center; gap: 2px;">
+                            ${renderStars(r.stars)}
+                            ${verifiedMark}
+                        </div>
+                        <div class="review-author">${escapeHtml(r.author)}</div>
+                    </div>
+                    <div class="review-comment">${escapeHtml(r.comment)}</div>
+                    ${actions}
+                </div>
+            `;
+        });
+        const sentHtml = m.sentimentalValue ? `<div class="sentimental">✨ ${escapeHtml(m.sentimentalValue)}</div>` : '';
+        const posterUrl = m.poster && m.poster.trim() ? m.poster : '';
+        const posterImg = posterUrl ? `<img class="poster-img" src="${escapeHtml(posterUrl)}" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22300%22%3E%3Crect%20width%3D%221200%22%20height%3D%22300%22%20fill%3D%22%231a1a1a%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23888%22%20font-size%3D%2224%22%3Ebrak%20plakatu%3C%2Ftext%3E%3C%2Fsvg%3E'">` : `<div class="poster-img" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#888;">🎬 brak plakatu</div>`;
+        const avgVal = avgWeighted(m);
+        const avgDisplay = avgVal !== '—' ? `${avgVal} ★` : '— ★';
+        const slide = `
+            <div class="carousel-container">
+                <div class="slide">
+                    <div class="poster-wrapper">${posterImg}<div class="movie-title-overlay">${escapeHtml(m.title)}</div><button class="edit-movie-btn" id="editBtn">✎</button></div>
+                    <div class="movie-date">${escapeHtml(m.date)}</div>
+                    <div class="reviews-grid" id="reviewsGrid">${revHtml}</div>
+                    ${sentHtml}
+                    <div class="add-review">
+                        <div class="review-form-grid">
+                            <div class="review-form-row">
+                                <div class="review-form-left">
+                                    <input type="text" id="reviewAuthor" placeholder="Imię" maxlength="20">
+                                    <div class="rating-input" id="starSelector">
+                                        ${[1,2,3,4,5].map(n => `<span class="star-select" data-value="${n}">★</span>`).join('')}
+                                    </div>
+                                </div>
+                                <div class="review-form-middle">
+                                    <textarea id="reviewComment" placeholder="Napisz kilka słów o filmie (Enter aby dodać)" maxlength="256"></textarea>
+                                    <div class="avg-box" id="avgBox">${avgDisplay}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        document.getElementById('mainContent').innerHTML = slide;
+        // obsługa akcji
+        document.querySelectorAll('.approve-btn').forEach(btn => {
+            btn.onclick = () => {
+                const idx = parseInt(btn.dataset.idx);
+                const pwd = prompt("Hasło admina, aby zatwierdzić:");
+                if(pwd === ADMIN_PASSWORD) {
+                    movies[current].reviews[idx].approved = true;
+                    movies[current].reviews[idx].timestamp = Date.now();
+                    saveMovies();
+                    renderMovie();
+                } else alert("Złe hasło");
+            };
+        });
+        document.querySelectorAll('.verify-btn').forEach(btn => {
+            btn.onclick = () => {
+                const idx = parseInt(btn.dataset.idx);
+                const pwd = prompt("Hasło admina, aby nadać JLL Verified:");
+                if(pwd === ADMIN_PASSWORD) {
+                    movies[current].reviews[idx].verified = true;
+                    movies[current].reviews[idx].timestamp = Date.now();
+                    saveMovies();
+                    renderMovie();
+                } else alert("Złe hasło");
+            };
+        });
+        document.querySelectorAll('.delete-review-btn').forEach(btn => {
+            btn.onclick = () => {
+                const idx = parseInt(btn.dataset.idx);
+                const pwd = prompt("Hasło admina, aby usunąć recenzję:");
+                if(pwd === ADMIN_PASSWORD) {
+                    movies[current].reviews.splice(idx,1);
+                    saveMovies();
+                    renderMovie();
+                } else alert("Złe hasło");
+            };
+        });
+        // dodawanie nowej recenzji
+        let selStars = 0;
+        const starsSpans = document.querySelectorAll('#starSelector .star-select');
+        starsSpans.forEach((s,i) => { s.onclick = () => { selStars = i+1; starsSpans.forEach((ss,j) => ss.classList.toggle('selected', j<=i)); }; });
+        const textarea = document.getElementById('reviewComment');
+        const authorInput = document.getElementById('reviewAuthor');
+        function addPendingReview() {
+            const a = authorInput.value.trim();
+            const c = textarea.value.trim();
+            if(!a) { alert("Podaj imię"); return; }
+            if(!selStars) { alert("Wybierz gwiazdki"); return; }
+            movies[current].reviews.push({
+                author: a,
+                stars: selStars,
+                comment: c || "(bez komentarza)",
+                approved: false,
+                verified: false,
+                timestamp: Date.now()
+            });
+            saveMovies();
+            renderMovie();
+            authorInput.value = '';
+            textarea.value = '';
+            selStars = 0;
+            starsSpans.forEach(s => s.classList.remove('selected'));
+        }
+        textarea.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                addPendingReview();
+            }
+        });
+        document.getElementById('editBtn').onclick = () => { document.getElementById('editTitle').value = m.title; document.getElementById('editPosterUrl').value = m.poster||''; document.getElementById('editSentimental').value = m.sentimentalValue||''; document.getElementById('editMovieModal').style.display = 'flex'; };
+        document.getElementById('avgBox').onclick = () => { view = 'home'; renderHome(); };
+    }
+    function showArrows(show) { document.getElementById('prevArrow').style.display = show ? 'flex' : 'none'; document.getElementById('nextArrow').style.display = show ? 'flex' : 'none'; }
+    function next() { if(view==='movie' && movies.length) { current = (current+1)%movies.length; renderMovie(); } }
+    function prev() { if(view==='movie' && movies.length) { current = (current-1+movies.length)%movies.length; renderMovie(); } }
+    function delMovie() { if(view!=='movie') return; if(prompt("Hasło admina, aby USUNĄĆ film:")===ADMIN_PASSWORD) { movies.splice(current,1); saveMovies(); if(movies.length===0) renderHome(); else { if(current>=movies.length) current=movies.length-1; renderMovie(); } } else alert("Złe hasło"); }
+    const addModal = document.getElementById('movieModal'), editModal = document.getElementById('editMovieModal');
+    document.getElementById('openModalBtn').onclick = () => addModal.style.display = 'flex';
+    document.getElementById('cancelModalBtn').onclick = () => addModal.style.display = 'none';
+    document.getElementById('deleteMovieBtn').onclick = delMovie;
+    document.getElementById('cancelEditBtn').onclick = () => editModal.style.display = 'none';
+    window.onclick = (e) => { if(e.target===addModal) addModal.style.display='none'; if(e.target===editModal) editModal.style.display='none'; };
+    document.getElementById('posterFile').onchange = (e) => { const f = e.target.files[0]; if(f && f.type.startsWith('image/')) { const r = new FileReader(); r.onload = (ev) => document.getElementById('newPosterUrl').value = ev.target.result; r.readAsDataURL(f); } };
+    document.getElementById('editPosterFile').onchange = (e) => { const f = e.target.files[0]; if(f && f.type.startsWith('image/')) { const r = new FileReader(); r.onload = (ev) => document.getElementById('editPosterUrl').value = ev.target.result; r.readAsDataURL(f); } };
+    document.getElementById('saveMovieBtn').onclick = () => { if(prompt("Hasło admina:")!==ADMIN_PASSWORD) { alert("Złe hasło"); return; } const t = document.getElementById('newTitle').value.trim(); if(!t) return alert("Tytuł wymagany"); movies.push({ id:Date.now(), date:document.getElementById('newDate').value.split('-').reverse().join('.'), title:t, poster:document.getElementById('newPosterUrl').value.trim(), reviews:[], sentimentalValue:document.getElementById('newSentimental').value.trim() }); saveMovies(); current=movies.length-1; view='movie'; renderMovie(); showArrows(true); addModal.style.display='none'; document.getElementById('newTitle').value=''; document.getElementById('newPosterUrl').value=''; document.getElementById('newSentimental').value=''; document.getElementById('posterFile').value=''; };
+    document.getElementById('saveEditBtn').onclick = () => { if(prompt("Hasło admina:")!==ADMIN_PASSWORD) { alert("Złe hasło"); return; } const nt = document.getElementById('editTitle').value.trim(); if(!nt) return alert("Tytuł nie może być pusty"); movies[current].title = nt; movies[current].poster = document.getElementById('editPosterUrl').value.trim(); movies[current].sentimentalValue = document.getElementById('editSentimental').value.trim(); saveMovies(); if(view==='movie') renderMovie(); else renderHome(); editModal.style.display='none'; };
+    document.getElementById('homeLogo').onclick = () => { view = 'home'; renderHome(); };
+    document.getElementById('prevArrow').onclick = prev; document.getElementById('nextArrow').onclick = next;
+    window.addEventListener('keydown', (e) => { if(view==='movie') { if(e.key==='ArrowLeft') prev(); if(e.key==='ArrowRight') next(); } });
+    loadMovies(); renderHome();
+</script>
+</body>
+</html>
