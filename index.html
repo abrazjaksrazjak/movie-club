@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>JLL Movie Club – współdzielony ranking</title>
-    <!-- Firebase SDK (compat) -->
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-auth-compat.js"></script>
@@ -84,6 +83,25 @@
             flex-direction: column;
             position: relative;
             width: 100%;
+            overflow: hidden;
+        }
+        .carousel-slide-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .carousel-slide-wrapper {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease-in-out;
+        }
+        .carousel-slide {
+            flex: 0 0 100%;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
         }
         .loading-indicator {
             position: absolute;
@@ -97,51 +115,6 @@
             font-size: 0.8rem;
             z-index: 10;
             backdrop-filter: blur(4px);
-            animation: fadeIn 0.2s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translate(-50%, -48%); }
-            to { opacity: 1; transform: translate(-50%, -50%); }
-        }
-        .transition-fade {
-            transition: opacity 0.25s ease, transform 0.25s ease;
-        }
-        .fade-out {
-            opacity: 0;
-            transform: scale(0.98);
-        }
-        .slide-transition {
-            transition: transform 0.25s ease, opacity 0.2s ease;
-        }
-        .slide-left {
-            transform: translateX(-30px);
-            opacity: 0;
-        }
-        .slide-right {
-            transform: translateX(30px);
-            opacity: 0;
-        }
-        .carousel-wrapper {
-            width: 100%;
-            position: relative;
-            flex: 1;
-            min-height: 0;
-        }
-        .carousel-container {
-            background: #111;
-            border-radius: 10px;
-            box-shadow: 0 12px 28px rgba(0,0,0,0.6);
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border: 1px solid #262626;
-        }
-        .slide {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            overflow: hidden;
         }
         .poster-wrapper {
             width: 100%;
@@ -368,8 +341,8 @@
             border: 1px solid #2c2c2c;
             border-radius: 10px;
             padding: 0.5rem 0.8rem;
-            font-size: 0.9rem;
-            font-weight: 600;
+            font-size: 1.1rem;
+            font-weight: 700;
             color: #d4af37;
             text-align: center;
             display: flex;
@@ -383,7 +356,7 @@
             top: 50%;
             transform: translateY(-50%);
             color: #7a7a7a;
-            font-size: 1.8rem;
+            font-size: 2rem;
             cursor: pointer;
             user-select: none;
             z-index: 100;
@@ -440,15 +413,25 @@
             font-weight: 400;
             color: #c0c0c0;
         }
-        .propose-link {
+        .link-text {
             cursor: pointer;
-            color: #d4af37;
-            font-size: 0.8rem;
-            font-weight: 500;
+            font-size: 0.9rem;
+            font-weight: 400;
             letter-spacing: 0.5px;
         }
+        .propose-link {
+            color: #c0c0c0;
+        }
         .propose-link:hover {
-            color: #f5d742;
+            color: #d4af37;
+        }
+        .rating-system-link {
+            color: #c0c0c0;
+            margin-left: 8px;
+            text-transform: uppercase;
+        }
+        .rating-system-link:hover {
+            color: #d4af37;
         }
         .ranking-section {
             padding: 0 0.8rem;
@@ -489,16 +472,6 @@
         .ranking-item:hover { background: #1f1f1f; transform: translateX(3px); }
         .ranking-title { font-size: 0.9rem; font-weight: 500; position: relative; z-index: 1; }
         .ranking-rating { color: #d4af37; font-size: 0.8rem; position: relative; z-index: 1; }
-        .rating-system-link {
-            cursor: pointer;
-            color: #a0a0a0;
-            font-size: 0.75rem;
-            margin-left: 8px;
-            text-transform: uppercase;
-        }
-        .rating-system-link:hover {
-            color: #d4af37;
-        }
         .info-text {
             margin: 1rem 0;
             line-height: 1.5;
@@ -527,13 +500,8 @@
             border-radius: 16px;
             padding: 1.5rem;
             border: 1px solid #2c2c2c;
-            animation: modalFadeIn 0.2s ease-out;
             max-height: 80vh;
             overflow-y: auto;
-        }
-        @keyframes modalFadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
         }
         .modal-content h3 {
             font-size: 1.2rem;
@@ -707,67 +675,12 @@
     <div class="nav-arrow nav-arrow-left" id="prevArrow">←</div>
     <div class="nav-arrow nav-arrow-right" id="nextArrow">→</div>
 
-    <!-- Modal dodawania filmu -->
-    <div id="movieModal" class="modal">
-        <div class="modal-content">
-            <h3>Nowy film</h3>
-            <input type="text" id="newTitle" placeholder="Tytuł" required>
-            <input type="date" id="newDate" value="2026-05-22">
-            <input type="text" id="newPosterUrl" placeholder="URL plakatu (opcjonalnie)">
-            <textarea id="newSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea>
-            <div class="modal-buttons"><button id="cancelModalBtn">Anuluj</button><button id="saveMovieBtn">Dodaj</button></div>
-        </div>
-    </div>
-
-    <!-- Modal edycji filmu -->
-    <div id="editMovieModal" class="modal">
-        <div class="modal-content">
-            <h3>Edytuj film</h3>
-            <input type="text" id="editTitle" placeholder="Tytuł" required>
-            <input type="date" id="editDate" placeholder="Data">
-            <input type="text" id="editPosterUrl" placeholder="URL plakatu">
-            <textarea id="editSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea>
-            <div class="modal-buttons"><button id="cancelEditBtn">Anuluj</button><button id="saveEditBtn">Zapisz</button></div>
-        </div>
-    </div>
-
-    <!-- Modal informacyjny -->
-    <div id="infoModal" class="modal">
-        <div class="modal-content">
-            <h3>Jak działa ranking i system oceniania?</h3>
-            <div class="info-text">
-                <p><strong>Nowe recenzje</strong> – są dodawane od razu, ale nie wliczają się do średniej i nie są widoczne w rankingu, dopóki nie zostaną zatwierdzone.</p>
-                <p><strong>JLL Verified</strong> – wyróżnienie przyznawane pracownikom JLL. Recenzje z tą etykietą liczą się podwójnie do średniej oceny filmu.</p>
-                <p><strong>Minimalna liczba ocen</strong> – film pojawia się w głównej liście rankingu dopiero po zebraniu co najmniej 3 zatwierdzonych recenzji. Filmy, które mają mniej opinii, są przesunięte na dół.</p>
-                <p><strong>Usunięcie/edycja recenzji</strong> – napisz do sam wiesz kogo ◡̈</p>
-            </div>
-            <div class="modal-buttons"><button id="closeInfoModalBtn">Zamknij</button></div>
-        </div>
-    </div>
-
-    <!-- Modal propozycji filmów -->
-    <div id="proposeModal" class="modal">
-        <div class="modal-content">
-            <h3>Propozycje filmów</h3>
-            <div id="proposalsList" class="proposals-list">Ładowanie...</div>
-            <hr>
-            <h4>Zaproponuj nowy film</h4>
-            <input type="text" id="proposeTitle" placeholder="Tytuł filmu *" required>
-            <div class="modal-buttons"><button id="cancelProposeBtn">Anuluj</button><button id="submitProposeBtn">Dodaj propozycję</button></div>
-        </div>
-    </div>
-
-    <!-- Modal logowania admina (bez podpowiedzi hasła) -->
-    <div id="adminLoginModal" class="modal">
-        <div class="modal-content">
-            <h3>Logowanie administratora</h3>
-            <input type="password" id="adminPassword" placeholder="Hasło" autocomplete="off">
-            <div class="modal-buttons">
-                <button id="cancelAdminLoginBtn">Anuluj</button>
-                <button id="confirmAdminLoginBtn">Zaloguj</button>
-            </div>
-        </div>
-    </div>
+    <!-- Modale -->
+    <div id="movieModal" class="modal"><div class="modal-content"><h3>Nowy film</h3><input type="text" id="newTitle" placeholder="Tytuł" required><input type="date" id="newDate" value="2026-05-22"><input type="text" id="newPosterUrl" placeholder="URL plakatu (opcjonalnie)"><textarea id="newSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea><div class="modal-buttons"><button id="cancelModalBtn">Anuluj</button><button id="saveMovieBtn">Dodaj</button></div></div></div>
+    <div id="editMovieModal" class="modal"><div class="modal-content"><h3>Edytuj film</h3><input type="text" id="editTitle" placeholder="Tytuł" required><input type="date" id="editDate" placeholder="Data"><input type="text" id="editPosterUrl" placeholder="URL plakatu"><textarea id="editSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea><div class="modal-buttons"><button id="cancelEditBtn">Anuluj</button><button id="saveEditBtn">Zapisz</button></div></div></div>
+    <div id="infoModal" class="modal"><div class="modal-content"><h3>Jak działa ranking i system oceniania?</h3><div class="info-text"><p><strong>Nowe recenzje</strong> – są dodawane od razu, ale nie wliczają się do średniej i nie są widoczne w rankingu, dopóki nie zostaną zatwierdzone.</p><p><strong>JLL Verified</strong> – wyróżnienie przyznawane pracownikom JLL. Recenzje z tą etykietą liczą się podwójnie do średniej oceny filmu.</p><p><strong>Minimalna liczba ocen</strong> – film pojawia się w głównej liście rankingu dopiero po zebraniu co najmniej 3 zatwierdzonych recenzji. Filmy, które mają mniej opinii, są przesunięte na dół.</p><p><strong>Usunięcie/edycja recenzji</strong> – napisz do sam wiesz kogo ◡̈</p></div><div class="modal-buttons"><button id="closeInfoModalBtn">Zamknij</button></div></div></div>
+    <div id="proposeModal" class="modal"><div class="modal-content"><h3>Propozycje filmów</h3><div id="proposalsList" class="proposals-list">Ładowanie...</div><hr><h4>Zaproponuj nowy film</h4><input type="text" id="proposeTitle" placeholder="Tytuł filmu *" required><div class="modal-buttons"><button id="cancelProposeBtn">Anuluj</button><button id="submitProposeBtn">Dodaj propozycję</button></div></div></div>
+    <div id="adminLoginModal" class="modal"><div class="modal-content"><h3>Logowanie administratora</h3><input type="password" id="adminPassword" placeholder="Hasło" autocomplete="off"><div class="modal-buttons"><button id="cancelAdminLoginBtn">Anuluj</button><button id="confirmAdminLoginBtn">Zaloguj</button></div></div></div>
 
     <script>
         // ======================= KONFIGURACJA FIREBASE =======================
@@ -782,7 +695,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
-        auth.signInAnonymously().catch(error => console.error("Błąd logowania anonimowego:", error));
 
         // ======================= DANE DOMYŚLNE =======================
         const defaultMovies = [
@@ -814,6 +726,8 @@
         let view = 'home';
         let unsubscribeMovies = null;
         let isAdmin = false;
+        let isAuthReady = false;
+        let pendingAuthCallbacks = [];
 
         const ADMIN_PASSWORD = "aadmin";
 
@@ -851,12 +765,11 @@
             return false;
         }
 
-        let isTransitioning = false;
-
         function showLoading(show) {
             const ld = document.querySelector('.loading-indicator');
             if (ld) ld.style.display = show ? 'flex' : 'none';
         }
+
         function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
         function renderStars(rating) {
             let starsHtml = `<span class="stars">`;
@@ -892,51 +805,235 @@
             document.getElementById('nextArrow').style.display = show ? 'flex' : 'none'; 
         }
 
-        async function animateViewTransition(callback) {
-            if (isTransitioning) return;
-            isTransitioning = true;
+        // Carousel dla filmów
+        let currentIndex = 0;
+        let slideWrapper = null;
+        let slides = [];
+
+        function buildCarousel() {
             const container = document.getElementById('mainContent');
-            if (container) {
-                container.classList.add('transition-fade');
-                container.classList.add('fade-out');
-                await new Promise(r => setTimeout(r, 200));
+            if (!container) return;
+            const carouselHtml = `
+                <div class="carousel-slide-container">
+                    <div class="carousel-slide-wrapper" id="carouselWrapper"></div>
+                </div>
+            `;
+            container.innerHTML = carouselHtml;
+            slideWrapper = document.getElementById('carouselWrapper');
+            renderSlides();
+        }
+
+        function renderSlides() {
+            if (!slideWrapper) return;
+            slideWrapper.innerHTML = '';
+            slides = [];
+            for (let i = 0; i < movies.length; i++) {
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'carousel-slide';
+                slideDiv.style.flex = '0 0 100%';
+                slideDiv.style.width = '100%';
+                slideDiv.style.height = '100%';
+                slideDiv.style.overflowY = 'auto';
+                slideDiv.innerHTML = generateMovieHTML(movies[i]);
+                slideWrapper.appendChild(slideDiv);
+                slides.push(slideDiv);
             }
-            await callback();
-            if (container) {
-                container.classList.remove('fade-out');
-                setTimeout(() => {
-                    container.classList.remove('transition-fade');
-                    isTransitioning = false;
-                }, 200);
-            } else {
-                isTransitioning = false;
+            updateCarouselPosition();
+        }
+
+        function generateMovieHTML(movie) {
+            const sortedReviews = [...movie.reviews].sort((a,b) => {
+                if(a.verified !== b.verified) return a.verified ? -1 : 1;
+                if(a.approved !== b.approved) return a.approved ? -1 : 1;
+                return b.timestamp - a.timestamp;
+            });
+            let revHtml = '';
+            sortedReviews.forEach((r, i) => {
+                const origIndex = movie.reviews.findIndex(orig => orig.timestamp === r.timestamp && orig.author === r.author);
+                const pendingClass = !r.approved ? 'pending' : '';
+                const verifiedMark = r.verified ? '<span class="verified-check">✓</span>' : '';
+                const actions = `
+                    <div class="review-actions">
+                        ${!r.approved ? `<button class="review-action-btn approve-btn" data-idx="${origIndex}" title="Zatwierdź (admin)">✓</button>` : ''}
+                        ${r.approved && !r.verified ? `<button class="review-action-btn verify-btn" data-idx="${origIndex}" title="JLL Verified (admin)">⭐</button>` : ''}
+                        <button class="review-action-btn delete-review-btn" data-idx="${origIndex}" title="Usuń (admin)">✕</button>
+                    </div>
+                `;
+                revHtml += `
+                    <div class="review-row ${pendingClass}" data-idx="${origIndex}">
+                        <div class="review-left">
+                            <div style="display: flex; align-items: center; gap: 2px;">
+                                ${renderStars(r.stars)}
+                                ${verifiedMark}
+                            </div>
+                            <div class="review-author">${escapeHtml(r.author)}</div>
+                        </div>
+                        <div class="review-comment">${escapeHtml(r.comment)}</div>
+                        ${actions}
+                    </div>
+                `;
+            });
+            const sentHtml = movie.sentimentalValue ? `<div class="sentimental">✨ ${escapeHtml(movie.sentimentalValue)}</div>` : '';
+            const posterUrl = movie.poster && movie.poster.trim() ? movie.poster : '';
+            const posterImg = posterUrl ? `<img class="poster-img" src="${escapeHtml(posterUrl)}" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22300%22%3E%3Crect%20width%3D%221200%22%20height%3D%22300%22%20fill%3D%22%231a1a1a%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23888%22%20font-size%3D%2224%22%3Ebrak%20plakatu%3C%2Ftext%3E%3C%2Fsvg%3E'">` : `<div class="poster-img" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#888;">🎬 brak plakatu</div>`;
+            const avgVal = avgWeighted(movie);
+            const avgDisplay = avgVal !== '—' ? `${avgVal} ★` : '— ★';
+            return `
+                <div class="carousel-container" style="height:100%; display:flex; flex-direction:column;">
+                    <div class="poster-wrapper">${posterImg}<div class="movie-title-overlay">${escapeHtml(movie.title)}</div><button class="edit-movie-btn" data-movie-id="${movie.id}" style="position:absolute; top:8px; right:8px;">✎</button></div>
+                    <div class="movie-date">${escapeHtml(movie.date)}</div>
+                    <div class="reviews-grid" data-movie-id="${movie.id}">${revHtml}</div>
+                    ${sentHtml}
+                    <div class="add-review">
+                        <div class="review-form-grid">
+                            <div class="review-form-row">
+                                <div class="review-form-left">
+                                    <input type="text" class="reviewAuthorInput" placeholder="Imię" maxlength="20">
+                                    <div class="rating-input" class="starSelector">
+                                        ${[1,2,3,4,5].map(n => `<span class="star-select" data-value="${n}">★</span>`).join('')}
+                                    </div>
+                                </div>
+                                <div class="review-form-middle">
+                                    <textarea class="reviewCommentInput" placeholder="Napisz kilka słów o filmie (Enter aby dodać)" maxlength="256"></textarea>
+                                    <div class="avg-box" data-movie-id="${movie.id}">${avgDisplay}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateCarouselPosition() {
+            if (slideWrapper) {
+                slideWrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
             }
         }
 
-        async function animateSlideTransition(direction, callback) {
-            if (isTransitioning) return;
-            isTransitioning = true;
-            const container = document.getElementById('mainContent');
-            if (container) {
-                container.classList.add('slide-transition');
-                if (direction === 'left') container.classList.add('slide-left');
-                else if (direction === 'right') container.classList.add('slide-right');
-                await new Promise(r => setTimeout(r, 200));
-            }
-            await callback();
-            if (container) {
-                container.classList.remove('slide-left', 'slide-right');
-                setTimeout(() => {
-                    container.classList.remove('slide-transition');
-                    isTransitioning = false;
-                }, 200);
-            } else {
-                isTransitioning = false;
-            }
+        function nextSlide() {
+            if (movies.length === 0) return;
+            currentIndex = (currentIndex + 1) % movies.length;
+            updateCarouselPosition();
         }
 
-        // ======================= RENDEROWANIE STRONY GŁÓWNEJ =======================
+        function prevSlide() {
+            if (movies.length === 0) return;
+            currentIndex = (currentIndex - 1 + movies.length) % movies.length;
+            updateCarouselPosition();
+        }
+
+        function attachMovieEvents() {
+            // Recenzje akcje
+            document.querySelectorAll('.approve-btn').forEach(btn => {
+                btn.onclick = async () => {
+                    if (!isAdmin && !isAdminAction()) return;
+                    const idx = parseInt(btn.dataset.idx);
+                    const movieId = btn.closest('.carousel-container')?.querySelector('.reviews-grid')?.dataset.movieId;
+                    const movie = movies.find(m => m.id === movieId);
+                    if (!movie) return;
+                    const updatedReviews = [...movie.reviews];
+                    updatedReviews[idx].approved = true;
+                    updatedReviews[idx].timestamp = Date.now();
+                    await db.collection("movies").doc(movieId).update({ reviews: updatedReviews });
+                };
+            });
+            document.querySelectorAll('.verify-btn').forEach(btn => {
+                btn.onclick = async () => {
+                    if (!isAdmin && !isAdminAction()) return;
+                    const idx = parseInt(btn.dataset.idx);
+                    const movieId = btn.closest('.carousel-container')?.querySelector('.reviews-grid')?.dataset.movieId;
+                    const movie = movies.find(m => m.id === movieId);
+                    if (!movie) return;
+                    const updatedReviews = [...movie.reviews];
+                    updatedReviews[idx].verified = true;
+                    updatedReviews[idx].timestamp = Date.now();
+                    await db.collection("movies").doc(movieId).update({ reviews: updatedReviews });
+                };
+            });
+            document.querySelectorAll('.delete-review-btn').forEach(btn => {
+                btn.onclick = async () => {
+                    if (!isAdmin && !isAdminAction()) return;
+                    const idx = parseInt(btn.dataset.idx);
+                    const movieId = btn.closest('.carousel-container')?.querySelector('.reviews-grid')?.dataset.movieId;
+                    const movie = movies.find(m => m.id === movieId);
+                    if (!movie) return;
+                    const updatedReviews = [...movie.reviews];
+                    updatedReviews.splice(idx, 1);
+                    await db.collection("movies").doc(movieId).update({ reviews: updatedReviews });
+                };
+            });
+            // Edycja filmu
+            document.querySelectorAll('.edit-movie-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const movieId = btn.dataset.movieId;
+                    const movie = movies.find(m => m.id === movieId);
+                    if (!movie) return;
+                    document.getElementById('editTitle').value = movie.title;
+                    document.getElementById('editDate').value = movie.date ? movie.date.split('.').reverse().join('-') : '';
+                    document.getElementById('editPosterUrl').value = movie.poster || '';
+                    document.getElementById('editSentimental').value = movie.sentimentalValue || '';
+                    document.getElementById('editMovieModal').style.display = 'flex';
+                    // zapamiętujemy edytowany film
+                    window.editMovieId = movieId;
+                };
+            });
+            // Dodawanie recenzji
+            document.querySelectorAll('.reviewAuthorInput, .reviewCommentInput').forEach((el, index) => {
+                // usuwamy stare listenery, bo dynamicznie się odświeża – uproszczone: obsługa w głównej pętli
+            });
+            // Ustawienie listenera dla textarea w każdym slajdzie
+            document.querySelectorAll('.reviewCommentInput').forEach((textarea, idx) => {
+                const authorInput = textarea.closest('.review-form-row')?.querySelector('.reviewAuthorInput');
+                const starsSpans = textarea.closest('.review-form-row')?.querySelectorAll('.star-select');
+                let selStars = 0;
+                if (starsSpans) {
+                    starsSpans.forEach((s, i) => {
+                        s.onclick = () => {
+                            selStars = i + 1;
+                            starsSpans.forEach((ss, j) => ss.classList.toggle('selected', j <= i));
+                        };
+                    });
+                }
+                textarea.onkeydown = async (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        const a = authorInput ? authorInput.value.trim() : '';
+                        const c = textarea.value.trim();
+                        if (!a) { alert("Podaj imię"); return; }
+                        if (!selStars) { alert("Wybierz gwiazdki"); return; }
+                        const movieId = textarea.closest('.carousel-container')?.querySelector('.reviews-grid')?.dataset.movieId;
+                        const movie = movies.find(m => m.id === movieId);
+                        if (!movie) return;
+                        const newReview = {
+                            author: a,
+                            stars: selStars,
+                            comment: c || "(bez komentarza)",
+                            approved: false,
+                            verified: false,
+                            timestamp: Date.now()
+                        };
+                        const updatedReviews = [...movie.reviews, newReview];
+                        await db.collection("movies").doc(movieId).update({ reviews: updatedReviews });
+                        authorInput.value = '';
+                        textarea.value = '';
+                        if (starsSpans) starsSpans.forEach(s => s.classList.remove('selected'));
+                    }
+                };
+            });
+            // Średnia klikalna
+            document.querySelectorAll('.avg-box').forEach(box => {
+                box.onclick = () => {
+                    view = 'home';
+                    renderHome();
+                    showArrows(false);
+                };
+            });
+        }
+
+        // ======================= STRONA GŁÓWNA =======================
         function renderHome() {
+            view = 'home';
+            showArrows(false);
             const next = getNextMovie();
             const posterUrlNext = next && next.poster ? next.poster : '';
             const nextPosterHtml = posterUrlNext ? `<img class="poster" src="${escapeHtml(posterUrlNext)}" onerror="this.style.display='none'">` : '<div class="poster" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#666;">🎬</div>';
@@ -950,13 +1047,12 @@
                     </div>
                     <div class="ranking-section">
                         <div class="ranking-header">
-                            <h3>RANKING <span class="rating-system-link" id="ratingSystemLink">(SYSTEM OCENIANIA)</span></h3>
-                            <span class="propose-link" id="openProposeBtn">PROPONUJ!</span>
+                            <h3>RANKING <span class="rating-system-link link-text" id="ratingSystemLink">(SYSTEM OCENIANIA)</span></h3>
+                            <span class="propose-link link-text" id="openProposeBtn">PROPONUJ!</span>
                         </div>
                         <div class="ranking-list" id="rankingList"></div>
                     </div>
                 </div>`;
-            
             const rankingDiv = document.getElementById('rankingList');
             if(rankingDiv) {
                 const threshold = 3;
@@ -982,12 +1078,11 @@
                     el.onclick = () => {
                         const idx = parseInt(el.dataset.idx);
                         if(!isNaN(idx) && movies[idx]) {
-                            current = idx;
+                            currentIndex = idx;
                             view = 'movie';
-                            animateViewTransition(async () => {
-                                renderMovie();
-                                showArrows(true);
-                            });
+                            buildCarousel();
+                            attachMovieEvents();
+                            showArrows(true);
                         }
                     };
                 });
@@ -1000,8 +1095,7 @@
             document.getElementById('submitProposeBtn').onclick = async () => {
                 const title = document.getElementById('proposeTitle').value.trim();
                 if (!title) { alert("Podaj tytuł filmu"); return; }
-                const newProposal = { title: title, votes: 0, timestamp: Date.now() };
-                await db.collection("proposals").add(newProposal);
+                await db.collection("proposals").add({ title, votes: 0, timestamp: Date.now() });
                 document.getElementById('proposeTitle').value = '';
                 loadProposalsIntoModal();
             };
@@ -1010,19 +1104,17 @@
                 nextCard.onclick = () => {
                     const idx = movies.findIndex(m => m.id === next.id);
                     if(idx !== -1) {
-                        current = idx;
+                        currentIndex = idx;
                         view = 'movie';
-                        animateViewTransition(async () => {
-                            renderMovie();
-                            showArrows(true);
-                        });
+                        buildCarousel();
+                        attachMovieEvents();
+                        showArrows(true);
                     }
                 };
             }
             document.getElementById('ratingSystemLink').onclick = () => {
                 document.getElementById('infoModal').style.display = 'flex';
             };
-            showArrows(false);
             showLoading(false);
         }
 
@@ -1077,7 +1169,7 @@
                         loadProposalsIntoModal();
                     };
                 });
-                // Usuwanie propozycji (tylko admin)
+                // Usuwanie propozycji (admin)
                 document.querySelectorAll('.proposal-delete').forEach(btn => {
                     btn.onclick = async (e) => {
                         e.stopPropagation();
@@ -1088,192 +1180,22 @@
                     };
                 });
             } catch (error) {
-                console.error("Błąd ładowania propozycji:", error);
+                console.error(error);
                 proposalsDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:#e06c4e;">Błąd ładowania. Sprawdź połączenie z Firebase.</div>';
             }
         }
 
-        // ======================= RENDEROWANIE SZCZEGÓŁÓW FILMU =======================
-        function renderMovie() {
-            const m = movies[current];
-            if(!m) { renderHome(); return; }
-            const sortedReviews = [...m.reviews].sort((a,b) => {
-                if(a.verified !== b.verified) return a.verified ? -1 : 1;
-                if(a.approved !== b.approved) return a.approved ? -1 : 1;
-                return b.timestamp - a.timestamp;
-            });
-            let revHtml = '';
-            sortedReviews.forEach((r,i) => {
-                const origIndex = m.reviews.findIndex(orig => orig.timestamp === r.timestamp && orig.author === r.author);
-                const pendingClass = !r.approved ? 'pending' : '';
-                const verifiedMark = r.verified ? '<span class="verified-check">✓</span>' : '';
-                const actions = `
-                    <div class="review-actions">
-                        ${!r.approved ? `<button class="review-action-btn approve-btn" data-idx="${origIndex}" title="Zatwierdź (admin)">✓</button>` : ''}
-                        ${r.approved && !r.verified ? `<button class="review-action-btn verify-btn" data-idx="${origIndex}" title="JLL Verified (admin)">⭐</button>` : ''}
-                        <button class="review-action-btn delete-review-btn" data-idx="${origIndex}" title="Usuń (admin)">✕</button>
-                    </div>
-                `;
-                revHtml += `
-                    <div class="review-row ${pendingClass}" data-idx="${origIndex}">
-                        <div class="review-left">
-                            <div style="display: flex; align-items: center; gap: 2px;">
-                                ${renderStars(r.stars)}
-                                ${verifiedMark}
-                            </div>
-                            <div class="review-author">${escapeHtml(r.author)}</div>
-                        </div>
-                        <div class="review-comment">${escapeHtml(r.comment)}</div>
-                        ${actions}
-                    </div>
-                `;
-            });
-            const sentHtml = m.sentimentalValue ? `<div class="sentimental">✨ ${escapeHtml(m.sentimentalValue)}</div>` : '';
-            const posterUrl = m.poster && m.poster.trim() ? m.poster : '';
-            const posterImg = posterUrl ? `<img class="poster-img" src="${escapeHtml(posterUrl)}" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22300%22%3E%3Crect%20width%3D%221200%22%20height%3D%22300%22%20fill%3D%22%231a1a1a%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23888%22%20font-size%3D%2224%22%3Ebrak%20plakatu%3C%2Ftext%3E%3C%2Fsvg%3E'">` : `<div class="poster-img" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#888;">🎬 brak plakatu</div>`;
-            const avgVal = avgWeighted(m);
-            const avgDisplay = avgVal !== '—' ? `${avgVal} ★` : '— ★';
-            const slide = `
-                <div class="carousel-wrapper">
-                    <div class="carousel-container">
-                        <div class="slide">
-                            <div class="poster-wrapper">${posterImg}<div class="movie-title-overlay">${escapeHtml(m.title)}</div><button class="edit-movie-btn" id="editBtn">✎</button></div>
-                            <div class="movie-date">${escapeHtml(m.date)}</div>
-                            <div class="reviews-grid" id="reviewsGrid">${revHtml}</div>
-                            ${sentHtml}
-                            <div class="add-review">
-                                <div class="review-form-grid">
-                                    <div class="review-form-row">
-                                        <div class="review-form-left">
-                                            <input type="text" id="reviewAuthor" placeholder="Imię" maxlength="20">
-                                            <div class="rating-input" id="starSelector">
-                                                ${[1,2,3,4,5].map(n => `<span class="star-select" data-value="${n}">★</span>`).join('')}
-                                            </div>
-                                        </div>
-                                        <div class="review-form-middle">
-                                            <textarea id="reviewComment" placeholder="Napisz kilka słów o filmie (Enter aby dodać)" maxlength="256"></textarea>
-                                            <div class="avg-box" id="avgBox">${avgDisplay}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-            document.getElementById('mainContent').innerHTML = slide;
-            showLoading(false);
-            
-            // Obsługa akcji na recenzjach (z trybem admina)
-            document.querySelectorAll('.approve-btn').forEach(btn => {
-                btn.onclick = async () => {
-                    if (!isAdmin && !isAdminAction()) return;
-                    const idx = parseInt(btn.dataset.idx);
-                    const updatedReviews = [...movies[current].reviews];
-                    updatedReviews[idx].approved = true;
-                    updatedReviews[idx].timestamp = Date.now();
-                    await db.collection("movies").doc(movies[current].id).update({ reviews: updatedReviews });
-                };
-            });
-            document.querySelectorAll('.verify-btn').forEach(btn => {
-                btn.onclick = async () => {
-                    if (!isAdmin && !isAdminAction()) return;
-                    const idx = parseInt(btn.dataset.idx);
-                    const updatedReviews = [...movies[current].reviews];
-                    updatedReviews[idx].verified = true;
-                    updatedReviews[idx].timestamp = Date.now();
-                    await db.collection("movies").doc(movies[current].id).update({ reviews: updatedReviews });
-                };
-            });
-            document.querySelectorAll('.delete-review-btn').forEach(btn => {
-                btn.onclick = async () => {
-                    if (!isAdmin && !isAdminAction()) return;
-                    const idx = parseInt(btn.dataset.idx);
-                    const updatedReviews = [...movies[current].reviews];
-                    updatedReviews.splice(idx,1);
-                    await db.collection("movies").doc(movies[current].id).update({ reviews: updatedReviews });
-                };
-            });
-            
-            let selStars = 0;
-            const starsSpans = document.querySelectorAll('#starSelector .star-select');
-            starsSpans.forEach((s,i) => { s.onclick = () => { selStars = i+1; starsSpans.forEach((ss,j) => ss.classList.toggle('selected', j<=i)); }; });
-            const textarea = document.getElementById('reviewComment');
-            const authorInput = document.getElementById('reviewAuthor');
-            async function addPendingReview() {
-                const a = authorInput.value.trim();
-                const c = textarea.value.trim();
-                if(!a) { alert("Podaj imię"); return; }
-                if(!selStars) { alert("Wybierz gwiazdki"); return; }
-                const newReview = {
-                    author: a,
-                    stars: selStars,
-                    comment: c || "(bez komentarza)",
-                    approved: false,
-                    verified: false,
-                    timestamp: Date.now()
-                };
-                const updatedReviews = [...movies[current].reviews, newReview];
-                await db.collection("movies").doc(movies[current].id).update({ reviews: updatedReviews });
-                authorInput.value = '';
-                textarea.value = '';
-                selStars = 0;
-                starsSpans.forEach(s => s.classList.remove('selected'));
-            }
-            textarea.addEventListener('keydown', (e) => {
-                if(e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    addPendingReview();
-                }
-            });
-            
-            document.getElementById('editBtn').onclick = () => { 
-                document.getElementById('editTitle').value = m.title; 
-                document.getElementById('editDate').value = m.date ? m.date.split('.').reverse().join('-') : '';
-                document.getElementById('editPosterUrl').value = m.poster||''; 
-                document.getElementById('editSentimental').value = m.sentimentalValue||''; 
-                document.getElementById('editMovieModal').style.display = 'flex'; 
-            };
-            document.getElementById('avgBox').onclick = () => {
-                view = 'home';
-                animateViewTransition(async () => {
-                    renderHome();
-                    showArrows(false);
-                });
-            };
-        }
-
-        // ======================= NAWIGACJA =======================
-        function next() {
-            if(view==='movie' && movies.length && !isTransitioning) {
-                animateSlideTransition('left', async () => {
-                    current = (current + 1) % movies.length;
-                    renderMovie();
-                });
-            }
-        }
-        function prev() {
-            if(view==='movie' && movies.length && !isTransitioning) {
-                animateSlideTransition('right', async () => {
-                    current = (current - 1 + movies.length) % movies.length;
-                    renderMovie();
-                });
-            }
-        }
-
-        // ======================= OPERACJE ADMINA =======================
+        // ======================= OBSŁUGA MODALI I ADMINA =======================
         async function delMovie() {
             if(view!=='movie') return;
             if (!isAdmin && !isAdminAction()) return;
-            await db.collection("movies").doc(movies[current].id).delete();
+            await db.collection("movies").doc(movies[currentIndex].id).delete();
         }
-        
-        // Obsługa przycisku admin (✕ / 👑)
         function handleAdminButton() {
             if (view === 'movie') {
-                delMovie();   // w widoku filmu usuwa film (jeśli admin)
+                delMovie();
             } else {
                 if (isAdmin) {
-                    // jeśli admin jest zalogowany – kliknięcie w koronę wyłącza tryb admina
                     setAdminMode(false);
                     alert("Tryb administratora został wyłączony.");
                 } else {
@@ -1282,13 +1204,11 @@
             }
         }
 
-        // Modale
         const addModal = document.getElementById('movieModal');
         const editModal = document.getElementById('editMovieModal');
         const infoModal = document.getElementById('infoModal');
         const proposeModal = document.getElementById('proposeModal');
         const adminLoginModal = document.getElementById('adminLoginModal');
-        
         document.getElementById('openModalBtn').onclick = () => {
             if (!isAdmin && !isAdminAction()) return;
             addModal.style.display = 'flex';
@@ -1298,7 +1218,6 @@
         document.getElementById('closeInfoModalBtn').onclick = () => infoModal.style.display = 'none';
         document.getElementById('cancelProposeBtn').onclick = () => proposeModal.style.display = 'none';
         document.getElementById('cancelAdminLoginBtn').onclick = () => adminLoginModal.style.display = 'none';
-        
         document.getElementById('confirmAdminLoginBtn').onclick = () => {
             const pwd = document.getElementById('adminPassword').value;
             if (pwd === ADMIN_PASSWORD) {
@@ -1309,7 +1228,6 @@
                 alert("Nieprawidłowe hasło.");
             }
         };
-        
         window.onclick = (e) => { 
             if(e.target===addModal) addModal.style.display='none'; 
             if(e.target===editModal) editModal.style.display='none'; 
@@ -1317,22 +1235,19 @@
             if(e.target===proposeModal) proposeModal.style.display='none';
             if(e.target===adminLoginModal) adminLoginModal.style.display='none';
         };
-        
         document.getElementById('saveMovieBtn').onclick = async () => {
             if (!isAdmin && !isAdminAction()) return;
             const t = document.getElementById('newTitle').value.trim();
             if(!t) return alert("Tytuł wymagany");
             const dateRaw = document.getElementById('newDate').value;
             const date = dateRaw ? dateRaw.split('-').reverse().join('.') : '';
-            const poster = document.getElementById('newPosterUrl').value.trim();
-            const sentimental = document.getElementById('newSentimental').value.trim();
             const newMovie = {
                 id: Date.now().toString(),
                 date: date,
                 title: t,
-                poster: poster,
+                poster: document.getElementById('newPosterUrl').value.trim(),
                 reviews: [],
-                sentimentalValue: sentimental
+                sentimentalValue: document.getElementById('newSentimental').value.trim()
             };
             await db.collection("movies").doc(newMovie.id).set(newMovie);
             addModal.style.display='none';
@@ -1340,7 +1255,6 @@
             document.getElementById('newPosterUrl').value=''; 
             document.getElementById('newSentimental').value=''; 
         };
-        
         document.getElementById('saveEditBtn').onclick = async () => {
             if (!isAdmin && !isAdminAction()) return;
             const nt = document.getElementById('editTitle').value.trim();
@@ -1353,24 +1267,19 @@
                 poster: document.getElementById('editPosterUrl').value.trim(),
                 sentimentalValue: document.getElementById('editSentimental').value.trim()
             };
-            await db.collection("movies").doc(movies[current].id).update(updateData);
+            await db.collection("movies").doc(window.editMovieId).update(updateData);
             editModal.style.display='none';
         };
-        
         document.getElementById('homeLogo').onclick = () => {
             view = 'home';
-            animateViewTransition(async () => {
-                renderHome();
-                showArrows(false);
-            });
+            renderHome();
         };
-        
         document.getElementById('adminBtn').onclick = handleAdminButton;
-        document.getElementById('prevArrow').onclick = prev;
-        document.getElementById('nextArrow').onclick = next;
-        window.addEventListener('keydown', (e) => { if(view==='movie' && !isTransitioning) { if(e.key==='ArrowLeft') prev(); if(e.key==='ArrowRight') next(); } });
-        
-        // ======================= INICJALIZACJA FIRESTORE =======================
+        document.getElementById('prevArrow').onclick = () => { if(view==='movie') prevSlide(); };
+        document.getElementById('nextArrow').onclick = () => { if(view==='movie') nextSlide(); };
+        window.addEventListener('keydown', (e) => { if(view==='movie') { if(e.key==='ArrowLeft') prevSlide(); if(e.key==='ArrowRight') nextSlide(); } });
+
+        // ======================= INICJALIZACJA PO LOGOWANIU =======================
         async function seedDefaultDataIfNeeded() {
             const snapshot = await db.collection("movies").get();
             if (snapshot.empty) {
@@ -1379,7 +1288,7 @@
                 }
             }
         }
-        
+
         function startFirestoreListener() {
             if (unsubscribeMovies) unsubscribeMovies();
             showLoading(true);
@@ -1395,14 +1304,9 @@
                         if (view === 'home') {
                             renderHome();
                         } else {
-                            if (!movies.find(m => m.id === movies[current]?.id)) {
-                                current = 0;
-                                view = 'home';
-                                renderHome();
-                            } else {
-                                if (current >= movies.length) current = movies.length - 1;
-                                renderMovie();
-                            }
+                            // odśwież karuzelę
+                            buildCarousel();
+                            attachMovieEvents();
                         }
                     }
                     showLoading(false);
@@ -1415,9 +1319,18 @@
                 showLoading(false);
             });
         }
-        
-        checkAdminFromStorage();
-        startFirestoreListener();
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                if (!isAuthReady) {
+                    isAuthReady = true;
+                    checkAdminFromStorage();
+                    startFirestoreListener();
+                }
+            } else {
+                auth.signInAnonymously().catch(console.error);
+            }
+        });
     </script>
 </body>
 </html>
