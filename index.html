@@ -63,13 +63,11 @@
             align-items: center;
             justify-content: center;
             border-radius: 10px;
+            transition: 0.2s;
         }
         .icon-btn:hover {
             color: #d4af37;
             background: rgba(212, 175, 55, 0.08);
-        }
-        .delete-movie-btn {
-            transition: 0.2s;
         }
         .delete-movie-btn.admin-active {
             color: #d4af37;
@@ -396,7 +394,6 @@
         .nav-arrow:hover { color: #d4af37; transform: translateY(-50%) scale(1.1); background: rgba(212,175,55,0.05); }
         .nav-arrow-left { left: 4px; }
         .nav-arrow-right { right: 4px; }
-        /* Strona główna */
         .home-container {
             flex: 1;
             overflow-y: auto;
@@ -502,7 +499,6 @@
         .rating-system-link:hover {
             color: #d4af37;
         }
-        /* Modal informacyjny – bez punktorów, zwiększone odstępy */
         .info-text {
             margin: 1rem 0;
             line-height: 1.5;
@@ -640,12 +636,6 @@
         .proposal-delete:hover {
             color: #e06c4e;
         }
-        .admin-note {
-            font-size: 0.7rem;
-            color: #888;
-            margin-top: 0.5rem;
-            text-align: center;
-        }
         @media (max-width: 480px) {
             .review-form-row {
                 display: grid;
@@ -741,7 +731,7 @@
         </div>
     </div>
 
-    <!-- Modal informacyjny (bez punktorów) -->
+    <!-- Modal informacyjny -->
     <div id="infoModal" class="modal">
         <div class="modal-content">
             <h3>Jak działa ranking i system oceniania?</h3>
@@ -767,7 +757,7 @@
         </div>
     </div>
 
-    <!-- Modal logowania admina -->
+    <!-- Modal logowania admina (bez podpowiedzi hasła) -->
     <div id="adminLoginModal" class="modal">
         <div class="modal-content">
             <h3>Logowanie administratora</h3>
@@ -776,7 +766,6 @@
                 <button id="cancelAdminLoginBtn">Anuluj</button>
                 <button id="confirmAdminLoginBtn">Zaloguj</button>
             </div>
-            <div class="admin-note">Hasło: aadmin</div>
         </div>
     </div>
 
@@ -833,7 +822,6 @@
             if (admin) {
                 sessionStorage.setItem('movieclub_admin', 'true');
                 document.getElementById('adminBtn').classList.add('admin-active');
-                // zmień tekst przycisku na symbol admina
                 document.getElementById('adminBtn').textContent = '👑';
             } else {
                 sessionStorage.removeItem('movieclub_admin');
@@ -855,8 +843,7 @@
 
         function isAdminAction() {
             if (isAdmin) return true;
-            // jeśli nie admin, można zapytać o hasło (opcjonalnie)
-            const pwd = prompt("Hasło admina:");
+            const pwd = prompt("Hasło administratora:");
             if (pwd === ADMIN_PASSWORD) {
                 setAdminMode(true);
                 return true;
@@ -1094,9 +1081,7 @@
                 document.querySelectorAll('.proposal-delete').forEach(btn => {
                     btn.onclick = async (e) => {
                         e.stopPropagation();
-                        if (!isAdmin) {
-                            if (!isAdminAction()) return;
-                        }
+                        if (!isAdmin && !isAdminAction()) return;
                         const id = btn.dataset.id;
                         await db.collection("proposals").doc(id).delete();
                         loadProposalsIntoModal();
@@ -1282,12 +1267,18 @@
             await db.collection("movies").doc(movies[current].id).delete();
         }
         
-        // Obsługa przycisku "X" na głównej
+        // Obsługa przycisku admin (✕ / 👑)
         function handleAdminButton() {
             if (view === 'movie') {
-                delMovie();
+                delMovie();   // w widoku filmu usuwa film (jeśli admin)
             } else {
-                showAdminLoginModal();
+                if (isAdmin) {
+                    // jeśli admin jest zalogowany – kliknięcie w koronę wyłącza tryb admina
+                    setAdminMode(false);
+                    alert("Tryb administratora został wyłączony.");
+                } else {
+                    showAdminLoginModal();
+                }
             }
         }
 
