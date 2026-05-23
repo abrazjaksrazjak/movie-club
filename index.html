@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>JLL Movie Club – współdzielony ranking</title>
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-auth-compat.js"></script>
@@ -14,7 +15,7 @@
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
             color: #e5e5e5;
             height: 100vh;
-            overflow: hidden;
+            overflow: hidden; /* zapobiega suwakom strony */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -28,6 +29,7 @@
             flex-direction: column;
             height: 100%;
             padding: 0 1rem 1rem 1rem;
+            overflow: hidden;
         }
         .club-header {
             display: flex;
@@ -85,24 +87,6 @@
             width: 100%;
             overflow: hidden;
         }
-        .carousel-slide-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-        .carousel-slide-wrapper {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            transition: transform 0.3s ease-in-out;
-        }
-        .carousel-slide {
-            flex: 0 0 100%;
-            width: 100%;
-            height: 100%;
-            overflow-y: auto;
-        }
         .loading-indicator {
             position: absolute;
             top: 50%;
@@ -115,6 +99,65 @@
             font-size: 0.8rem;
             z-index: 10;
             backdrop-filter: blur(4px);
+            pointer-events: none;
+        }
+        .carousel-viewport {
+            width: 100%;
+            overflow: hidden;
+            flex: 1;
+            position: relative;
+            /* ukryj pasek przewijania */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .carousel-viewport::-webkit-scrollbar {
+            display: none;
+        }
+        .carousel-track {
+            display: flex;
+            height: 100%;
+            transition: transform 0.3s ease-out;
+        }
+        .carousel-slide {
+            width: 100%;
+            flex-shrink: 0;
+            height: 100%;
+            overflow-y: auto;
+            padding: 0;
+            /* ukryj pasek przewijania wewnątrz slajdu */
+            scrollbar-width: thin;
+        }
+        .carousel-slide::-webkit-scrollbar {
+            width: 4px;
+        }
+        .carousel-slide::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        .carousel-slide::-webkit-scrollbar-thumb {
+            background: #3a3a3a;
+            border-radius: 10px;
+        }
+        .view-transition {
+            transition: opacity 0.2s ease;
+        }
+        .view-fade-out {
+            opacity: 0;
+        }
+        .carousel-container {
+            background: #111;
+            border-radius: 10px;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.6);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #262626;
+        }
+        .slide {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
         }
         .poster-wrapper {
             width: 100%;
@@ -173,6 +216,20 @@
             margin: 0.5rem 0 0.8rem 0;
             flex-shrink: 0;
         }
+        .movie-link {
+            text-align: center;
+            margin: 0.2rem 0 0.5rem 0;
+        }
+        .movie-link a {
+            color: #d4af37;
+            font-size: 0.7rem;
+            text-decoration: none;
+            border-bottom: 1px dashed #d4af37;
+        }
+        .movie-link a:hover {
+            color: #f5d742;
+            border-bottom-color: #f5d742;
+        }
         .reviews-grid {
             flex: 1;
             overflow-y: auto;
@@ -181,7 +238,7 @@
             flex-direction: column;
             gap: 1rem;
         }
-        .reviews-grid::-webkit-scrollbar { width: 3px; }
+        .reviews-grid::-webkit-scrollbar { width: 4px; }
         .reviews-grid::-webkit-scrollbar-track { background: #1e1e1e; }
         .reviews-grid::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 10px; }
         .review-row {
@@ -340,7 +397,7 @@
             background: #1c1c1c;
             border: 1px solid #2c2c2c;
             border-radius: 10px;
-            padding: 0.5rem 0.8rem;
+            padding: 0.6rem 1rem;
             font-size: 1.1rem;
             font-weight: 700;
             color: #d4af37;
@@ -350,13 +407,14 @@
             justify-content: center;
             white-space: nowrap;
             cursor: pointer;
+            transition: 0.2s;
         }
         .nav-arrow {
             position: fixed;
             top: 50%;
             transform: translateY(-50%);
             color: #7a7a7a;
-            font-size: 2rem;
+            font-size: 1.8rem;
             cursor: pointer;
             user-select: none;
             z-index: 100;
@@ -373,6 +431,7 @@
             display: flex;
             flex-direction: column;
             padding: 0;
+            scrollbar-width: thin;
         }
         .next-movie-card {
             background: #1a1a1a;
@@ -405,32 +464,24 @@
             justify-content: space-between;
             align-items: baseline;
             margin: 0.8rem 0 0.6rem 0;
-            flex-wrap: wrap;
-            gap: 0.5rem;
+            flex-wrap: nowrap; /* zapobiega zawijaniu */
+            gap: 0.8rem;
         }
         .ranking-header h3 {
-            font-size: 0.9rem;
+            font-size: 0.75rem;
             font-weight: 400;
             color: #c0c0c0;
+            white-space: nowrap;
         }
-        .link-text {
+        .clickable-text {
             cursor: pointer;
-            font-size: 0.9rem;
+            color: #c0c0c0;
+            font-size: 0.75rem;
             font-weight: 400;
-            letter-spacing: 0.5px;
+            transition: color 0.2s;
+            white-space: nowrap;
         }
-        .propose-link {
-            color: #c0c0c0;
-        }
-        .propose-link:hover {
-            color: #d4af37;
-        }
-        .rating-system-link {
-            color: #c0c0c0;
-            margin-left: 8px;
-            text-transform: uppercase;
-        }
-        .rating-system-link:hover {
+        .clickable-text:hover {
             color: #d4af37;
         }
         .ranking-section {
@@ -641,8 +692,10 @@
                 max-height: 240px;
             }
             .ranking-header {
-                flex-direction: column;
-                align-items: flex-start;
+                gap: 0.3rem;
+            }
+            .ranking-header h3, .clickable-text {
+                font-size: 0.65rem;
             }
             .proposal-item {
                 flex-wrap: wrap;
@@ -676,8 +729,8 @@
     <div class="nav-arrow nav-arrow-right" id="nextArrow">→</div>
 
     <!-- Modale -->
-    <div id="movieModal" class="modal"><div class="modal-content"><h3>Nowy film</h3><input type="text" id="newTitle" placeholder="Tytuł" required><input type="date" id="newDate" value="2026-05-22"><input type="text" id="newPosterUrl" placeholder="URL plakatu (opcjonalnie)"><textarea id="newSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea><div class="modal-buttons"><button id="cancelModalBtn">Anuluj</button><button id="saveMovieBtn">Dodaj</button></div></div></div>
-    <div id="editMovieModal" class="modal"><div class="modal-content"><h3>Edytuj film</h3><input type="text" id="editTitle" placeholder="Tytuł" required><input type="date" id="editDate" placeholder="Data"><input type="text" id="editPosterUrl" placeholder="URL plakatu"><textarea id="editSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea><div class="modal-buttons"><button id="cancelEditBtn">Anuluj</button><button id="saveEditBtn">Zapisz</button></div></div></div>
+    <div id="movieModal" class="modal"><div class="modal-content"><h3>Nowy film</h3><input type="text" id="newTitle" placeholder="Tytuł" required><input type="date" id="newDate" value="2026-05-22"><input type="text" id="newPosterUrl" placeholder="URL plakatu (opcjonalnie)"><input type="text" id="newLink" placeholder="Link do filmu (opcjonalnie)"><textarea id="newSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea><div class="modal-buttons"><button id="cancelModalBtn">Anuluj</button><button id="saveMovieBtn">Dodaj</button></div></div></div>
+    <div id="editMovieModal" class="modal"><div class="modal-content"><h3>Edytuj film</h3><input type="text" id="editTitle" placeholder="Tytuł" required><input type="date" id="editDate" placeholder="Data"><input type="text" id="editPosterUrl" placeholder="URL plakatu"><input type="text" id="editLink" placeholder="Link do filmu"><textarea id="editSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea><div class="modal-buttons"><button id="cancelEditBtn">Anuluj</button><button id="saveEditBtn">Zapisz</button></div></div></div>
     <div id="infoModal" class="modal"><div class="modal-content"><h3>Jak działa ranking i system oceniania?</h3><div class="info-text"><p><strong>Nowe recenzje</strong> – są dodawane od razu, ale nie wliczają się do średniej i nie są widoczne w rankingu, dopóki nie zostaną zatwierdzone.</p><p><strong>JLL Verified</strong> – wyróżnienie przyznawane pracownikom JLL. Recenzje z tą etykietą liczą się podwójnie do średniej oceny filmu.</p><p><strong>Minimalna liczba ocen</strong> – film pojawia się w głównej liście rankingu dopiero po zebraniu co najmniej 3 zatwierdzonych recenzji. Filmy, które mają mniej opinii, są przesunięte na dół.</p><p><strong>Usunięcie/edycja recenzji</strong> – napisz do sam wiesz kogo ◡̈</p></div><div class="modal-buttons"><button id="closeInfoModalBtn">Zamknij</button></div></div></div>
     <div id="proposeModal" class="modal"><div class="modal-content"><h3>Propozycje filmów</h3><div id="proposalsList" class="proposals-list">Ładowanie...</div><hr><h4>Zaproponuj nowy film</h4><input type="text" id="proposeTitle" placeholder="Tytuł filmu *" required><div class="modal-buttons"><button id="cancelProposeBtn">Anuluj</button><button id="submitProposeBtn">Dodaj propozycję</button></div></div></div>
     <div id="adminLoginModal" class="modal"><div class="modal-content"><h3>Logowanie administratora</h3><input type="password" id="adminPassword" placeholder="Hasło" autocomplete="off"><div class="modal-buttons"><button id="cancelAdminLoginBtn">Anuluj</button><button id="confirmAdminLoginBtn">Zaloguj</button></div></div></div>
@@ -695,10 +748,14 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
+        auth.signInAnonymously().catch(error => {
+            console.error("Błąd logowania anonimowego:", error);
+            alert("Błąd autoryzacji: upewnij się, że w Firebase włączono anonimowe logowanie (Authentication → Anonymous).");
+        });
 
         // ======================= DANE DOMYŚLNE =======================
         const defaultMovies = [
-            { id:"lobster_2026", date:"02.04.2026", title:"Lobster", poster:"https://via.placeholder.com/1200x300?text=Lobster", reviews:[
+            { id:"lobster_2026", date:"02.04.2026", title:"Lobster", poster:"https://via.placeholder.com/1200x300?text=Lobster", link:"", reviews:[
                 { author:"Sebuś", stars:4, comment:"Depresyjny obraz tamtych czasów i smutna rzeczywistość życia w ukryciu.", approved:true, verified:false, timestamp:Date.now() },
                 { author:"Maciek", stars:3, comment:"Hehe geje", approved:true, verified:false, timestamp:Date.now()+1 },
                 { author:"Kuba", stars:5, comment:"Piękny film, scenerie które sprawiały że chciało się go oglądać, jednak pełen żalu bólu.", approved:true, verified:false, timestamp:Date.now()+2 },
@@ -706,11 +763,11 @@
                 { author:"Daria", stars:5, comment:"Piękne obrazy kontrastujące z niełatwymi wyborami w życiu.", approved:true, verified:false, timestamp:Date.now()+4 },
                 { author:"Ola", stars:5, comment:"Piękny, poruszający film. Łezka się w oku zakręciła.", approved:true, verified:false, timestamp:Date.now()+5 }
             ], sentimentalValue:"Odbierzemy go na tyle na ile sami jesteśmy wrażliwi." },
-            { id:"weapons_2026", date:"10.05.2026", title:"WEAPONS", poster:"https://via.placeholder.com/1200x300?text=WEAPONS", reviews:[
+            { id:"weapons_2026", date:"10.05.2026", title:"WEAPONS", poster:"https://via.placeholder.com/1200x300?text=WEAPONS", link:"", reviews:[
                 { author:"Sebuś", stars:4, comment:"Ciekawy koncept, ale trochę niedopracowany.", approved:true, verified:false, timestamp:Date.now() },
                 { author:"Daria", stars:5, comment:"Wizualnie oszałamiający.", approved:true, verified:false, timestamp:Date.now()+1 }
             ], sentimentalValue:"" },
-            { id:"bugonia_2026", date:"17.05.2026", title:"BUGONIA", poster:"https://via.placeholder.com/1200x300?text=Bugonia", reviews:[
+            { id:"bugonia_2026", date:"17.05.2026", title:"BUGONIA", poster:"https://via.placeholder.com/1200x300?text=Bugonia", link:"", reviews:[
                 { author:"Sebuś", stars:5, comment:"Genialnie trzyma w napięciu. Lanthimos coraz lepszy z roku na rok.", approved:true, verified:false, timestamp:Date.now() },
                 { author:"Igor", stars:5, comment:"Zaskakujący. Bardzo dobrze się bawiłem.", approved:true, verified:false, timestamp:Date.now()+1 },
                 { author:"Daria", stars:5, comment:"Świetnie zagrane postaci. Uwierzyłam w nie od pierwszych scen.", approved:true, verified:false, timestamp:Date.now()+2 },
@@ -722,14 +779,15 @@
         ];
 
         let movies = [];
-        let current = 0;
-        let view = 'home';
+        let currentMovieIndex = 0;
+        let viewMode = 'home'; // 'home' or 'movie'
         let unsubscribeMovies = null;
         let isAdmin = false;
-        let isAuthReady = false;
-        let pendingAuthCallbacks = [];
-
         const ADMIN_PASSWORD = "aadmin";
+
+        // Karuzela
+        let track = null;
+        let currentSlideIndex = 0;
 
         function setAdminMode(admin) {
             isAdmin = admin;
@@ -743,297 +801,233 @@
                 document.getElementById('adminBtn').textContent = '✕';
             }
         }
-
         function checkAdminFromStorage() {
-            if (sessionStorage.getItem('movieclub_admin') === 'true') {
-                setAdminMode(true);
-            }
+            if (sessionStorage.getItem('movieclub_admin') === 'true') setAdminMode(true);
         }
-
         function showAdminLoginModal() {
             document.getElementById('adminLoginModal').style.display = 'flex';
             document.getElementById('adminPassword').value = '';
         }
-
         function isAdminAction() {
             if (isAdmin) return true;
             const pwd = prompt("Hasło administratora:");
-            if (pwd === ADMIN_PASSWORD) {
-                setAdminMode(true);
-                return true;
-            }
+            if (pwd === ADMIN_PASSWORD) { setAdminMode(true); return true; }
             return false;
         }
 
-        function showLoading(show) {
-            const ld = document.querySelector('.loading-indicator');
-            if (ld) ld.style.display = show ? 'flex' : 'none';
-        }
-
         function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
-        function renderStars(rating) {
-            let starsHtml = `<span class="stars">`;
-            for (let i = 1; i <= 5; i++) {
-                starsHtml += `<span class="star ${i <= rating ? 'star-filled' : 'star-empty'}">★</span>`;
-            }
-            starsHtml += `</span>`;
-            return starsHtml;
-        }
+        function renderStars(rating) { let h='<span class="stars">'; for(let i=1;i<=5;i++) h+=`<span class="star ${i<=rating?'star-filled':'star-empty'}">★</span>`; return h+'</span>'; }
         function avgWeighted(movie) {
-            let total = 0, weight = 0;
-            movie.reviews.forEach(r => {
-                if(!r.approved) return;
-                let w = r.verified ? 2 : 1;
-                total += r.stars * w;
-                weight += w;
-            });
-            if(weight === 0) return '—';
-            return (total / weight).toFixed(1);
+            let total=0, weight=0;
+            movie.reviews.forEach(r=>{ if(r.approved){ let w=r.verified?2:1; total+=r.stars*w; weight+=w; } });
+            if(weight===0) return '—';
+            return (total/weight).toFixed(1);
         }
-        function countApprovedReviews(movie) {
-            return movie.reviews.filter(r => r.approved).length;
-        }
-        function parseDate(dateStr) { let parts = dateStr.split('.'); return new Date(parts[2], parts[1]-1, parts[0]); }
+        function countApprovedReviews(movie) { return movie.reviews.filter(r=>r.approved).length; }
+        function parseDate(dateStr) { let parts=dateStr.split('.'); return new Date(parts[2], parts[1]-1, parts[0]); }
         function getNextMovie() {
-            let today = new Date(); today.setHours(0,0,0,0);
-            let future = movies.filter(m => parseDate(m.date) >= today);
-            if(future.length) return future.sort((a,b) => parseDate(a.date) - parseDate(b.date))[0];
-            return movies.length ? movies.reduce((a,b) => parseDate(a.date) - parseDate(b.date) > 0 ? a : b) : null;
+            let today=new Date(); today.setHours(0,0,0,0);
+            let future=movies.filter(m=>parseDate(m.date)>=today);
+            if(future.length) return future.sort((a,b)=>parseDate(a.date)-parseDate(b.date))[0];
+            return movies.length ? movies.reduce((a,b)=>parseDate(a.date)-parseDate(b.date)>0?a:b) : null;
         }
-        function showArrows(show) { 
-            document.getElementById('prevArrow').style.display = show ? 'flex' : 'none'; 
-            document.getElementById('nextArrow').style.display = show ? 'flex' : 'none'; 
-        }
+        function showArrows(show) { document.getElementById('prevArrow').style.display=show?'flex':'none'; document.getElementById('nextArrow').style.display=show?'flex':'none'; }
 
-        // Carousel dla filmów
-        let currentIndex = 0;
-        let slideWrapper = null;
-        let slides = [];
-
-        function buildCarousel() {
-            const container = document.getElementById('mainContent');
-            if (!container) return;
-            const carouselHtml = `
-                <div class="carousel-slide-container">
-                    <div class="carousel-slide-wrapper" id="carouselWrapper"></div>
-                </div>
-            `;
-            container.innerHTML = carouselHtml;
-            slideWrapper = document.getElementById('carouselWrapper');
-            renderSlides();
-        }
-
-        function renderSlides() {
-            if (!slideWrapper) return;
-            slideWrapper.innerHTML = '';
-            slides = [];
-            for (let i = 0; i < movies.length; i++) {
-                const slideDiv = document.createElement('div');
-                slideDiv.className = 'carousel-slide';
-                slideDiv.style.flex = '0 0 100%';
-                slideDiv.style.width = '100%';
-                slideDiv.style.height = '100%';
-                slideDiv.style.overflowY = 'auto';
-                slideDiv.innerHTML = generateMovieHTML(movies[i]);
-                slideWrapper.appendChild(slideDiv);
-                slides.push(slideDiv);
-            }
-            updateCarouselPosition();
-        }
-
-        function generateMovieHTML(movie) {
+        function generateMovieSlide(movie) {
             const sortedReviews = [...movie.reviews].sort((a,b) => {
                 if(a.verified !== b.verified) return a.verified ? -1 : 1;
                 if(a.approved !== b.approved) return a.approved ? -1 : 1;
                 return b.timestamp - a.timestamp;
             });
             let revHtml = '';
-            sortedReviews.forEach((r, i) => {
+            sortedReviews.forEach((r,i) => {
                 const origIndex = movie.reviews.findIndex(orig => orig.timestamp === r.timestamp && orig.author === r.author);
                 const pendingClass = !r.approved ? 'pending' : '';
                 const verifiedMark = r.verified ? '<span class="verified-check">✓</span>' : '';
-                const actions = `
-                    <div class="review-actions">
-                        ${!r.approved ? `<button class="review-action-btn approve-btn" data-idx="${origIndex}" title="Zatwierdź (admin)">✓</button>` : ''}
-                        ${r.approved && !r.verified ? `<button class="review-action-btn verify-btn" data-idx="${origIndex}" title="JLL Verified (admin)">⭐</button>` : ''}
-                        <button class="review-action-btn delete-review-btn" data-idx="${origIndex}" title="Usuń (admin)">✕</button>
-                    </div>
-                `;
-                revHtml += `
-                    <div class="review-row ${pendingClass}" data-idx="${origIndex}">
-                        <div class="review-left">
-                            <div style="display: flex; align-items: center; gap: 2px;">
-                                ${renderStars(r.stars)}
-                                ${verifiedMark}
-                            </div>
-                            <div class="review-author">${escapeHtml(r.author)}</div>
-                        </div>
-                        <div class="review-comment">${escapeHtml(r.comment)}</div>
-                        ${actions}
-                    </div>
-                `;
+                const actions = `<div class="review-actions">
+                    ${!r.approved ? `<button class="review-action-btn approve-btn" data-idx="${origIndex}">✓</button>` : ''}
+                    ${r.approved && !r.verified ? `<button class="review-action-btn verify-btn" data-idx="${origIndex}">⭐</button>` : ''}
+                    <button class="review-action-btn delete-review-btn" data-idx="${origIndex}">✕</button>
+                </div>`;
+                revHtml += `<div class="review-row ${pendingClass}" data-idx="${origIndex}">
+                    <div class="review-left"><div style="display:flex;align-items:center;gap:2px;">${renderStars(r.stars)}${verifiedMark}</div><div class="review-author">${escapeHtml(r.author)}</div></div>
+                    <div class="review-comment">${escapeHtml(r.comment)}</div>${actions}</div>`;
             });
             const sentHtml = movie.sentimentalValue ? `<div class="sentimental">✨ ${escapeHtml(movie.sentimentalValue)}</div>` : '';
             const posterUrl = movie.poster && movie.poster.trim() ? movie.poster : '';
-            const posterImg = posterUrl ? `<img class="poster-img" src="${escapeHtml(posterUrl)}" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22300%22%3E%3Crect%20width%3D%221200%22%20height%3D%22300%22%20fill%3D%22%231a1a1a%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23888%22%20font-size%3D%2224%22%3Ebrak%20plakatu%3C%2Ftext%3E%3C%2Fsvg%3E'">` : `<div class="poster-img" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#888;">🎬 brak plakatu</div>`;
+            const posterImg = posterUrl ? `<img class="poster-img" src="${escapeHtml(posterUrl)}" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22300%22%3E%3Crect%20width%3D%221200%22%20height%3D%22300%22%20fill%3D%22%231a1a1a%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%20fill%3D%22%23888%22%20font-size%3D%2224%22%3Ebrak%20plakatu%3C%2Ftext%3E%3C%2Fsvg%3E'">` : `<div class="poster-img" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#888;">🎬 brak plakatu</div>`;
             const avgVal = avgWeighted(movie);
             const avgDisplay = avgVal !== '—' ? `${avgVal} ★` : '— ★';
+            const linkHtml = movie.link ? `<div class="movie-link"><a href="${escapeHtml(movie.link)}" target="_blank" rel="noopener noreferrer">🔗 Link do filmu</a></div>` : '';
             return `
-                <div class="carousel-container" style="height:100%; display:flex; flex-direction:column;">
-                    <div class="poster-wrapper">${posterImg}<div class="movie-title-overlay">${escapeHtml(movie.title)}</div><button class="edit-movie-btn" data-movie-id="${movie.id}" style="position:absolute; top:8px; right:8px;">✎</button></div>
-                    <div class="movie-date">${escapeHtml(movie.date)}</div>
-                    <div class="reviews-grid" data-movie-id="${movie.id}">${revHtml}</div>
-                    ${sentHtml}
-                    <div class="add-review">
-                        <div class="review-form-grid">
-                            <div class="review-form-row">
-                                <div class="review-form-left">
-                                    <input type="text" class="reviewAuthorInput" placeholder="Imię" maxlength="20">
-                                    <div class="rating-input" class="starSelector">
-                                        ${[1,2,3,4,5].map(n => `<span class="star-select" data-value="${n}">★</span>`).join('')}
+                <div class="carousel-slide">
+                    <div class="carousel-container">
+                        <div class="slide">
+                            <div class="poster-wrapper">${posterImg}<div class="movie-title-overlay">${escapeHtml(movie.title)}</div><button class="edit-movie-btn" id="editBtn">✎</button></div>
+                            <div class="movie-date">${escapeHtml(movie.date)}</div>
+                            ${linkHtml}
+                            <div class="reviews-grid">${revHtml}</div>
+                            ${sentHtml}
+                            <div class="add-review">
+                                <div class="review-form-grid">
+                                    <div class="review-form-row">
+                                        <div class="review-form-left"><input type="text" id="reviewAuthor" placeholder="Imię" maxlength="20"><div class="rating-input" id="starSelector">${[1,2,3,4,5].map(n=>`<span class="star-select" data-value="${n}">★</span>`).join('')}</div></div>
+                                        <div class="review-form-middle"><textarea id="reviewComment" placeholder="Napisz kilka słów o filmie (Enter aby dodać)" maxlength="256"></textarea><div class="avg-box" id="avgBox">${avgDisplay}</div></div>
                                     </div>
-                                </div>
-                                <div class="review-form-middle">
-                                    <textarea class="reviewCommentInput" placeholder="Napisz kilka słów o filmie (Enter aby dodać)" maxlength="256"></textarea>
-                                    <div class="avg-box" data-movie-id="${movie.id}">${avgDisplay}</div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
-        function updateCarouselPosition() {
-            if (slideWrapper) {
-                slideWrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
+        function buildCarousel(selectedIndex) {
+            const container = document.getElementById('mainContent');
+            if (!container) return;
+            container.innerHTML = `<div class="carousel-viewport"><div class="carousel-track" id="carouselTrack"></div></div>`;
+            track = document.getElementById('carouselTrack');
+            movies.forEach((m, idx) => {
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'carousel-slide';
+                slideDiv.innerHTML = generateMovieSlide(m);
+                track.appendChild(slideDiv);
+            });
+            currentSlideIndex = selectedIndex;
+            // natychmiast ustaw transform bez animacji
+            if (track && track.parentElement) {
+                const slideWidth = track.parentElement.clientWidth;
+                track.style.transition = 'none';
+                track.style.transform = `translateX(-${selectedIndex * slideWidth}px)`;
+                // force reflow
+                track.offsetHeight;
+                track.style.transition = 'transform 0.3s ease-out';
             }
         }
 
-        function nextSlide() {
-            if (movies.length === 0) return;
-            currentIndex = (currentIndex + 1) % movies.length;
-            updateCarouselPosition();
+        function updateCarouselPosition(animate = true) {
+            if (!track) return;
+            const slideWidth = track.parentElement.clientWidth;
+            const newOffset = -currentSlideIndex * slideWidth;
+            track.style.transition = animate ? 'transform 0.3s ease-out' : 'none';
+            track.style.transform = `translateX(${newOffset}px)`;
         }
 
-        function prevSlide() {
-            if (movies.length === 0) return;
-            currentIndex = (currentIndex - 1 + movies.length) % movies.length;
-            updateCarouselPosition();
+        function goToSlide(index) {
+            if (index < 0) index = movies.length - 1;
+            if (index >= movies.length) index = 0;
+            if (index === currentSlideIndex) return;
+            currentSlideIndex = index;
+            currentMovieIndex = index;
+            updateCarouselPosition(true);
+            setTimeout(() => attachMovieEvents(), 350);
         }
+
+        function nextSlide() { goToSlide(currentSlideIndex + 1); }
+        function prevSlide() { goToSlide(currentSlideIndex - 1); }
 
         function attachMovieEvents() {
-            // Recenzje akcje
+            const currentMovie = movies[currentSlideIndex];
+            if (!currentMovie) return;
             document.querySelectorAll('.approve-btn').forEach(btn => {
                 btn.onclick = async () => {
                     if (!isAdmin && !isAdminAction()) return;
                     const idx = parseInt(btn.dataset.idx);
-                    const movieId = btn.closest('.carousel-container')?.querySelector('.reviews-grid')?.dataset.movieId;
-                    const movie = movies.find(m => m.id === movieId);
-                    if (!movie) return;
-                    const updatedReviews = [...movie.reviews];
+                    const updatedReviews = [...currentMovie.reviews];
                     updatedReviews[idx].approved = true;
                     updatedReviews[idx].timestamp = Date.now();
-                    await db.collection("movies").doc(movieId).update({ reviews: updatedReviews });
+                    await db.collection("movies").doc(currentMovie.id).update({ reviews: updatedReviews });
                 };
             });
             document.querySelectorAll('.verify-btn').forEach(btn => {
                 btn.onclick = async () => {
                     if (!isAdmin && !isAdminAction()) return;
                     const idx = parseInt(btn.dataset.idx);
-                    const movieId = btn.closest('.carousel-container')?.querySelector('.reviews-grid')?.dataset.movieId;
-                    const movie = movies.find(m => m.id === movieId);
-                    if (!movie) return;
-                    const updatedReviews = [...movie.reviews];
+                    const updatedReviews = [...currentMovie.reviews];
                     updatedReviews[idx].verified = true;
                     updatedReviews[idx].timestamp = Date.now();
-                    await db.collection("movies").doc(movieId).update({ reviews: updatedReviews });
+                    await db.collection("movies").doc(currentMovie.id).update({ reviews: updatedReviews });
                 };
             });
             document.querySelectorAll('.delete-review-btn').forEach(btn => {
                 btn.onclick = async () => {
                     if (!isAdmin && !isAdminAction()) return;
                     const idx = parseInt(btn.dataset.idx);
-                    const movieId = btn.closest('.carousel-container')?.querySelector('.reviews-grid')?.dataset.movieId;
-                    const movie = movies.find(m => m.id === movieId);
-                    if (!movie) return;
-                    const updatedReviews = [...movie.reviews];
+                    const updatedReviews = [...currentMovie.reviews];
                     updatedReviews.splice(idx, 1);
-                    await db.collection("movies").doc(movieId).update({ reviews: updatedReviews });
+                    await db.collection("movies").doc(currentMovie.id).update({ reviews: updatedReviews });
                 };
             });
-            // Edycja filmu
-            document.querySelectorAll('.edit-movie-btn').forEach(btn => {
-                btn.onclick = () => {
-                    const movieId = btn.dataset.movieId;
-                    const movie = movies.find(m => m.id === movieId);
-                    if (!movie) return;
-                    document.getElementById('editTitle').value = movie.title;
-                    document.getElementById('editDate').value = movie.date ? movie.date.split('.').reverse().join('-') : '';
-                    document.getElementById('editPosterUrl').value = movie.poster || '';
-                    document.getElementById('editSentimental').value = movie.sentimentalValue || '';
-                    document.getElementById('editMovieModal').style.display = 'flex';
-                    // zapamiętujemy edytowany film
-                    window.editMovieId = movieId;
-                };
-            });
-            // Dodawanie recenzji
-            document.querySelectorAll('.reviewAuthorInput, .reviewCommentInput').forEach((el, index) => {
-                // usuwamy stare listenery, bo dynamicznie się odświeża – uproszczone: obsługa w głównej pętli
-            });
-            // Ustawienie listenera dla textarea w każdym slajdzie
-            document.querySelectorAll('.reviewCommentInput').forEach((textarea, idx) => {
-                const authorInput = textarea.closest('.review-form-row')?.querySelector('.reviewAuthorInput');
-                const starsSpans = textarea.closest('.review-form-row')?.querySelectorAll('.star-select');
-                let selStars = 0;
-                if (starsSpans) {
-                    starsSpans.forEach((s, i) => {
-                        s.onclick = () => {
-                            selStars = i + 1;
-                            starsSpans.forEach((ss, j) => ss.classList.toggle('selected', j <= i));
-                        };
-                    });
-                }
-                textarea.onkeydown = async (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
+            const starsSpans = document.querySelectorAll('#starSelector .star-select');
+            let selStars = 0;
+            starsSpans.forEach((s,i) => { s.onclick = () => { selStars = i+1; starsSpans.forEach((ss,j) => ss.classList.toggle('selected', j<=i)); }; });
+            const textarea = document.getElementById('reviewComment');
+            const authorInput = document.getElementById('reviewAuthor');
+            const addReviewHandler = async () => {
+                const a = authorInput.value.trim();
+                const c = textarea.value.trim();
+                if(!a) { alert("Podaj imię"); return; }
+                if(!selStars) { alert("Wybierz gwiazdki"); return; }
+                const newReview = { author: a, stars: selStars, comment: c || "(bez komentarza)", approved: false, verified: false, timestamp: Date.now() };
+                const updatedReviews = [...currentMovie.reviews, newReview];
+                await db.collection("movies").doc(currentMovie.id).update({ reviews: updatedReviews });
+                authorInput.value = '';
+                textarea.value = '';
+                selStars = 0;
+                starsSpans.forEach(s => s.classList.remove('selected'));
+            };
+            if (textarea) {
+                const newTextarea = textarea.cloneNode(true);
+                textarea.parentNode.replaceChild(newTextarea, textarea);
+                newTextarea.addEventListener('keydown', (e) => {
+                    if(e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        const a = authorInput ? authorInput.value.trim() : '';
-                        const c = textarea.value.trim();
-                        if (!a) { alert("Podaj imię"); return; }
-                        if (!selStars) { alert("Wybierz gwiazdki"); return; }
-                        const movieId = textarea.closest('.carousel-container')?.querySelector('.reviews-grid')?.dataset.movieId;
-                        const movie = movies.find(m => m.id === movieId);
-                        if (!movie) return;
-                        const newReview = {
-                            author: a,
-                            stars: selStars,
-                            comment: c || "(bez komentarza)",
-                            approved: false,
-                            verified: false,
-                            timestamp: Date.now()
-                        };
-                        const updatedReviews = [...movie.reviews, newReview];
-                        await db.collection("movies").doc(movieId).update({ reviews: updatedReviews });
-                        authorInput.value = '';
-                        textarea.value = '';
-                        if (starsSpans) starsSpans.forEach(s => s.classList.remove('selected'));
+                        addReviewHandler();
                     }
+                });
+            }
+            const editBtn = document.getElementById('editBtn');
+            if (editBtn) {
+                editBtn.onclick = () => {
+                    document.getElementById('editTitle').value = currentMovie.title;
+                    document.getElementById('editDate').value = currentMovie.date ? currentMovie.date.split('.').reverse().join('-') : '';
+                    document.getElementById('editPosterUrl').value = currentMovie.poster || '';
+                    document.getElementById('editLink').value = currentMovie.link || '';
+                    document.getElementById('editSentimental').value = currentMovie.sentimentalValue || '';
+                    document.getElementById('editMovieModal').style.display = 'flex';
                 };
-            });
-            // Średnia klikalna
-            document.querySelectorAll('.avg-box').forEach(box => {
-                box.onclick = () => {
-                    view = 'home';
-                    renderHome();
-                    showArrows(false);
-                };
-            });
+            }
+            const avgBox = document.getElementById('avgBox');
+            if (avgBox) avgBox.onclick = () => switchToHome();
         }
 
-        // ======================= STRONA GŁÓWNA =======================
+        function switchToMovie() {
+            viewMode = 'movie';
+            const container = document.getElementById('mainContent');
+            container.classList.add('view-transition');
+            container.classList.add('view-fade-out');
+            setTimeout(() => {
+                buildCarousel(currentMovieIndex);
+                attachMovieEvents();
+                container.classList.remove('view-fade-out');
+                setTimeout(() => container.classList.remove('view-transition'), 200);
+                showArrows(true);
+            }, 150);
+        }
+
+        function switchToHome() {
+            viewMode = 'home';
+            const container = document.getElementById('mainContent');
+            container.classList.add('view-transition');
+            container.classList.add('view-fade-out');
+            setTimeout(() => {
+                renderHome();
+                container.classList.remove('view-fade-out');
+                setTimeout(() => container.classList.remove('view-transition'), 200);
+                showArrows(false);
+            }, 150);
+        }
+
         function renderHome() {
-            view = 'home';
-            showArrows(false);
             const next = getNextMovie();
             const posterUrlNext = next && next.poster ? next.poster : '';
             const nextPosterHtml = posterUrlNext ? `<img class="poster" src="${escapeHtml(posterUrlNext)}" onerror="this.style.display='none'">` : '<div class="poster" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#666;">🎬</div>';
@@ -1047,8 +1041,8 @@
                     </div>
                     <div class="ranking-section">
                         <div class="ranking-header">
-                            <h3>RANKING <span class="rating-system-link link-text" id="ratingSystemLink">(SYSTEM OCENIANIA)</span></h3>
-                            <span class="propose-link link-text" id="openProposeBtn">PROPONUJ!</span>
+                            <h3>RANKING <span class="clickable-text" id="ratingSystemLink">(?)</span></h3>
+                            <span class="clickable-text" id="openProposeBtn">PROPONUJ!</span>
                         </div>
                         <div class="ranking-list" id="rankingList"></div>
                     </div>
@@ -1078,208 +1072,81 @@
                     el.onclick = () => {
                         const idx = parseInt(el.dataset.idx);
                         if(!isNaN(idx) && movies[idx]) {
-                            currentIndex = idx;
-                            view = 'movie';
-                            buildCarousel();
-                            attachMovieEvents();
-                            showArrows(true);
+                            currentMovieIndex = idx;
+                            switchToMovie();
                         }
                     };
                 });
             }
-            document.getElementById('openProposeBtn').onclick = () => {
-                loadProposalsIntoModal();
-                document.getElementById('proposeModal').style.display = 'flex';
-            };
+            document.getElementById('openProposeBtn').onclick = () => { loadProposalsIntoModal(); document.getElementById('proposeModal').style.display = 'flex'; };
             document.getElementById('cancelProposeBtn').onclick = () => document.getElementById('proposeModal').style.display = 'none';
             document.getElementById('submitProposeBtn').onclick = async () => {
                 const title = document.getElementById('proposeTitle').value.trim();
                 if (!title) { alert("Podaj tytuł filmu"); return; }
-                await db.collection("proposals").add({ title, votes: 0, timestamp: Date.now() });
+                await db.collection("proposals").add({ title: title, votes: 0, timestamp: Date.now() });
                 document.getElementById('proposeTitle').value = '';
                 loadProposalsIntoModal();
             };
+            document.getElementById('ratingSystemLink').onclick = () => document.getElementById('infoModal').style.display = 'flex';
             const nextCard = document.getElementById('nextMovieCard');
             if(nextCard && next) {
                 nextCard.onclick = () => {
                     const idx = movies.findIndex(m => m.id === next.id);
-                    if(idx !== -1) {
-                        currentIndex = idx;
-                        view = 'movie';
-                        buildCarousel();
-                        attachMovieEvents();
-                        showArrows(true);
-                    }
+                    if(idx !== -1) { currentMovieIndex = idx; switchToMovie(); }
                 };
             }
-            document.getElementById('ratingSystemLink').onclick = () => {
-                document.getElementById('infoModal').style.display = 'flex';
-            };
+            showArrows(false);
             showLoading(false);
         }
 
         async function loadProposalsIntoModal() {
             const proposalsDiv = document.getElementById('proposalsList');
             if (!proposalsDiv) return;
-            proposalsDiv.innerHTML = '<div style="text-align:center; padding:1rem;">Ładowanie propozycji...</div>';
+            proposalsDiv.innerHTML = '<div style="text-align:center; padding:1rem;">Ładowanie...</div>';
             try {
                 const snapshot = await db.collection("proposals").orderBy("votes", "desc").get();
                 const proposals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if (proposals.length === 0) {
-                    proposalsDiv.innerHTML = '<div style="text-align:center; padding:1rem;">Brak propozycji. Bądź pierwszy!</div>';
-                    return;
-                }
+                if (proposals.length === 0) { proposalsDiv.innerHTML = '<div style="text-align:center; padding:1rem;">Brak propozycji. Bądź pierwszy!</div>'; return; }
                 const votedIds = JSON.parse(localStorage.getItem('proposal_votes') || '[]');
                 proposalsDiv.innerHTML = proposals.map(p => {
                     const votedClass = votedIds.includes(p.id) ? 'voted' : '';
                     const voteDisabled = votedIds.includes(p.id) ? 'disabled' : '';
-                    return `
-                        <div class="proposal-item" data-id="${p.id}">
-                            <div class="proposal-info">
-                                <div class="proposal-title">${escapeHtml(p.title)}</div>
-                            </div>
-                            <div class="proposal-actions">
-                                <div class="proposal-vote ${votedClass}" data-id="${p.id}" style="pointer-events: ${voteDisabled ? 'none' : 'auto'}">
-                                    <span>${p.votes || 0}</span>
-                                    <span>${votedIds.includes(p.id) ? '✓' : '+1'}</span>
-                                </div>
-                                <button class="proposal-delete" data-id="${p.id}" title="Usuń">✕</button>
-                            </div>
-                        </div>
-                    `;
+                    return `<div class="proposal-item"><div class="proposal-info"><div class="proposal-title">${escapeHtml(p.title)}</div></div><div class="proposal-actions"><div class="proposal-vote ${votedClass}" data-id="${p.id}" style="pointer-events: ${voteDisabled ? 'none' : 'auto'}"><span>${p.votes || 0}</span><span>${votedIds.includes(p.id) ? '✓' : '+1'}</span></div><button class="proposal-delete" data-id="${p.id}">✕</button></div></div>`;
                 }).join('');
-                // Głosowanie
                 document.querySelectorAll('.proposal-vote').forEach(el => {
                     if (el.classList.contains('voted')) return;
-                    el.onclick = async (e) => {
-                        e.stopPropagation();
-                        const proposalId = el.dataset.id;
+                    el.onclick = async () => {
+                        const pid = el.dataset.id;
                         let voted = JSON.parse(localStorage.getItem('proposal_votes') || '[]');
-                        if (voted.includes(proposalId)) {
-                            alert("Już oddałeś głos na tę propozycję.");
-                            return;
-                        }
-                        const proposalRef = db.collection("proposals").doc(proposalId);
-                        const proposalDoc = await proposalRef.get();
-                        if (!proposalDoc.exists) return;
-                        const currentVotes = proposalDoc.data().votes || 0;
-                        await proposalRef.update({ votes: currentVotes + 1 });
-                        voted.push(proposalId);
+                        if (voted.includes(pid)) { alert("Już głosowałeś"); return; }
+                        const ref = db.collection("proposals").doc(pid);
+                        const doc = await ref.get();
+                        if (!doc.exists) return;
+                        await ref.update({ votes: (doc.data().votes || 0) + 1 });
+                        voted.push(pid);
                         localStorage.setItem('proposal_votes', JSON.stringify(voted));
                         loadProposalsIntoModal();
                     };
                 });
-                // Usuwanie propozycji (admin)
                 document.querySelectorAll('.proposal-delete').forEach(btn => {
-                    btn.onclick = async (e) => {
-                        e.stopPropagation();
+                    btn.onclick = async () => {
                         if (!isAdmin && !isAdminAction()) return;
-                        const id = btn.dataset.id;
-                        await db.collection("proposals").doc(id).delete();
+                        const pid = btn.dataset.id;
+                        await db.collection("proposals").doc(pid).delete();
                         loadProposalsIntoModal();
                     };
                 });
-            } catch (error) {
-                console.error(error);
-                proposalsDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:#e06c4e;">Błąd ładowania. Sprawdź połączenie z Firebase.</div>';
-            }
+            } catch(e) { proposalsDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:#e06c4e;">Błąd ładowania.</div>'; }
         }
 
-        // ======================= OBSŁUGA MODALI I ADMINA =======================
-        async function delMovie() {
-            if(view!=='movie') return;
+        async function deleteCurrentMovie() {
+            if (viewMode !== 'movie') return;
             if (!isAdmin && !isAdminAction()) return;
-            await db.collection("movies").doc(movies[currentIndex].id).delete();
-        }
-        function handleAdminButton() {
-            if (view === 'movie') {
-                delMovie();
-            } else {
-                if (isAdmin) {
-                    setAdminMode(false);
-                    alert("Tryb administratora został wyłączony.");
-                } else {
-                    showAdminLoginModal();
-                }
-            }
+            const confirmDelete = confirm("Czy na pewno chcesz usunąć ten film? Tej operacji nie można cofnąć.");
+            if (!confirmDelete) return;
+            await db.collection("movies").doc(movies[currentMovieIndex].id).delete();
         }
 
-        const addModal = document.getElementById('movieModal');
-        const editModal = document.getElementById('editMovieModal');
-        const infoModal = document.getElementById('infoModal');
-        const proposeModal = document.getElementById('proposeModal');
-        const adminLoginModal = document.getElementById('adminLoginModal');
-        document.getElementById('openModalBtn').onclick = () => {
-            if (!isAdmin && !isAdminAction()) return;
-            addModal.style.display = 'flex';
-        };
-        document.getElementById('cancelModalBtn').onclick = () => addModal.style.display = 'none';
-        document.getElementById('cancelEditBtn').onclick = () => editModal.style.display = 'none';
-        document.getElementById('closeInfoModalBtn').onclick = () => infoModal.style.display = 'none';
-        document.getElementById('cancelProposeBtn').onclick = () => proposeModal.style.display = 'none';
-        document.getElementById('cancelAdminLoginBtn').onclick = () => adminLoginModal.style.display = 'none';
-        document.getElementById('confirmAdminLoginBtn').onclick = () => {
-            const pwd = document.getElementById('adminPassword').value;
-            if (pwd === ADMIN_PASSWORD) {
-                setAdminMode(true);
-                adminLoginModal.style.display = 'none';
-                alert("Jesteś teraz w trybie administratora.");
-            } else {
-                alert("Nieprawidłowe hasło.");
-            }
-        };
-        window.onclick = (e) => { 
-            if(e.target===addModal) addModal.style.display='none'; 
-            if(e.target===editModal) editModal.style.display='none'; 
-            if(e.target===infoModal) infoModal.style.display='none';
-            if(e.target===proposeModal) proposeModal.style.display='none';
-            if(e.target===adminLoginModal) adminLoginModal.style.display='none';
-        };
-        document.getElementById('saveMovieBtn').onclick = async () => {
-            if (!isAdmin && !isAdminAction()) return;
-            const t = document.getElementById('newTitle').value.trim();
-            if(!t) return alert("Tytuł wymagany");
-            const dateRaw = document.getElementById('newDate').value;
-            const date = dateRaw ? dateRaw.split('-').reverse().join('.') : '';
-            const newMovie = {
-                id: Date.now().toString(),
-                date: date,
-                title: t,
-                poster: document.getElementById('newPosterUrl').value.trim(),
-                reviews: [],
-                sentimentalValue: document.getElementById('newSentimental').value.trim()
-            };
-            await db.collection("movies").doc(newMovie.id).set(newMovie);
-            addModal.style.display='none';
-            document.getElementById('newTitle').value=''; 
-            document.getElementById('newPosterUrl').value=''; 
-            document.getElementById('newSentimental').value=''; 
-        };
-        document.getElementById('saveEditBtn').onclick = async () => {
-            if (!isAdmin && !isAdminAction()) return;
-            const nt = document.getElementById('editTitle').value.trim();
-            if(!nt) return alert("Tytuł nie może być pusty");
-            const dateRaw = document.getElementById('editDate').value;
-            const date = dateRaw ? dateRaw.split('-').reverse().join('.') : '';
-            const updateData = {
-                title: nt,
-                date: date,
-                poster: document.getElementById('editPosterUrl').value.trim(),
-                sentimentalValue: document.getElementById('editSentimental').value.trim()
-            };
-            await db.collection("movies").doc(window.editMovieId).update(updateData);
-            editModal.style.display='none';
-        };
-        document.getElementById('homeLogo').onclick = () => {
-            view = 'home';
-            renderHome();
-        };
-        document.getElementById('adminBtn').onclick = handleAdminButton;
-        document.getElementById('prevArrow').onclick = () => { if(view==='movie') prevSlide(); };
-        document.getElementById('nextArrow').onclick = () => { if(view==='movie') nextSlide(); };
-        window.addEventListener('keydown', (e) => { if(view==='movie') { if(e.key==='ArrowLeft') prevSlide(); if(e.key==='ArrowRight') nextSlide(); } });
-
-        // ======================= INICJALIZACJA PO LOGOWANIU =======================
         async function seedDefaultDataIfNeeded() {
             const snapshot = await db.collection("movies").get();
             if (snapshot.empty) {
@@ -1298,39 +1165,118 @@
                     snapshot.forEach(doc => newMovies.push(doc.data()));
                     movies = newMovies;
                     if (movies.length === 0) {
-                        view = 'home';
-                        renderHome();
+                        if (viewMode === 'home') renderHome();
+                        else switchToHome();
                     } else {
-                        if (view === 'home') {
-                            renderHome();
-                        } else {
-                            // odśwież karuzelę
-                            buildCarousel();
-                            attachMovieEvents();
+                        if (viewMode === 'home') renderHome();
+                        else {
+                            if (track) {
+                                // odśwież slajdy w istniejącej karuzeli
+                                while (track.firstChild) track.removeChild(track.firstChild);
+                                movies.forEach((m, idx) => {
+                                    const slideDiv = document.createElement('div');
+                                    slideDiv.className = 'carousel-slide';
+                                    slideDiv.innerHTML = generateMovieSlide(m);
+                                    track.appendChild(slideDiv);
+                                });
+                                if (currentMovieIndex >= movies.length) currentMovieIndex = movies.length - 1;
+                                currentSlideIndex = currentMovieIndex;
+                                updateCarouselPosition(false);
+                                attachMovieEvents();
+                            } else {
+                                // jeśli nie ma tracka (np. pierwsze uruchomienie w movie)
+                                buildCarousel(currentMovieIndex);
+                                attachMovieEvents();
+                            }
                         }
                     }
                     showLoading(false);
                 }, error => {
-                    console.error("Błąd nasłuchiwania filmów:", error);
+                    console.error("Błąd nasłuchiwania:", error);
                     showLoading(false);
                 });
-            }).catch(err => {
-                console.error("Błąd seedowania:", err);
-                showLoading(false);
             });
         }
 
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                if (!isAuthReady) {
-                    isAuthReady = true;
-                    checkAdminFromStorage();
-                    startFirestoreListener();
-                }
+        function handleAdminButton() {
+            if (viewMode === 'movie') {
+                deleteCurrentMovie();
             } else {
-                auth.signInAnonymously().catch(console.error);
+                if (isAdmin) {
+                    setAdminMode(false);
+                    alert("Tryb administratora został wyłączony.");
+                } else {
+                    showAdminLoginModal();
+                }
             }
-        });
+        }
+
+        // Modale
+        const addModal = document.getElementById('movieModal');
+        const editModal = document.getElementById('editMovieModal');
+        const infoModal = document.getElementById('infoModal');
+        const proposeModal = document.getElementById('proposeModal');
+        const adminLoginModal = document.getElementById('adminLoginModal');
+        document.getElementById('openModalBtn').onclick = () => { if (!isAdmin && !isAdminAction()) return; addModal.style.display = 'flex'; };
+        document.getElementById('cancelModalBtn').onclick = () => addModal.style.display = 'none';
+        document.getElementById('cancelEditBtn').onclick = () => editModal.style.display = 'none';
+        document.getElementById('closeInfoModalBtn').onclick = () => infoModal.style.display = 'none';
+        document.getElementById('cancelProposeBtn').onclick = () => proposeModal.style.display = 'none';
+        document.getElementById('cancelAdminLoginBtn').onclick = () => adminLoginModal.style.display = 'none';
+        document.getElementById('confirmAdminLoginBtn').onclick = () => {
+            const pwd = document.getElementById('adminPassword').value;
+            if (pwd === ADMIN_PASSWORD) { setAdminMode(true); adminLoginModal.style.display = 'none'; alert("Jesteś teraz w trybie administratora."); }
+            else alert("Nieprawidłowe hasło.");
+        };
+        window.onclick = (e) => {
+            if(e.target===addModal) addModal.style.display='none';
+            if(e.target===editModal) editModal.style.display='none';
+            if(e.target===infoModal) infoModal.style.display='none';
+            if(e.target===proposeModal) proposeModal.style.display='none';
+            if(e.target===adminLoginModal) adminLoginModal.style.display='none';
+        };
+        document.getElementById('saveMovieBtn').onclick = async () => {
+            if (!isAdmin && !isAdminAction()) return;
+            const t = document.getElementById('newTitle').value.trim();
+            if(!t) return alert("Tytuł wymagany");
+            const dateRaw = document.getElementById('newDate').value;
+            const date = dateRaw ? dateRaw.split('-').reverse().join('.') : '';
+            const poster = document.getElementById('newPosterUrl').value.trim();
+            const link = document.getElementById('newLink').value.trim();
+            const sentimental = document.getElementById('newSentimental').value.trim();
+            const newMovie = { id: Date.now().toString(), date, title: t, poster, link, reviews: [], sentimentalValue: sentimental };
+            await db.collection("movies").doc(newMovie.id).set(newMovie);
+            addModal.style.display='none';
+            document.getElementById('newTitle').value=''; document.getElementById('newPosterUrl').value=''; document.getElementById('newLink').value=''; document.getElementById('newSentimental').value='';
+        };
+        document.getElementById('saveEditBtn').onclick = async () => {
+            if (!isAdmin && !isAdminAction()) return;
+            const nt = document.getElementById('editTitle').value.trim();
+            if(!nt) return alert("Tytuł nie może być pusty");
+            const dateRaw = document.getElementById('editDate').value;
+            const date = dateRaw ? dateRaw.split('-').reverse().join('.') : '';
+            const updateData = {
+                title: nt, date: date,
+                poster: document.getElementById('editPosterUrl').value.trim(),
+                link: document.getElementById('editLink').value.trim(),
+                sentimentalValue: document.getElementById('editSentimental').value.trim()
+            };
+            await db.collection("movies").doc(movies[currentMovieIndex].id).update(updateData);
+            editModal.style.display='none';
+        };
+        document.getElementById('homeLogo').onclick = () => { if (viewMode !== 'home') switchToHome(); };
+        document.getElementById('adminBtn').onclick = handleAdminButton;
+        document.getElementById('prevArrow').onclick = () => { if (viewMode === 'movie') prevSlide(); };
+        document.getElementById('nextArrow').onclick = () => { if (viewMode === 'movie') nextSlide(); };
+        window.addEventListener('keydown', (e) => { if (viewMode === 'movie' && (e.key === 'ArrowLeft')) prevSlide(); if (viewMode === 'movie' && (e.key === 'ArrowRight')) nextSlide(); });
+
+        function showLoading(show) {
+            const ld = document.querySelector('.loading-indicator');
+            if (ld) ld.style.display = show ? 'flex' : 'none';
+        }
+
+        checkAdminFromStorage();
+        startFirestoreListener();
     </script>
 </body>
 </html>
