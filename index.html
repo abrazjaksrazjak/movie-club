@@ -275,7 +275,6 @@
             border-top: 1px solid #262626;
             padding: 0.8rem 1rem 1rem;
         }
-        /* Formularz recenzji – lewa kolumna stała 100px */
         .review-form-grid {
             display: flex;
             flex-direction: column;
@@ -322,7 +321,8 @@
         }
         .star-select.selected { color: #d4af37; }
         .review-form-middle {
-            flex: 1;
+            flex: 2;
+            min-width: 150px;
             display: flex;
             flex-direction: column;
         }
@@ -568,23 +568,11 @@
         }
         .proposal-vote span:first-child { font-weight: 600; margin-right: 0.2rem; }
         @media (max-width: 600px) {
-            .star-select {
-                width: 0.85rem;
-                font-size: 0.8rem;
-            }
-            .review-form-left input {
-                font-size: 0.65rem;
-                padding: 0.3rem 0.3rem;
-            }
-            .review-form-middle textarea {
-                font-size: 0.65rem;
-                padding: 0.3rem 0.4rem;
-            }
-            .avg-box {
-                flex-basis: 55px;
-                font-size: 0.75rem;
-                padding: 0.3rem 0.1rem;
-            }
+            .review-form-left { flex-basis: 80px; }
+            .review-form-left input { font-size: 0.65rem; padding: 0.3rem 0.3rem; }
+            .star-select { width: 0.85rem; font-size: 0.8rem; }
+            .review-form-middle textarea { font-size: 0.65rem; padding: 0.3rem 0.4rem; }
+            .avg-box { flex-basis: 55px; font-size: 0.75rem; padding: 0.3rem 0.1rem; }
         }
         @media (max-width: 480px) {
             .next-movie-card .poster { max-height: 240px; }
@@ -615,7 +603,6 @@
     <div id="adminLoginModal" class="modal"><div class="modal-content"><h3>Logowanie admina</h3><input type="password" id="adminPassword" placeholder="Hasło"><div class="modal-buttons"><button id="cancelAdminLoginBtn">Anuluj</button><button id="confirmAdminLoginBtn">Zaloguj</button></div></div></div>
 
     <script>
-        // ======================= KONFIGURACJA FIREBASE =======================
         const firebaseConfig = {
             apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE",
             authDomain: "movie-club-f8ceb.firebaseapp.com",
@@ -750,6 +737,7 @@
         function attachDelegatedEvents() {
             const container = document.getElementById('mainContent');
             if (!container) return;
+            // Edycja filmu
             container.querySelectorAll('.edit-movie-btn').forEach(btn => {
                 btn.onclick = (e) => {
                     e.stopPropagation();
@@ -766,6 +754,7 @@
                     window.currentEditMovieId = movie.id;
                 };
             });
+            // Akcje recenzji (zatwierdzanie, verified, usuwanie)
             container.querySelectorAll('.approve-btn, .verify-btn, .delete-review-btn').forEach(btn => {
                 btn.onclick = async (e) => {
                     e.stopPropagation();
@@ -788,6 +777,7 @@
                     await db.collection("movies").doc(movie.id).update({ reviews: updatedReviews });
                 };
             });
+            // Dodawanie recenzji – za każdym razem pobieramy aktualne wartości z DOM
             container.querySelectorAll('.carousel-slide').forEach(slide => {
                 const movieId = slide.dataset.movieId;
                 const movie = movies.find(m => m.id === movieId);
@@ -800,22 +790,25 @@
                         starSpans.forEach((s,j) => s.classList.toggle('selected', j<=i));
                     };
                 });
-                const textarea = slide.querySelector('.review-comment-input');
-                const authorInput = slide.querySelector('.review-author-input');
                 const avgBox = slide.querySelector('.avg-box');
+                // Funkcja dodająca recenzję – pobiera wartości na bieżąco
                 const addReview = async () => {
-                    const author = authorInput.value.trim();
-                    const comment = textarea.value.trim();
+                    const authorInput = slide.querySelector('.review-author-input');
+                    const textarea = slide.querySelector('.review-comment-input');
+                    const author = authorInput ? authorInput.value.trim() : '';
+                    const comment = textarea ? textarea.value.trim() : '';
                     if (!author) { alert("Podaj imię"); return; }
                     if (selectedStars === 0) { alert("Wybierz gwiazdki"); return; }
                     const newReview = { author, stars: selectedStars, comment: comment || "(bez komentarza)", approved: false, verified: false, timestamp: Date.now() };
                     const updatedReviews = [...movie.reviews, newReview];
                     await db.collection("movies").doc(movie.id).update({ reviews: updatedReviews });
-                    authorInput.value = '';
-                    textarea.value = '';
+                    if (authorInput) authorInput.value = '';
+                    if (textarea) textarea.value = '';
                     selectedStars = 0;
                     starSpans.forEach(s => s.classList.remove('selected'));
                 };
+                // Obsługa Enter na textarea
+                const textarea = slide.querySelector('.review-comment-input');
                 if (textarea) {
                     const newTextarea = textarea.cloneNode(true);
                     textarea.parentNode.replaceChild(newTextarea, textarea);
@@ -826,7 +819,10 @@
                         }
                     });
                 }
-                if (avgBox) avgBox.onclick = () => addReview();
+                // Kliknięcie w średnią
+                if (avgBox) {
+                    avgBox.onclick = () => addReview();
+                }
             });
         }
 
