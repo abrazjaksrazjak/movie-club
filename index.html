@@ -12,10 +12,10 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #0a0a0a;
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             color: #e5e5e5;
             height: 100vh;
-            overflow: hidden; /* zapobiega suwakom strony */
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -37,12 +37,10 @@
             align-items: center;
             margin-bottom: 1rem;
             flex-shrink: 0;
-            width: 100%;
         }
         .club-header h1 {
             font-size: clamp(0.9rem, 5vw, 1.1rem);
             font-weight: 400;
-            letter-spacing: 0.5px;
             color: #c0c0c0;
             cursor: pointer;
         }
@@ -50,7 +48,6 @@
         .header-buttons {
             display: flex;
             gap: 0.6rem;
-            align-items: center;
         }
         .icon-btn {
             background: transparent;
@@ -60,29 +57,20 @@
             cursor: pointer;
             width: 28px;
             height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             border-radius: 10px;
             transition: 0.2s;
         }
         .icon-btn:hover {
             color: #d4af37;
-            background: rgba(212, 175, 55, 0.08);
+            background: rgba(212,175,55,0.08);
         }
         .delete-movie-btn.admin-active {
             color: #d4af37;
-            background: rgba(212, 175, 55, 0.2);
-        }
-        .delete-movie-btn.admin-active:hover {
-            color: #f5d742;
-            background: rgba(212, 175, 55, 0.3);
+            background: rgba(212,175,55,0.2);
         }
         #mainContent {
             flex: 1;
             min-height: 0;
-            display: flex;
-            flex-direction: column;
             position: relative;
             width: 100%;
             overflow: hidden;
@@ -91,28 +79,23 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%,-50%);
             background: rgba(0,0,0,0.7);
             padding: 0.8rem 1.2rem;
             border-radius: 30px;
             color: #d4af37;
             font-size: 0.8rem;
-            z-index: 10;
             backdrop-filter: blur(4px);
+            z-index: 10;
             pointer-events: none;
         }
         .carousel-viewport {
             width: 100%;
             overflow: hidden;
-            flex: 1;
-            position: relative;
-            /* ukryj pasek przewijania */
+            height: 100%;
             scrollbar-width: none;
-            -ms-overflow-style: none;
         }
-        .carousel-viewport::-webkit-scrollbar {
-            display: none;
-        }
+        .carousel-viewport::-webkit-scrollbar { display: none; }
         .carousel-track {
             display: flex;
             height: 100%;
@@ -123,26 +106,13 @@
             flex-shrink: 0;
             height: 100%;
             overflow-y: auto;
-            padding: 0;
-            /* ukryj pasek przewijania wewnątrz slajdu */
             scrollbar-width: thin;
         }
-        .carousel-slide::-webkit-scrollbar {
-            width: 4px;
-        }
-        .carousel-slide::-webkit-scrollbar-track {
-            background: #1e1e1e;
-        }
-        .carousel-slide::-webkit-scrollbar-thumb {
-            background: #3a3a3a;
-            border-radius: 10px;
-        }
-        .view-transition {
-            transition: opacity 0.2s ease;
-        }
-        .view-fade-out {
-            opacity: 0;
-        }
+        .carousel-slide::-webkit-scrollbar { width: 4px; }
+        .carousel-slide::-webkit-scrollbar-track { background: #1e1e1e; }
+        .carousel-slide::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 10px; }
+        .view-transition { transition: opacity 0.2s ease; }
+        .view-fade-out { opacity: 0; }
         .carousel-container {
             background: #111;
             border-radius: 10px;
@@ -171,7 +141,6 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            display: block;
         }
         .movie-title-overlay {
             position: absolute;
@@ -179,11 +148,11 @@
             left: 0;
             right: 0;
             text-align: center;
-            font-size: clamp(1.2rem, 5vw, 2rem);
+            font-size: clamp(1.2rem,5vw,2rem);
             font-weight: 500;
             color: #fff;
             text-shadow: 0 2px 10px rgba(0,0,0,0.7);
-            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.5), transparent);
+            background: linear-gradient(90deg,transparent,rgba(0,0,0,0.5),transparent);
             padding: 0.3rem;
             backdrop-filter: blur(2px);
         }
@@ -199,36 +168,27 @@
             width: 28px;
             height: 28px;
             border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             cursor: pointer;
             opacity: 0;
             transition: 0.2s;
         }
         .poster-wrapper:hover .edit-movie-btn { opacity: 1; }
-        .edit-movie-btn:hover { background: #d4af37; color: #0a0a0a; transform: scale(1.05); }
+        .edit-movie-btn:hover { background: #d4af37; color: #0a0a0a; }
         .movie-date {
             text-align: center;
             font-size: 0.7rem;
-            font-weight: 300;
             color: #8a8a8a;
             margin: 0.5rem 0 0.8rem 0;
-            flex-shrink: 0;
         }
         .movie-link {
             text-align: center;
-            margin: 0.2rem 0 0.5rem 0;
+            margin: 0.2rem 0 0.5rem;
         }
         .movie-link a {
             color: #d4af37;
             font-size: 0.7rem;
             text-decoration: none;
             border-bottom: 1px dashed #d4af37;
-        }
-        .movie-link a:hover {
-            color: #f5d742;
-            border-bottom-color: #f5d742;
         }
         .reviews-grid {
             flex: 1;
@@ -238,9 +198,6 @@
             flex-direction: column;
             gap: 1rem;
         }
-        .reviews-grid::-webkit-scrollbar { width: 4px; }
-        .reviews-grid::-webkit-scrollbar-track { background: #1e1e1e; }
-        .reviews-grid::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 10px; }
         .review-row {
             display: flex;
             gap: 0.8rem;
@@ -248,7 +205,6 @@
             border-bottom: 1px solid #252525;
             padding-bottom: 0.7rem;
             flex-wrap: wrap;
-            transition: opacity 0.2s;
         }
         .review-row.pending { opacity: 0.6; }
         .review-left {
@@ -267,20 +223,11 @@
             width: 1rem;
             text-align: center;
             font-size: 0.9rem;
-            line-height: 1;
         }
         .star-filled { color: #d4af37; }
         .star-empty { color: #3d3d3d; }
-        .verified-check {
-            color: #d4af37;
-            font-size: 0.8rem;
-            margin-left: 4px;
-        }
-        .review-author {
-            font-size: 0.75rem;
-            font-weight: 400;
-            color: #b0b0b0;
-        }
+        .verified-check { color: #d4af37; font-size: 0.8rem; margin-left: 4px; }
+        .review-author { font-size: 0.75rem; color: #b0b0b0; }
         .review-comment {
             flex: 1;
             font-size: 0.8rem;
@@ -309,13 +256,12 @@
             color: #aaa;
             font-size: 0.7rem;
             cursor: pointer;
-            padding: 0.1rem 0.2rem;
             border-radius: 6px;
         }
         .review-action-btn:hover { background: #2a2a2a; color: #d4af37; }
         .delete-review-btn:hover { color: #e06c4e; }
         .sentimental {
-            margin: 0.6rem 1rem 0.6rem 1rem;
+            margin: 0.6rem 1rem;
             padding: 0.5rem 0.8rem;
             background: #181818;
             border-left: 2px solid #d4af37;
@@ -323,13 +269,11 @@
             color: #b9a97c;
             border-radius: 10px;
             text-align: center;
-            flex-shrink: 0;
         }
         .add-review {
             background: #111;
             border-top: 1px solid #262626;
-            padding: 0.8rem 1rem 1rem 1rem;
-            flex-shrink: 0;
+            padding: 0.8rem 1rem 1rem;
         }
         .review-form-grid {
             display: flex;
@@ -364,7 +308,6 @@
             background: #1c1c1c;
             padding: 0.2rem 0.4rem;
             border-radius: 10px;
-            justify-content: center;
         }
         .star-select {
             display: inline-block;
@@ -397,7 +340,7 @@
             background: #1c1c1c;
             border: 1px solid #2c2c2c;
             border-radius: 10px;
-            padding: 0.6rem 1rem;
+            padding: 0.6rem 0.8rem;
             font-size: 1.1rem;
             font-weight: 700;
             color: #d4af37;
@@ -405,9 +348,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            white-space: nowrap;
             cursor: pointer;
             transition: 0.2s;
+        }
+        .avg-box:hover {
+            background: #2a2a2a;
+            transform: scale(1.02);
         }
         .nav-arrow {
             position: fixed;
@@ -416,7 +362,6 @@
             color: #7a7a7a;
             font-size: 1.8rem;
             cursor: pointer;
-            user-select: none;
             z-index: 100;
             background: none;
             padding: 0.3rem;
@@ -430,8 +375,6 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            padding: 0;
-            scrollbar-width: thin;
         }
         .next-movie-card {
             background: #1a1a1a;
@@ -440,7 +383,6 @@
             margin-bottom: 1.5rem;
             text-align: center;
             cursor: pointer;
-            width: 100%;
         }
         .next-movie-card:hover { background: #222; }
         .next-movie-card .poster {
@@ -449,11 +391,9 @@
             object-fit: cover;
             border-radius: 6px;
             margin-bottom: 0.8rem;
-            background: #0f0f0f;
         }
         .next-movie-card h2 {
             font-size: 0.85rem;
-            font-weight: 400;
             color: #d4af37;
             margin-bottom: 0.3rem;
         }
@@ -463,8 +403,8 @@
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin: 0.8rem 0 0.6rem 0;
-            flex-wrap: nowrap; /* zapobiega zawijaniu */
+            margin: 0.8rem 0 0.6rem;
+            flex-wrap: nowrap;
             gap: 0.8rem;
         }
         .ranking-header h3 {
@@ -477,17 +417,17 @@
             cursor: pointer;
             color: #c0c0c0;
             font-size: 0.75rem;
-            font-weight: 400;
             transition: color 0.2s;
             white-space: nowrap;
         }
-        .clickable-text:hover {
-            color: #d4af37;
+        .clickable-text:hover { color: #d4af37; }
+        .ranking-section { padding: 0 0.8rem; }
+        .ranking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
         }
-        .ranking-section {
-            padding: 0 0.8rem;
-        }
-        .ranking-list { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
         .ranking-item {
             position: relative;
             background: #151515;
@@ -523,16 +463,9 @@
         .ranking-item:hover { background: #1f1f1f; transform: translateX(3px); }
         .ranking-title { font-size: 0.9rem; font-weight: 500; position: relative; z-index: 1; }
         .ranking-rating { color: #d4af37; font-size: 0.8rem; position: relative; z-index: 1; }
-        .info-text {
-            margin: 1rem 0;
-            line-height: 1.5;
-        }
-        .info-text strong {
-            color: #d4af37;
-        }
-        .info-text p {
-            margin: 0.8rem 0;
-        }
+        .info-text { margin: 1rem 0; line-height: 1.5; }
+        .info-text strong { color: #d4af37; }
+        .info-text p { margin: 0.8rem 0; }
         .modal {
             display: none;
             position: fixed;
@@ -556,7 +489,6 @@
         }
         .modal-content h3 {
             font-size: 1.2rem;
-            font-weight: 500;
             margin-bottom: 1rem;
             color: #d4af37;
         }
@@ -584,12 +516,7 @@
             color: #eee;
             cursor: pointer;
         }
-        .modal-buttons button:last-child {
-            background: #d4af37;
-            color: #0a0a0a;
-        }
-        .modal-buttons button:hover { background: #3a3a3a; }
-        .modal-buttons button:last-child:hover { background: #c99f1a; }
+        .modal-buttons button:last-child { background: #d4af37; color: #0a0a0a; }
         hr { border-color: #2c2c2c; margin: 1rem 0; }
         .proposals-list {
             display: flex;
@@ -606,18 +533,6 @@
             align-items: center;
             border: 1px solid #2c2c2c;
         }
-        .proposal-info {
-            flex: 1;
-        }
-        .proposal-title {
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        .proposal-actions {
-            display: flex;
-            gap: 0.6rem;
-            align-items: center;
-        }
         .proposal-vote {
             display: flex;
             align-items: center;
@@ -626,89 +541,34 @@
             padding: 0.3rem 0.8rem;
             border-radius: 30px;
             cursor: pointer;
-            transition: 0.2s;
         }
-        .proposal-vote:hover {
-            background: #3a3a3a;
-        }
-        .proposal-vote.voted {
-            background: #d4af37;
-            color: #0a0a0a;
-            cursor: default;
-            opacity: 0.8;
-        }
-        .proposal-vote span:first-child {
-            font-weight: 600;
-            font-size: 1rem;
-        }
-        .proposal-vote span:last-child {
-            font-size: 0.8rem;
-        }
+        .proposal-vote.voted { background: #d4af37; color: #0a0a0a; cursor: default; opacity: 0.8; }
         .proposal-delete {
             background: none;
             border: none;
             color: #a0a0a0;
             font-size: 1rem;
             cursor: pointer;
-            padding: 0 0.2rem;
         }
-        .proposal-delete:hover {
-            color: #e06c4e;
-        }
+        .proposal-delete:hover { color: #e06c4e; }
         @media (max-width: 480px) {
             .review-form-row {
                 display: grid;
                 grid-template-columns: 1fr auto;
                 gap: 0.4rem;
-                align-items: start;
             }
-            .review-form-left {
-                grid-area: left;
-                flex: none;
-                width: auto;
-            }
-            .review-form-middle {
-                display: contents;
-            }
-            .review-form-middle textarea {
-                grid-area: textarea;
-                width: 100%;
-                margin-top: 0.2rem;
-            }
-            .avg-box {
-                grid-area: avg;
-                align-self: stretch;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 70px;
-            }
-            .review-form-row {
-                grid-template-areas:
-                    "left avg"
-                    "textarea textarea";
-            }
-            .next-movie-card .poster {
-                max-height: 240px;
-            }
-            .ranking-header {
-                gap: 0.3rem;
-            }
-            .ranking-header h3, .clickable-text {
-                font-size: 0.65rem;
-            }
-            .proposal-item {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
+            .review-form-left { grid-area: left; }
+            .review-form-middle { display: contents; }
+            .review-form-middle textarea { grid-area: textarea; width: 100%; margin-top: 0.2rem; }
+            .avg-box { grid-area: avg; align-self: stretch; min-width: 70px; }
+            .review-form-row { grid-template-areas: "left avg" "textarea textarea"; }
+            .next-movie-card .poster { max-height: 240px; }
+            .ranking-header { gap: 0.3rem; }
+            .ranking-header h3, .clickable-text { font-size: 0.65rem; }
         }
         @media (min-width: 481px) {
-            .review-form-middle {
-                flex-direction: row;
-            }
-            .avg-box {
-                flex-shrink: 0;
-            }
+            .review-form-middle { flex-direction: row; }
+            .avg-box { flex-shrink: 0; }
         }
     </style>
 </head>
@@ -721,164 +581,112 @@
                 <button class="icon-btn" id="openModalBtn">+</button>
             </div>
         </div>
-        <div id="mainContent">
-            <div class="loading-indicator">Ładowanie danych...</div>
-        </div>
+        <div id="mainContent"><div class="loading-indicator">Ładowanie danych...</div></div>
     </div>
     <div class="nav-arrow nav-arrow-left" id="prevArrow">←</div>
     <div class="nav-arrow nav-arrow-right" id="nextArrow">→</div>
 
-    <!-- Modale -->
-    <div id="movieModal" class="modal"><div class="modal-content"><h3>Nowy film</h3><input type="text" id="newTitle" placeholder="Tytuł" required><input type="date" id="newDate" value="2026-05-22"><input type="text" id="newPosterUrl" placeholder="URL plakatu (opcjonalnie)"><input type="text" id="newLink" placeholder="Link do filmu (opcjonalnie)"><textarea id="newSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea><div class="modal-buttons"><button id="cancelModalBtn">Anuluj</button><button id="saveMovieBtn">Dodaj</button></div></div></div>
-    <div id="editMovieModal" class="modal"><div class="modal-content"><h3>Edytuj film</h3><input type="text" id="editTitle" placeholder="Tytuł" required><input type="date" id="editDate" placeholder="Data"><input type="text" id="editPosterUrl" placeholder="URL plakatu"><input type="text" id="editLink" placeholder="Link do filmu"><textarea id="editSentimental" rows="2" placeholder="Cytat (opcjonalnie)"></textarea><div class="modal-buttons"><button id="cancelEditBtn">Anuluj</button><button id="saveEditBtn">Zapisz</button></div></div></div>
-    <div id="infoModal" class="modal"><div class="modal-content"><h3>Jak działa ranking i system oceniania?</h3><div class="info-text"><p><strong>Nowe recenzje</strong> – są dodawane od razu, ale nie wliczają się do średniej i nie są widoczne w rankingu, dopóki nie zostaną zatwierdzone.</p><p><strong>JLL Verified</strong> – wyróżnienie przyznawane pracownikom JLL. Recenzje z tą etykietą liczą się podwójnie do średniej oceny filmu.</p><p><strong>Minimalna liczba ocen</strong> – film pojawia się w głównej liście rankingu dopiero po zebraniu co najmniej 3 zatwierdzonych recenzji. Filmy, które mają mniej opinii, są przesunięte na dół.</p><p><strong>Usunięcie/edycja recenzji</strong> – napisz do sam wiesz kogo ◡̈</p></div><div class="modal-buttons"><button id="closeInfoModalBtn">Zamknij</button></div></div></div>
-    <div id="proposeModal" class="modal"><div class="modal-content"><h3>Propozycje filmów</h3><div id="proposalsList" class="proposals-list">Ładowanie...</div><hr><h4>Zaproponuj nowy film</h4><input type="text" id="proposeTitle" placeholder="Tytuł filmu *" required><div class="modal-buttons"><button id="cancelProposeBtn">Anuluj</button><button id="submitProposeBtn">Dodaj propozycję</button></div></div></div>
-    <div id="adminLoginModal" class="modal"><div class="modal-content"><h3>Logowanie administratora</h3><input type="password" id="adminPassword" placeholder="Hasło" autocomplete="off"><div class="modal-buttons"><button id="cancelAdminLoginBtn">Anuluj</button><button id="confirmAdminLoginBtn">Zaloguj</button></div></div></div>
+    <!-- MODALE -->
+    <div id="movieModal" class="modal"><div class="modal-content"><h3>Nowy film</h3><input type="text" id="newTitle" placeholder="Tytuł" required><input type="date" id="newDate" value="2026-05-22"><input type="text" id="newPosterUrl" placeholder="URL plakatu"><input type="text" id="newLink" placeholder="Link do filmu"><textarea id="newSentimental" rows="2" placeholder="Cytat"></textarea><div class="modal-buttons"><button id="cancelModalBtn">Anuluj</button><button id="saveMovieBtn">Dodaj</button></div></div></div>
+    <div id="editMovieModal" class="modal"><div class="modal-content"><h3>Edytuj film</h3><input type="text" id="editTitle"><input type="date" id="editDate"><input type="text" id="editPosterUrl" placeholder="URL plakatu"><input type="text" id="editLink" placeholder="Link"><textarea id="editSentimental" rows="2" placeholder="Cytat"></textarea><div class="modal-buttons"><button id="cancelEditBtn">Anuluj</button><button id="saveEditBtn">Zapisz</button></div></div></div>
+    <div id="infoModal" class="modal"><div class="modal-content"><h3>Jak działa ranking?</h3><div class="info-text"><p><strong>Nowe recenzje</strong> – dodane, ale nie wliczają się do średniej, dopóki nie zatwierdzone.</p><p><strong>JLL Verified</strong> – podwójna waga.</p><p><strong>Min. 3 oceny</strong> – film widoczny w rankingu dopiero po 3 zatwierdzonych recenzjach.</p><p><strong>Usuwanie/edycja</strong> – tylko admin.</p></div><div class="modal-buttons"><button id="closeInfoModalBtn">Zamknij</button></div></div></div>
+    <div id="proposeModal" class="modal"><div class="modal-content"><h3>Propozycje filmów</h3><div id="proposalsList">Ładowanie...</div><hr><h4>Zaproponuj nowy film</h4><input type="text" id="proposeTitle" placeholder="Tytuł"><div class="modal-buttons"><button id="cancelProposeBtn">Anuluj</button><button id="submitProposeBtn">Dodaj</button></div></div></div>
+    <div id="adminLoginModal" class="modal"><div class="modal-content"><h3>Logowanie admina</h3><input type="password" id="adminPassword" placeholder="Hasło"><div class="modal-buttons"><button id="cancelAdminLoginBtn">Anuluj</button><button id="confirmAdminLoginBtn">Zaloguj</button></div></div></div>
 
     <script>
-        // ======================= KONFIGURACJA FIREBASE =======================
-        const firebaseConfig = {
-            apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE",   // ZASTĄP NOWYM KLUCZEM
-            authDomain: "movie-club-f8ceb.firebaseapp.com",
-            projectId: "movie-club-f8ceb",
-            storageBucket: "movie-club-f8ceb.firebasestorage.app",
-            messagingSenderId: "17251318633",
-            appId: "1:17251318633:web:5080a0bc0243e1a91d1bf8"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE", authDomain: "movie-club-f8ceb.firebaseapp.com", projectId: "movie-club-f8ceb", storageBucket: "movie-club-f8ceb.firebasestorage.app", messagingSenderId: "17251318633", appId: "1:17251318633:web:5080a0bc0243e1a91d1bf8" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
-        auth.signInAnonymously().catch(error => {
-            console.error("Błąd logowania anonimowego:", error);
-            alert("Błąd autoryzacji: upewnij się, że w Firebase włączono anonimowe logowanie (Authentication → Anonymous).");
-        });
+        auth.signInAnonymously().catch(console.error);
 
-        // ======================= DANE DOMYŚLNE =======================
         const defaultMovies = [
             { id:"lobster_2026", date:"02.04.2026", title:"Lobster", poster:"https://via.placeholder.com/1200x300?text=Lobster", link:"", reviews:[
-                { author:"Sebuś", stars:4, comment:"Depresyjny obraz tamtych czasów i smutna rzeczywistość życia w ukryciu.", approved:true, verified:false, timestamp:Date.now() },
+                { author:"Sebuś", stars:4, comment:"Depresyjny obraz...", approved:true, verified:false, timestamp:Date.now() },
                 { author:"Maciek", stars:3, comment:"Hehe geje", approved:true, verified:false, timestamp:Date.now()+1 },
-                { author:"Kuba", stars:5, comment:"Piękny film, scenerie które sprawiały że chciało się go oglądać, jednak pełen żalu bólu.", approved:true, verified:false, timestamp:Date.now()+2 },
-                { author:"Maciej D", stars:4, comment:"Na tamte czasy to był bardzo odważny film.", approved:true, verified:false, timestamp:Date.now()+3 },
-                { author:"Daria", stars:5, comment:"Piękne obrazy kontrastujące z niełatwymi wyborami w życiu.", approved:true, verified:false, timestamp:Date.now()+4 },
-                { author:"Ola", stars:5, comment:"Piękny, poruszający film. Łezka się w oku zakręciła.", approved:true, verified:false, timestamp:Date.now()+5 }
-            ], sentimentalValue:"Odbierzemy go na tyle na ile sami jesteśmy wrażliwi." },
+                { author:"Kuba", stars:5, comment:"Piękny film...", approved:true, verified:false, timestamp:Date.now()+2 },
+                { author:"Maciej D", stars:4, comment:"Odważny film", approved:true, verified:false, timestamp:Date.now()+3 },
+                { author:"Daria", stars:5, comment:"Piękne obrazy", approved:true, verified:false, timestamp:Date.now()+4 },
+                { author:"Ola", stars:5, comment:"Łezka się kręci", approved:true, verified:false, timestamp:Date.now()+5 }
+            ], sentimentalValue:"Odbierzemy go..." },
             { id:"weapons_2026", date:"10.05.2026", title:"WEAPONS", poster:"https://via.placeholder.com/1200x300?text=WEAPONS", link:"", reviews:[
-                { author:"Sebuś", stars:4, comment:"Ciekawy koncept, ale trochę niedopracowany.", approved:true, verified:false, timestamp:Date.now() },
-                { author:"Daria", stars:5, comment:"Wizualnie oszałamiający.", approved:true, verified:false, timestamp:Date.now()+1 }
+                { author:"Sebuś", stars:4, comment:"Ciekawy koncept", approved:true, verified:false, timestamp:Date.now() },
+                { author:"Daria", stars:5, comment:"Oszałamiający", approved:true, verified:false, timestamp:Date.now()+1 }
             ], sentimentalValue:"" },
             { id:"bugonia_2026", date:"17.05.2026", title:"BUGONIA", poster:"https://via.placeholder.com/1200x300?text=Bugonia", link:"", reviews:[
-                { author:"Sebuś", stars:5, comment:"Genialnie trzyma w napięciu. Lanthimos coraz lepszy z roku na rok.", approved:true, verified:false, timestamp:Date.now() },
-                { author:"Igor", stars:5, comment:"Zaskakujący. Bardzo dobrze się bawiłem.", approved:true, verified:false, timestamp:Date.now()+1 },
-                { author:"Daria", stars:5, comment:"Świetnie zagrane postaci. Uwierzyłam w nie od pierwszych scen.", approved:true, verified:false, timestamp:Date.now()+2 },
-                { author:"Grzegorz", stars:4, comment:"Dałbym czwórkę.", approved:true, verified:false, timestamp:Date.now()+3 },
-                { author:"Maciek", stars:5, comment:"Emma Stone jest nieziemska w tym filmie :)", approved:true, verified:false, timestamp:Date.now()+4 },
-                { author:"Kuba", stars:5, comment:"Trzyma w napięciu od pierwszej do ostatniej minuty (obejrzałem w całości).", approved:true, verified:false, timestamp:Date.now()+5 },
-                { author:"Ola", stars:5, comment:"Świetna gra aktorska. Bardzo ciekawy film, od początku, aż do końca.", approved:true, verified:false, timestamp:Date.now()+6 }
+                { author:"Sebuś", stars:5, comment:"Genialne napięcie", approved:true, verified:false, timestamp:Date.now() },
+                { author:"Igor", stars:5, comment:"Zaskakujący", approved:true, verified:false, timestamp:Date.now()+1 },
+                { author:"Daria", stars:5, comment:"Świetne postaci", approved:true, verified:false, timestamp:Date.now()+2 },
+                { author:"Grzegorz", stars:4, comment:"Czwórka", approved:true, verified:false, timestamp:Date.now()+3 },
+                { author:"Maciek", stars:5, comment:"Emma Stone nieziemska", approved:true, verified:false, timestamp:Date.now()+4 },
+                { author:"Kuba", stars:5, comment:"Obejrzałem w całości", approved:true, verified:false, timestamp:Date.now()+5 },
+                { author:"Ola", stars:5, comment:"Świetna gra", approved:true, verified:false, timestamp:Date.now()+6 }
             ], sentimentalValue:"" }
         ];
 
-        let movies = [];
-        let currentMovieIndex = 0;
-        let viewMode = 'home'; // 'home' or 'movie'
-        let unsubscribeMovies = null;
-        let isAdmin = false;
+        let movies = [], currentMovieIndex = 0, viewMode = 'home', unsubscribeMovies = null, isAdmin = false;
         const ADMIN_PASSWORD = "aadmin";
-
-        // Karuzela
-        let track = null;
-        let currentSlideIndex = 0;
+        let track = null, currentSlideIndex = 0;
 
         function setAdminMode(admin) {
             isAdmin = admin;
-            if (admin) {
-                sessionStorage.setItem('movieclub_admin', 'true');
-                document.getElementById('adminBtn').classList.add('admin-active');
-                document.getElementById('adminBtn').textContent = '👑';
-            } else {
-                sessionStorage.removeItem('movieclub_admin');
-                document.getElementById('adminBtn').classList.remove('admin-active');
-                document.getElementById('adminBtn').textContent = '✕';
-            }
+            if (admin) { sessionStorage.setItem('movieclub_admin','true'); document.getElementById('adminBtn').classList.add('admin-active'); document.getElementById('adminBtn').textContent = '👑'; }
+            else { sessionStorage.removeItem('movieclub_admin'); document.getElementById('adminBtn').classList.remove('admin-active'); document.getElementById('adminBtn').textContent = '✕'; }
         }
-        function checkAdminFromStorage() {
-            if (sessionStorage.getItem('movieclub_admin') === 'true') setAdminMode(true);
-        }
-        function showAdminLoginModal() {
-            document.getElementById('adminLoginModal').style.display = 'flex';
-            document.getElementById('adminPassword').value = '';
-        }
-        function isAdminAction() {
-            if (isAdmin) return true;
-            const pwd = prompt("Hasło administratora:");
-            if (pwd === ADMIN_PASSWORD) { setAdminMode(true); return true; }
-            return false;
-        }
+        function checkAdminFromStorage() { if (sessionStorage.getItem('movieclub_admin')==='true') setAdminMode(true); }
+        function showAdminLoginModal() { document.getElementById('adminLoginModal').style.display = 'flex'; document.getElementById('adminPassword').value = ''; }
+        function isAdminAction() { if (isAdmin) return true; const pwd = prompt("Hasło admina:"); if (pwd===ADMIN_PASSWORD) { setAdminMode(true); return true; } return false; }
 
         function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
         function renderStars(rating) { let h='<span class="stars">'; for(let i=1;i<=5;i++) h+=`<span class="star ${i<=rating?'star-filled':'star-empty'}">★</span>`; return h+'</span>'; }
-        function avgWeighted(movie) {
-            let total=0, weight=0;
-            movie.reviews.forEach(r=>{ if(r.approved){ let w=r.verified?2:1; total+=r.stars*w; weight+=w; } });
-            if(weight===0) return '—';
-            return (total/weight).toFixed(1);
-        }
-        function countApprovedReviews(movie) { return movie.reviews.filter(r=>r.approved).length; }
-        function parseDate(dateStr) { let parts=dateStr.split('.'); return new Date(parts[2], parts[1]-1, parts[0]); }
-        function getNextMovie() {
-            let today=new Date(); today.setHours(0,0,0,0);
-            let future=movies.filter(m=>parseDate(m.date)>=today);
-            if(future.length) return future.sort((a,b)=>parseDate(a.date)-parseDate(b.date))[0];
-            return movies.length ? movies.reduce((a,b)=>parseDate(a.date)-parseDate(b.date)>0?a:b) : null;
-        }
+        function avgWeighted(m) { let total=0,weight=0; m.reviews.forEach(r=>{ if(r.approved){ let w=r.verified?2:1; total+=r.stars*w; weight+=w; } }); return weight===0?'—':(total/weight).toFixed(1); }
+        function countApprovedReviews(m) { return m.reviews.filter(r=>r.approved).length; }
+        function parseDate(dateStr) { let p=dateStr.split('.'); return new Date(p[2],p[1]-1,p[0]); }
+        function getNextMovie() { let today=new Date(); today.setHours(0,0,0,0); let future=movies.filter(m=>parseDate(m.date)>=today); if(future.length) return future.sort((a,b)=>parseDate(a.date)-parseDate(b.date))[0]; return movies.length?movies.reduce((a,b)=>parseDate(a.date)-parseDate(b.date)>0?a:b):null; }
         function showArrows(show) { document.getElementById('prevArrow').style.display=show?'flex':'none'; document.getElementById('nextArrow').style.display=show?'flex':'none'; }
 
         function generateMovieSlide(movie) {
-            const sortedReviews = [...movie.reviews].sort((a,b) => {
-                if(a.verified !== b.verified) return a.verified ? -1 : 1;
-                if(a.approved !== b.approved) return a.approved ? -1 : 1;
-                return b.timestamp - a.timestamp;
-            });
+            const sorted = [...movie.reviews].sort((a,b)=>a.verified!==b.verified?a.verified?-1:1:(a.approved!==b.approved?a.approved?-1:1:b.timestamp-a.timestamp));
             let revHtml = '';
-            sortedReviews.forEach((r,i) => {
-                const origIndex = movie.reviews.findIndex(orig => orig.timestamp === r.timestamp && orig.author === r.author);
-                const pendingClass = !r.approved ? 'pending' : '';
+            sorted.forEach((r,idx) => {
+                const origIdx = movie.reviews.findIndex(orig=>orig.timestamp===r.timestamp&&orig.author===r.author);
+                const pending = !r.approved ? 'pending' : '';
                 const verifiedMark = r.verified ? '<span class="verified-check">✓</span>' : '';
-                const actions = `<div class="review-actions">
-                    ${!r.approved ? `<button class="review-action-btn approve-btn" data-idx="${origIndex}">✓</button>` : ''}
-                    ${r.approved && !r.verified ? `<button class="review-action-btn verify-btn" data-idx="${origIndex}">⭐</button>` : ''}
-                    <button class="review-action-btn delete-review-btn" data-idx="${origIndex}">✕</button>
-                </div>`;
-                revHtml += `<div class="review-row ${pendingClass}" data-idx="${origIndex}">
+                revHtml += `<div class="review-row ${pending}" data-review-idx="${origIdx}">
                     <div class="review-left"><div style="display:flex;align-items:center;gap:2px;">${renderStars(r.stars)}${verifiedMark}</div><div class="review-author">${escapeHtml(r.author)}</div></div>
-                    <div class="review-comment">${escapeHtml(r.comment)}</div>${actions}</div>`;
+                    <div class="review-comment">${escapeHtml(r.comment)}</div>
+                    <div class="review-actions">
+                        ${!r.approved ? `<button class="review-action-btn approve-btn" data-idx="${origIdx}">✓</button>` : ''}
+                        ${r.approved && !r.verified ? `<button class="review-action-btn verify-btn" data-idx="${origIdx}">⭐</button>` : ''}
+                        <button class="review-action-btn delete-review-btn" data-idx="${origIdx}">✕</button>
+                    </div>
+                </div>`;
             });
             const sentHtml = movie.sentimentalValue ? `<div class="sentimental">✨ ${escapeHtml(movie.sentimentalValue)}</div>` : '';
-            const posterUrl = movie.poster && movie.poster.trim() ? movie.poster : '';
+            const posterUrl = movie.poster || '';
             const posterImg = posterUrl ? `<img class="poster-img" src="${escapeHtml(posterUrl)}" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22300%22%3E%3Crect%20width%3D%221200%22%20height%3D%22300%22%20fill%3D%22%231a1a1a%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%20fill%3D%22%23888%22%20font-size%3D%2224%22%3Ebrak%20plakatu%3C%2Ftext%3E%3C%2Fsvg%3E'">` : `<div class="poster-img" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#888;">🎬 brak plakatu</div>`;
-            const avgVal = avgWeighted(movie);
-            const avgDisplay = avgVal !== '—' ? `${avgVal} ★` : '— ★';
-            const linkHtml = movie.link ? `<div class="movie-link"><a href="${escapeHtml(movie.link)}" target="_blank" rel="noopener noreferrer">🔗 Link do filmu</a></div>` : '';
-            return `
-                <div class="carousel-slide">
-                    <div class="carousel-container">
-                        <div class="slide">
-                            <div class="poster-wrapper">${posterImg}<div class="movie-title-overlay">${escapeHtml(movie.title)}</div><button class="edit-movie-btn" id="editBtn">✎</button></div>
-                            <div class="movie-date">${escapeHtml(movie.date)}</div>
-                            ${linkHtml}
-                            <div class="reviews-grid">${revHtml}</div>
-                            ${sentHtml}
-                            <div class="add-review">
-                                <div class="review-form-grid">
-                                    <div class="review-form-row">
-                                        <div class="review-form-left"><input type="text" id="reviewAuthor" placeholder="Imię" maxlength="20"><div class="rating-input" id="starSelector">${[1,2,3,4,5].map(n=>`<span class="star-select" data-value="${n}">★</span>`).join('')}</div></div>
-                                        <div class="review-form-middle"><textarea id="reviewComment" placeholder="Napisz kilka słów o filmie (Enter aby dodać)" maxlength="256"></textarea><div class="avg-box" id="avgBox">${avgDisplay}</div></div>
-                                    </div>
+            const avg = avgWeighted(movie);
+            const avgDisplay = avg !== '—' ? `${avg} ★` : '— ★';
+            const linkHtml = movie.link ? `<div class="movie-link"><a href="${escapeHtml(movie.link)}" target="_blank">🔗 Link</a></div>` : '';
+            return `<div class="carousel-slide" data-movie-id="${movie.id}">
+                <div class="carousel-container">
+                    <div class="slide">
+                        <div class="poster-wrapper">${posterImg}<div class="movie-title-overlay">${escapeHtml(movie.title)}</div><button class="edit-movie-btn" data-movie-id="${movie.id}">✎</button></div>
+                        <div class="movie-date">${escapeHtml(movie.date)}</div>
+                        ${linkHtml}
+                        <div class="reviews-grid">${revHtml}</div>
+                        ${sentHtml}
+                        <div class="add-review">
+                            <div class="review-form-grid">
+                                <div class="review-form-row">
+                                    <div class="review-form-left"><input type="text" class="review-author-input" placeholder="Imię" maxlength="20"><div class="rating-input" id="starSelector_${movie.id}">${[1,2,3,4,5].map(n=>`<span class="star-select" data-value="${n}">★</span>`).join('')}</div></div>
+                                    <div class="review-form-middle"><textarea class="review-comment-input" placeholder="Napisz kilka słów (Enter aby dodać)" maxlength="256"></textarea><div class="avg-box" data-movie-id="${movie.id}">${avgDisplay}</div></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>`;
+                </div>
+            </div>`;
         }
 
         function buildCarousel(selectedIndex) {
@@ -888,28 +696,113 @@
             track = document.getElementById('carouselTrack');
             movies.forEach((m, idx) => {
                 const slideDiv = document.createElement('div');
-                slideDiv.className = 'carousel-slide';
                 slideDiv.innerHTML = generateMovieSlide(m);
-                track.appendChild(slideDiv);
+                track.appendChild(slideDiv.firstChild);
             });
             currentSlideIndex = selectedIndex;
-            // natychmiast ustaw transform bez animacji
-            if (track && track.parentElement) {
-                const slideWidth = track.parentElement.clientWidth;
-                track.style.transition = 'none';
-                track.style.transform = `translateX(-${selectedIndex * slideWidth}px)`;
-                // force reflow
-                track.offsetHeight;
-                track.style.transition = 'transform 0.3s ease-out';
-            }
+            const slideWidth = track.parentElement.clientWidth;
+            track.style.transition = 'none';
+            track.style.transform = `translateX(-${selectedIndex * slideWidth}px)`;
+            track.offsetHeight;
+            track.style.transition = 'transform 0.3s ease-out';
+            attachDelegatedEvents();
+        }
+
+        function attachDelegatedEvents() {
+            const container = document.getElementById('mainContent');
+            if (!container) return;
+            // Edycja filmu
+            container.querySelectorAll('.edit-movie-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const movieId = btn.dataset.movieId;
+                    const movie = movies.find(m => m.id === movieId);
+                    if (!movie) return;
+                    if (!isAdmin && !isAdminAction()) return;
+                    document.getElementById('editTitle').value = movie.title;
+                    document.getElementById('editDate').value = movie.date ? movie.date.split('.').reverse().join('-') : '';
+                    document.getElementById('editPosterUrl').value = movie.poster || '';
+                    document.getElementById('editLink').value = movie.link || '';
+                    document.getElementById('editSentimental').value = movie.sentimentalValue || '';
+                    document.getElementById('editMovieModal').style.display = 'flex';
+                    window.currentEditMovieId = movie.id;
+                };
+            });
+            // Recenzje – zatwierdzanie, verified, usuwanie
+            container.querySelectorAll('.approve-btn, .verify-btn, .delete-review-btn').forEach(btn => {
+                btn.onclick = async (e) => {
+                    e.stopPropagation();
+                    if (!isAdmin && !isAdminAction()) return;
+                    const reviewIdx = parseInt(btn.dataset.idx);
+                    const slide = btn.closest('.carousel-slide');
+                    const movieId = slide.dataset.movieId;
+                    const movie = movies.find(m => m.id === movieId);
+                    if (!movie) return;
+                    const updatedReviews = [...movie.reviews];
+                    if (btn.classList.contains('approve-btn')) {
+                        updatedReviews[reviewIdx].approved = true;
+                        updatedReviews[reviewIdx].timestamp = Date.now();
+                    } else if (btn.classList.contains('verify-btn')) {
+                        updatedReviews[reviewIdx].verified = true;
+                        updatedReviews[reviewIdx].timestamp = Date.now();
+                    } else if (btn.classList.contains('delete-review-btn')) {
+                        updatedReviews.splice(reviewIdx, 1);
+                    }
+                    await db.collection("movies").doc(movie.id).update({ reviews: updatedReviews });
+                };
+            });
+            // Obsługa dodawania recenzji (gwiazdki, textarea Enter, oraz kliknięcie w średnią)
+            container.querySelectorAll('.carousel-slide').forEach(slide => {
+                const movieId = slide.dataset.movieId;
+                const movie = movies.find(m => m.id === movieId);
+                if (!movie) return;
+                const starSpans = slide.querySelectorAll('.star-select');
+                let selectedStars = 0;
+                starSpans.forEach((span, i) => {
+                    span.onclick = () => {
+                        selectedStars = i+1;
+                        starSpans.forEach((s,j) => s.classList.toggle('selected', j<=i));
+                    };
+                });
+                const textarea = slide.querySelector('.review-comment-input');
+                const authorInput = slide.querySelector('.review-author-input');
+                const avgBox = slide.querySelector('.avg-box');
+                const addReview = async () => {
+                    const author = authorInput.value.trim();
+                    const comment = textarea.value.trim();
+                    if (!author) { alert("Podaj imię"); return; }
+                    if (selectedStars === 0) { alert("Wybierz gwiazdki"); return; }
+                    const newReview = { author, stars: selectedStars, comment: comment || "(bez komentarza)", approved: false, verified: false, timestamp: Date.now() };
+                    const updatedReviews = [...movie.reviews, newReview];
+                    await db.collection("movies").doc(movie.id).update({ reviews: updatedReviews });
+                    authorInput.value = '';
+                    textarea.value = '';
+                    selectedStars = 0;
+                    starSpans.forEach(s => s.classList.remove('selected'));
+                };
+                if (textarea) {
+                    const newTextarea = textarea.cloneNode(true);
+                    textarea.parentNode.replaceChild(newTextarea, textarea);
+                    newTextarea.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            addReview();
+                        }
+                    });
+                }
+                // Kliknięcie w średnią – dodaje recenzję (jak Enter)
+                if (avgBox) {
+                    avgBox.onclick = () => addReview();
+                }
+            });
         }
 
         function updateCarouselPosition(animate = true) {
             if (!track) return;
             const slideWidth = track.parentElement.clientWidth;
-            const newOffset = -currentSlideIndex * slideWidth;
+            const offset = -currentSlideIndex * slideWidth;
             track.style.transition = animate ? 'transform 0.3s ease-out' : 'none';
-            track.style.transform = `translateX(${newOffset}px)`;
+            track.style.transform = `translateX(${offset}px)`;
         }
 
         function goToSlide(index) {
@@ -919,95 +812,17 @@
             currentSlideIndex = index;
             currentMovieIndex = index;
             updateCarouselPosition(true);
-            setTimeout(() => attachMovieEvents(), 350);
         }
 
         function nextSlide() { goToSlide(currentSlideIndex + 1); }
         function prevSlide() { goToSlide(currentSlideIndex - 1); }
 
-        function attachMovieEvents() {
-            const currentMovie = movies[currentSlideIndex];
-            if (!currentMovie) return;
-            document.querySelectorAll('.approve-btn').forEach(btn => {
-                btn.onclick = async () => {
-                    if (!isAdmin && !isAdminAction()) return;
-                    const idx = parseInt(btn.dataset.idx);
-                    const updatedReviews = [...currentMovie.reviews];
-                    updatedReviews[idx].approved = true;
-                    updatedReviews[idx].timestamp = Date.now();
-                    await db.collection("movies").doc(currentMovie.id).update({ reviews: updatedReviews });
-                };
-            });
-            document.querySelectorAll('.verify-btn').forEach(btn => {
-                btn.onclick = async () => {
-                    if (!isAdmin && !isAdminAction()) return;
-                    const idx = parseInt(btn.dataset.idx);
-                    const updatedReviews = [...currentMovie.reviews];
-                    updatedReviews[idx].verified = true;
-                    updatedReviews[idx].timestamp = Date.now();
-                    await db.collection("movies").doc(currentMovie.id).update({ reviews: updatedReviews });
-                };
-            });
-            document.querySelectorAll('.delete-review-btn').forEach(btn => {
-                btn.onclick = async () => {
-                    if (!isAdmin && !isAdminAction()) return;
-                    const idx = parseInt(btn.dataset.idx);
-                    const updatedReviews = [...currentMovie.reviews];
-                    updatedReviews.splice(idx, 1);
-                    await db.collection("movies").doc(currentMovie.id).update({ reviews: updatedReviews });
-                };
-            });
-            const starsSpans = document.querySelectorAll('#starSelector .star-select');
-            let selStars = 0;
-            starsSpans.forEach((s,i) => { s.onclick = () => { selStars = i+1; starsSpans.forEach((ss,j) => ss.classList.toggle('selected', j<=i)); }; });
-            const textarea = document.getElementById('reviewComment');
-            const authorInput = document.getElementById('reviewAuthor');
-            const addReviewHandler = async () => {
-                const a = authorInput.value.trim();
-                const c = textarea.value.trim();
-                if(!a) { alert("Podaj imię"); return; }
-                if(!selStars) { alert("Wybierz gwiazdki"); return; }
-                const newReview = { author: a, stars: selStars, comment: c || "(bez komentarza)", approved: false, verified: false, timestamp: Date.now() };
-                const updatedReviews = [...currentMovie.reviews, newReview];
-                await db.collection("movies").doc(currentMovie.id).update({ reviews: updatedReviews });
-                authorInput.value = '';
-                textarea.value = '';
-                selStars = 0;
-                starsSpans.forEach(s => s.classList.remove('selected'));
-            };
-            if (textarea) {
-                const newTextarea = textarea.cloneNode(true);
-                textarea.parentNode.replaceChild(newTextarea, textarea);
-                newTextarea.addEventListener('keydown', (e) => {
-                    if(e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        addReviewHandler();
-                    }
-                });
-            }
-            const editBtn = document.getElementById('editBtn');
-            if (editBtn) {
-                editBtn.onclick = () => {
-                    document.getElementById('editTitle').value = currentMovie.title;
-                    document.getElementById('editDate').value = currentMovie.date ? currentMovie.date.split('.').reverse().join('-') : '';
-                    document.getElementById('editPosterUrl').value = currentMovie.poster || '';
-                    document.getElementById('editLink').value = currentMovie.link || '';
-                    document.getElementById('editSentimental').value = currentMovie.sentimentalValue || '';
-                    document.getElementById('editMovieModal').style.display = 'flex';
-                };
-            }
-            const avgBox = document.getElementById('avgBox');
-            if (avgBox) avgBox.onclick = () => switchToHome();
-        }
-
         function switchToMovie() {
             viewMode = 'movie';
             const container = document.getElementById('mainContent');
-            container.classList.add('view-transition');
-            container.classList.add('view-fade-out');
+            container.classList.add('view-transition', 'view-fade-out');
             setTimeout(() => {
                 buildCarousel(currentMovieIndex);
-                attachMovieEvents();
                 container.classList.remove('view-fade-out');
                 setTimeout(() => container.classList.remove('view-transition'), 200);
                 showArrows(true);
@@ -1017,8 +832,7 @@
         function switchToHome() {
             viewMode = 'home';
             const container = document.getElementById('mainContent');
-            container.classList.add('view-transition');
-            container.classList.add('view-fade-out');
+            container.classList.add('view-transition', 'view-fade-out');
             setTimeout(() => {
                 renderHome();
                 container.classList.remove('view-fade-out');
@@ -1029,140 +843,116 @@
 
         function renderHome() {
             const next = getNextMovie();
-            const posterUrlNext = next && next.poster ? next.poster : '';
+            const posterUrlNext = next?.poster || '';
             const nextPosterHtml = posterUrlNext ? `<img class="poster" src="${escapeHtml(posterUrlNext)}" onerror="this.style.display='none'">` : '<div class="poster" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#666;">🎬</div>';
             document.getElementById('mainContent').innerHTML = `
                 <div class="home-container">
-                    <div class="next-movie-card" id="nextMovieCard">
-                        ${nextPosterHtml}
-                        <h2>NAJBLIŻSZY SEANS</h2>
-                        <div class="title">${escapeHtml(next?.title || 'brak filmów')}</div>
-                        <div class="date">${escapeHtml(next?.date || '')}</div>
-                    </div>
-                    <div class="ranking-section">
-                        <div class="ranking-header">
-                            <h3>RANKING <span class="clickable-text" id="ratingSystemLink">(?)</span></h3>
-                            <span class="clickable-text" id="openProposeBtn">PROPONUJ!</span>
-                        </div>
-                        <div class="ranking-list" id="rankingList"></div>
-                    </div>
+                    <div class="next-movie-card" id="nextMovieCard">${nextPosterHtml}<h2>NAJBLIŻSZY SEANS</h2><div class="title">${escapeHtml(next?.title||'brak filmów')}</div><div class="date">${escapeHtml(next?.date||'')}</div></div>
+                    <div class="ranking-section"><div class="ranking-header"><h3>RANKING <span class="clickable-text" id="ratingSystemLink">(?)</span></h3><span class="clickable-text" id="openProposeBtn">PROPONUJ!</span></div><div class="ranking-list" id="rankingList"></div></div>
                 </div>`;
             const rankingDiv = document.getElementById('rankingList');
-            if(rankingDiv) {
+            if (rankingDiv) {
                 const threshold = 3;
-                const highRank = movies.filter(m => countApprovedReviews(m) >= threshold);
-                const lowRank = movies.filter(m => countApprovedReviews(m) < threshold);
-                const sortByAvg = (a,b) => parseFloat(avgWeighted(b)) - parseFloat(avgWeighted(a));
-                highRank.sort(sortByAvg);
-                lowRank.sort(sortByAvg);
-                const sortedMovies = [...highRank, ...lowRank];
-                rankingDiv.innerHTML = sortedMovies.map((m, idx) => {
+                const high = movies.filter(m => countApprovedReviews(m) >= threshold);
+                const low = movies.filter(m => countApprovedReviews(m) < threshold);
+                const sortAvg = (a,b) => parseFloat(avgWeighted(b)) - parseFloat(avgWeighted(a));
+                high.sort(sortAvg); low.sort(sortAvg);
+                const all = [...high, ...low];
+                rankingDiv.innerHTML = all.map((m, idx) => {
                     const posterStyle = m.poster ? `background-image: url('${escapeHtml(m.poster)}'); background-size: cover;` : '';
                     const rating = avgWeighted(m);
-                    const hasEnoughReviews = countApprovedReviews(m) >= threshold;
-                    const ratingText = hasEnoughReviews ? (rating !== '—' ? `${rating} ★` : '— ★') : '–';
-                    let badge = '';
-                    if (!hasEnoughReviews) badge = ' <span style="font-size:0.7rem; color:#888;">(czeka na więcej ocen)</span>';
-                    return `<div class="ranking-item" data-idx="${movies.indexOf(m)}" style="${posterStyle}">
-                                <span class="ranking-title">${idx+1}. ${escapeHtml(m.title)}${badge}</span>
-                                <span class="ranking-rating">${ratingText}</span>
-                            </div>`;
+                    const enough = countApprovedReviews(m) >= threshold;
+                    const ratingText = enough ? (rating !== '—' ? `${rating} ★` : '— ★') : '–';
+                    const badge = !enough ? ' <span style="font-size:0.7rem; color:#888;">(czeka na więcej ocen)</span>' : '';
+                    return `<div class="ranking-item" data-idx="${movies.indexOf(m)}" style="${posterStyle}"><span class="ranking-title">${idx+1}. ${escapeHtml(m.title)}${badge}</span><span class="ranking-rating">${ratingText}</span></div>`;
                 }).join('');
                 document.querySelectorAll('.ranking-item').forEach(el => {
                     el.onclick = () => {
                         const idx = parseInt(el.dataset.idx);
-                        if(!isNaN(idx) && movies[idx]) {
+                        if (!isNaN(idx) && movies[idx]) {
                             currentMovieIndex = idx;
                             switchToMovie();
                         }
                     };
                 });
             }
-            document.getElementById('openProposeBtn').onclick = () => { loadProposalsIntoModal(); document.getElementById('proposeModal').style.display = 'flex'; };
+            document.getElementById('openProposeBtn').onclick = () => { loadProposals(); document.getElementById('proposeModal').style.display = 'flex'; };
             document.getElementById('cancelProposeBtn').onclick = () => document.getElementById('proposeModal').style.display = 'none';
             document.getElementById('submitProposeBtn').onclick = async () => {
                 const title = document.getElementById('proposeTitle').value.trim();
-                if (!title) { alert("Podaj tytuł filmu"); return; }
-                await db.collection("proposals").add({ title: title, votes: 0, timestamp: Date.now() });
+                if (!title) return alert("Podaj tytuł");
+                await db.collection("proposals").add({ title, votes: 0, timestamp: Date.now() });
                 document.getElementById('proposeTitle').value = '';
-                loadProposalsIntoModal();
+                loadProposals();
             };
             document.getElementById('ratingSystemLink').onclick = () => document.getElementById('infoModal').style.display = 'flex';
             const nextCard = document.getElementById('nextMovieCard');
-            if(nextCard && next) {
+            if (nextCard && next) {
                 nextCard.onclick = () => {
                     const idx = movies.findIndex(m => m.id === next.id);
-                    if(idx !== -1) { currentMovieIndex = idx; switchToMovie(); }
+                    if (idx !== -1) { currentMovieIndex = idx; switchToMovie(); }
                 };
             }
             showArrows(false);
             showLoading(false);
         }
 
-        async function loadProposalsIntoModal() {
-            const proposalsDiv = document.getElementById('proposalsList');
-            if (!proposalsDiv) return;
-            proposalsDiv.innerHTML = '<div style="text-align:center; padding:1rem;">Ładowanie...</div>';
+        async function loadProposals() {
+            const div = document.getElementById('proposalsList');
+            if (!div) return;
+            div.innerHTML = 'Ładowanie...';
             try {
-                const snapshot = await db.collection("proposals").orderBy("votes", "desc").get();
-                const proposals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if (proposals.length === 0) { proposalsDiv.innerHTML = '<div style="text-align:center; padding:1rem;">Brak propozycji. Bądź pierwszy!</div>'; return; }
-                const votedIds = JSON.parse(localStorage.getItem('proposal_votes') || '[]');
-                proposalsDiv.innerHTML = proposals.map(p => {
-                    const votedClass = votedIds.includes(p.id) ? 'voted' : '';
-                    const voteDisabled = votedIds.includes(p.id) ? 'disabled' : '';
-                    return `<div class="proposal-item"><div class="proposal-info"><div class="proposal-title">${escapeHtml(p.title)}</div></div><div class="proposal-actions"><div class="proposal-vote ${votedClass}" data-id="${p.id}" style="pointer-events: ${voteDisabled ? 'none' : 'auto'}"><span>${p.votes || 0}</span><span>${votedIds.includes(p.id) ? '✓' : '+1'}</span></div><button class="proposal-delete" data-id="${p.id}">✕</button></div></div>`;
-                }).join('');
+                const snap = await db.collection("proposals").orderBy("votes","desc").get();
+                const props = snap.docs.map(d=> ({id:d.id, ...d.data()}));
+                if (props.length===0) { div.innerHTML = 'Brak propozycji. Bądź pierwszy!'; return; }
+                const voted = JSON.parse(localStorage.getItem('proposal_votes')||'[]');
+                div.innerHTML = props.map(p => `<div class="proposal-item"><div class="proposal-info">${escapeHtml(p.title)}</div><div class="proposal-actions"><div class="proposal-vote ${voted.includes(p.id)?'voted':''}" data-id="${p.id}" style="pointer-events:${voted.includes(p.id)?'none':'auto'}"><span>${p.votes||0}</span><span>${voted.includes(p.id)?'✓':'+1'}</span></div><button class="proposal-delete" data-id="${p.id}">✕</button></div></div>`).join('');
                 document.querySelectorAll('.proposal-vote').forEach(el => {
                     if (el.classList.contains('voted')) return;
                     el.onclick = async () => {
-                        const pid = el.dataset.id;
-                        let voted = JSON.parse(localStorage.getItem('proposal_votes') || '[]');
-                        if (voted.includes(pid)) { alert("Już głosowałeś"); return; }
-                        const ref = db.collection("proposals").doc(pid);
+                        const id = el.dataset.id;
+                        let votedArr = JSON.parse(localStorage.getItem('proposal_votes')||'[]');
+                        if (votedArr.includes(id)) return alert("Już głosowałeś");
+                        const ref = db.collection("proposals").doc(id);
                         const doc = await ref.get();
                         if (!doc.exists) return;
-                        await ref.update({ votes: (doc.data().votes || 0) + 1 });
-                        voted.push(pid);
-                        localStorage.setItem('proposal_votes', JSON.stringify(voted));
-                        loadProposalsIntoModal();
+                        await ref.update({ votes: (doc.data().votes||0)+1 });
+                        votedArr.push(id);
+                        localStorage.setItem('proposal_votes', JSON.stringify(votedArr));
+                        loadProposals();
                     };
                 });
                 document.querySelectorAll('.proposal-delete').forEach(btn => {
                     btn.onclick = async () => {
                         if (!isAdmin && !isAdminAction()) return;
-                        const pid = btn.dataset.id;
-                        await db.collection("proposals").doc(pid).delete();
-                        loadProposalsIntoModal();
+                        await db.collection("proposals").doc(btn.dataset.id).delete();
+                        loadProposals();
                     };
                 });
-            } catch(e) { proposalsDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:#e06c4e;">Błąd ładowania.</div>'; }
+            } catch(e) { div.innerHTML = 'Błąd ładowania.'; }
         }
 
         async function deleteCurrentMovie() {
             if (viewMode !== 'movie') return;
             if (!isAdmin && !isAdminAction()) return;
-            const confirmDelete = confirm("Czy na pewno chcesz usunąć ten film? Tej operacji nie można cofnąć.");
-            if (!confirmDelete) return;
+            if (!confirm("Usunąć ten film? Nie można cofnąć.")) return;
             await db.collection("movies").doc(movies[currentMovieIndex].id).delete();
         }
 
-        async function seedDefaultDataIfNeeded() {
-            const snapshot = await db.collection("movies").get();
-            if (snapshot.empty) {
-                for (const m of defaultMovies) {
-                    await db.collection("movies").doc(m.id).set(m);
-                }
+        async function seedDefault() {
+            const snap = await db.collection("movies").get();
+            if (snap.empty) {
+                for (const m of defaultMovies) await db.collection("movies").doc(m.id).set(m);
             }
         }
 
-        function startFirestoreListener() {
+        function startListener() {
             if (unsubscribeMovies) unsubscribeMovies();
             showLoading(true);
-            seedDefaultDataIfNeeded().then(() => {
-                unsubscribeMovies = db.collection("movies").onSnapshot(snapshot => {
+            seedDefault().then(() => {
+                unsubscribeMovies = db.collection("movies").onSnapshot(snap => {
                     const newMovies = [];
-                    snapshot.forEach(doc => newMovies.push(doc.data()));
+                    snap.forEach(doc => newMovies.push(doc.data()));
                     movies = newMovies;
                     if (movies.length === 0) {
                         if (viewMode === 'home') renderHome();
@@ -1171,112 +961,85 @@
                         if (viewMode === 'home') renderHome();
                         else {
                             if (track) {
-                                // odśwież slajdy w istniejącej karuzeli
+                                const oldId = movies[currentMovieIndex]?.id;
                                 while (track.firstChild) track.removeChild(track.firstChild);
                                 movies.forEach((m, idx) => {
                                     const slideDiv = document.createElement('div');
-                                    slideDiv.className = 'carousel-slide';
                                     slideDiv.innerHTML = generateMovieSlide(m);
-                                    track.appendChild(slideDiv);
+                                    track.appendChild(slideDiv.firstChild);
                                 });
-                                if (currentMovieIndex >= movies.length) currentMovieIndex = movies.length - 1;
+                                if (oldId) {
+                                    const newIdx = movies.findIndex(m => m.id === oldId);
+                                    if (newIdx !== -1) currentMovieIndex = newIdx;
+                                    else currentMovieIndex = 0;
+                                } else currentMovieIndex = 0;
                                 currentSlideIndex = currentMovieIndex;
                                 updateCarouselPosition(false);
-                                attachMovieEvents();
+                                attachDelegatedEvents();
                             } else {
-                                // jeśli nie ma tracka (np. pierwsze uruchomienie w movie)
                                 buildCarousel(currentMovieIndex);
-                                attachMovieEvents();
                             }
                         }
                     }
-                    showLoading(false);
-                }, error => {
-                    console.error("Błąd nasłuchiwania:", error);
                     showLoading(false);
                 });
             });
         }
 
         function handleAdminButton() {
-            if (viewMode === 'movie') {
-                deleteCurrentMovie();
-            } else {
-                if (isAdmin) {
-                    setAdminMode(false);
-                    alert("Tryb administratora został wyłączony.");
-                } else {
-                    showAdminLoginModal();
-                }
+            if (viewMode === 'movie') deleteCurrentMovie();
+            else {
+                if (isAdmin) { setAdminMode(false); alert("Tryb admina wyłączony."); }
+                else showAdminLoginModal();
             }
         }
 
         // Modale
-        const addModal = document.getElementById('movieModal');
-        const editModal = document.getElementById('editMovieModal');
-        const infoModal = document.getElementById('infoModal');
-        const proposeModal = document.getElementById('proposeModal');
-        const adminLoginModal = document.getElementById('adminLoginModal');
-        document.getElementById('openModalBtn').onclick = () => { if (!isAdmin && !isAdminAction()) return; addModal.style.display = 'flex'; };
-        document.getElementById('cancelModalBtn').onclick = () => addModal.style.display = 'none';
-        document.getElementById('cancelEditBtn').onclick = () => editModal.style.display = 'none';
-        document.getElementById('closeInfoModalBtn').onclick = () => infoModal.style.display = 'none';
-        document.getElementById('cancelProposeBtn').onclick = () => proposeModal.style.display = 'none';
-        document.getElementById('cancelAdminLoginBtn').onclick = () => adminLoginModal.style.display = 'none';
+        document.getElementById('openModalBtn').onclick = () => { if (!isAdmin && !isAdminAction()) return; document.getElementById('movieModal').style.display = 'flex'; };
+        document.getElementById('cancelModalBtn').onclick = () => document.getElementById('movieModal').style.display = 'none';
+        document.getElementById('cancelEditBtn').onclick = () => document.getElementById('editMovieModal').style.display = 'none';
+        document.getElementById('closeInfoModalBtn').onclick = () => document.getElementById('infoModal').style.display = 'none';
+        document.getElementById('cancelProposeBtn').onclick = () => document.getElementById('proposeModal').style.display = 'none';
+        document.getElementById('cancelAdminLoginBtn').onclick = () => document.getElementById('adminLoginModal').style.display = 'none';
         document.getElementById('confirmAdminLoginBtn').onclick = () => {
             const pwd = document.getElementById('adminPassword').value;
-            if (pwd === ADMIN_PASSWORD) { setAdminMode(true); adminLoginModal.style.display = 'none'; alert("Jesteś teraz w trybie administratora."); }
-            else alert("Nieprawidłowe hasło.");
+            if (pwd === ADMIN_PASSWORD) { setAdminMode(true); document.getElementById('adminLoginModal').style.display = 'none'; alert("Tryb admina włączony."); }
+            else alert("Złe hasło");
         };
-        window.onclick = (e) => {
-            if(e.target===addModal) addModal.style.display='none';
-            if(e.target===editModal) editModal.style.display='none';
-            if(e.target===infoModal) infoModal.style.display='none';
-            if(e.target===proposeModal) proposeModal.style.display='none';
-            if(e.target===adminLoginModal) adminLoginModal.style.display='none';
+        window.onclick = e => {
+            if (e.target.classList.contains('modal')) e.target.style.display = 'none';
         };
         document.getElementById('saveMovieBtn').onclick = async () => {
             if (!isAdmin && !isAdminAction()) return;
-            const t = document.getElementById('newTitle').value.trim();
-            if(!t) return alert("Tytuł wymagany");
+            const title = document.getElementById('newTitle').value.trim();
+            if (!title) return alert("Tytuł wymagany");
             const dateRaw = document.getElementById('newDate').value;
             const date = dateRaw ? dateRaw.split('-').reverse().join('.') : '';
-            const poster = document.getElementById('newPosterUrl').value.trim();
-            const link = document.getElementById('newLink').value.trim();
-            const sentimental = document.getElementById('newSentimental').value.trim();
-            const newMovie = { id: Date.now().toString(), date, title: t, poster, link, reviews: [], sentimentalValue: sentimental };
+            const newMovie = { id: Date.now().toString(), date, title, poster: document.getElementById('newPosterUrl').value.trim(), link: document.getElementById('newLink').value.trim(), reviews: [], sentimentalValue: document.getElementById('newSentimental').value.trim() };
             await db.collection("movies").doc(newMovie.id).set(newMovie);
-            addModal.style.display='none';
-            document.getElementById('newTitle').value=''; document.getElementById('newPosterUrl').value=''; document.getElementById('newLink').value=''; document.getElementById('newSentimental').value='';
+            document.getElementById('movieModal').style.display = 'none';
+            document.getElementById('newTitle').value = ''; document.getElementById('newPosterUrl').value = ''; document.getElementById('newLink').value = ''; document.getElementById('newSentimental').value = '';
         };
         document.getElementById('saveEditBtn').onclick = async () => {
             if (!isAdmin && !isAdminAction()) return;
-            const nt = document.getElementById('editTitle').value.trim();
-            if(!nt) return alert("Tytuł nie może być pusty");
+            const title = document.getElementById('editTitle').value.trim();
+            if (!title) return alert("Tytuł wymagany");
             const dateRaw = document.getElementById('editDate').value;
             const date = dateRaw ? dateRaw.split('-').reverse().join('.') : '';
-            const updateData = {
-                title: nt, date: date,
-                poster: document.getElementById('editPosterUrl').value.trim(),
-                link: document.getElementById('editLink').value.trim(),
-                sentimentalValue: document.getElementById('editSentimental').value.trim()
-            };
-            await db.collection("movies").doc(movies[currentMovieIndex].id).update(updateData);
-            editModal.style.display='none';
+            const update = { title, date, poster: document.getElementById('editPosterUrl').value.trim(), link: document.getElementById('editLink').value.trim(), sentimentalValue: document.getElementById('editSentimental').value.trim() };
+            await db.collection("movies").doc(window.currentEditMovieId).update(update);
+            document.getElementById('editMovieModal').style.display = 'none';
         };
         document.getElementById('homeLogo').onclick = () => { if (viewMode !== 'home') switchToHome(); };
         document.getElementById('adminBtn').onclick = handleAdminButton;
         document.getElementById('prevArrow').onclick = () => { if (viewMode === 'movie') prevSlide(); };
         document.getElementById('nextArrow').onclick = () => { if (viewMode === 'movie') nextSlide(); };
-        window.addEventListener('keydown', (e) => { if (viewMode === 'movie' && (e.key === 'ArrowLeft')) prevSlide(); if (viewMode === 'movie' && (e.key === 'ArrowRight')) nextSlide(); });
+        window.addEventListener('keydown', e => { if (viewMode === 'movie' && e.key === 'ArrowLeft') prevSlide(); if (viewMode === 'movie' && e.key === 'ArrowRight') nextSlide(); });
 
-        function showLoading(show) {
-            const ld = document.querySelector('.loading-indicator');
-            if (ld) ld.style.display = show ? 'flex' : 'none';
-        }
+        function showLoading(show) { const ld = document.querySelector('.loading-indicator'); if (ld) ld.style.display = show ? 'flex' : 'none'; }
 
         checkAdminFromStorage();
-        startFirestoreListener();
+        startListener();
     </script>
 </body>
 </html>
