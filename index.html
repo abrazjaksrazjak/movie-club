@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>JLL Movie Club – współdzielony ranking</title>
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-auth-compat.js"></script>
@@ -20,6 +19,7 @@
             flex-direction: column;
             align-items: center;
             padding: env(safe-area-inset-top) 0 0 0;
+            min-height: -webkit-fill-available;
         }
         .app-container {
             width: 100%;
@@ -73,7 +73,7 @@
             min-height: 0;
             position: relative;
             width: 100%;
-            overflow: hidden;
+            overflow: auto;
         }
         .loading-indicator {
             position: absolute;
@@ -275,6 +275,7 @@
             border-top: 1px solid #262626;
             padding: 0.8rem 1rem 1rem;
         }
+        /* Formularz recenzji – lewa kolumna stała 100px */
         .review-form-grid {
             display: flex;
             flex-direction: column;
@@ -282,7 +283,7 @@
         }
         .review-form-row {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 0.8rem;
             align-items: stretch;
         }
@@ -290,6 +291,7 @@
             flex: 0 0 100px;
             display: flex;
             flex-direction: column;
+            justify-content: center;
             gap: 0.3rem;
         }
         .review-form-left input {
@@ -308,6 +310,7 @@
             background: #1c1c1c;
             padding: 0.2rem 0.4rem;
             border-radius: 10px;
+            justify-content: center;
         }
         .star-select {
             display: inline-block;
@@ -319,14 +322,13 @@
         }
         .star-select.selected { color: #d4af37; }
         .review-form-middle {
-            flex: 2;
-            min-width: 180px;
+            flex: 1;
             display: flex;
-            gap: 0.8rem;
-            align-items: stretch;
+            flex-direction: column;
         }
         .review-form-middle textarea {
-            flex: 1;
+            width: 100%;
+            height: 100%;
             background: #1c1c1c;
             border: 1px solid #2c2c2c;
             border-radius: 10px;
@@ -337,11 +339,12 @@
             font-family: inherit;
         }
         .avg-box {
+            flex: 0 0 70px;
             background: #1c1c1c;
             border: 1px solid #2c2c2c;
             border-radius: 10px;
-            padding: 0.6rem 0.8rem;
-            font-size: 1.1rem;
+            padding: 0.5rem 0.2rem;
+            font-size: 0.9rem;
             font-weight: 700;
             color: #d4af37;
             text-align: center;
@@ -521,54 +524,72 @@
         .proposals-list {
             display: flex;
             flex-direction: column;
-            gap: 0.6rem;
-            margin: 1rem 0;
+            gap: 0.3rem;
+            margin: 0.5rem 0;
         }
         .proposal-item {
             background: #1e1e2a;
-            border-radius: 10px;
-            padding: 0.8rem;
+            border-radius: 8px;
+            padding: 0.4rem 0.6rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border: 1px solid #2c2c2c;
+            font-size: 0.8rem;
         }
-        .proposal-vote {
+        .proposal-info {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            background: #2a2a2a;
-            padding: 0.3rem 0.8rem;
-            border-radius: 30px;
-            cursor: pointer;
+            flex: 1;
         }
-        .proposal-vote.voted { background: #d4af37; color: #0a0a0a; cursor: default; opacity: 0.8; }
+        .proposal-title {
+            font-size: 0.8rem;
+        }
         .proposal-delete {
             background: none;
             border: none;
             color: #a0a0a0;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
         }
-        .proposal-delete:hover { color: #e06c4e; }
-        @media (max-width: 480px) {
-            .review-form-row {
-                display: grid;
-                grid-template-columns: 1fr auto;
-                gap: 0.4rem;
+        .proposal-delete:hover {
+            color: #e06c4e;
+        }
+        .proposal-vote {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: #2a2a2a;
+            padding: 0.2rem 0.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+        .proposal-vote span:first-child { font-weight: 600; margin-right: 0.2rem; }
+        @media (max-width: 600px) {
+            .star-select {
+                width: 0.85rem;
+                font-size: 0.8rem;
             }
-            .review-form-left { grid-area: left; }
-            .review-form-middle { display: contents; }
-            .review-form-middle textarea { grid-area: textarea; width: 100%; margin-top: 0.2rem; }
-            .avg-box { grid-area: avg; align-self: stretch; min-width: 70px; }
-            .review-form-row { grid-template-areas: "left avg" "textarea textarea"; }
+            .review-form-left input {
+                font-size: 0.65rem;
+                padding: 0.3rem 0.3rem;
+            }
+            .review-form-middle textarea {
+                font-size: 0.65rem;
+                padding: 0.3rem 0.4rem;
+            }
+            .avg-box {
+                flex-basis: 55px;
+                font-size: 0.75rem;
+                padding: 0.3rem 0.1rem;
+            }
+        }
+        @media (max-width: 480px) {
             .next-movie-card .poster { max-height: 240px; }
             .ranking-header { gap: 0.3rem; }
             .ranking-header h3, .clickable-text { font-size: 0.65rem; }
-        }
-        @media (min-width: 481px) {
-            .review-form-middle { flex-direction: row; }
-            .avg-box { flex-shrink: 0; }
         }
     </style>
 </head>
@@ -594,7 +615,15 @@
     <div id="adminLoginModal" class="modal"><div class="modal-content"><h3>Logowanie admina</h3><input type="password" id="adminPassword" placeholder="Hasło"><div class="modal-buttons"><button id="cancelAdminLoginBtn">Anuluj</button><button id="confirmAdminLoginBtn">Zaloguj</button></div></div></div>
 
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE", authDomain: "movie-club-f8ceb.firebaseapp.com", projectId: "movie-club-f8ceb", storageBucket: "movie-club-f8ceb.firebasestorage.app", messagingSenderId: "17251318633", appId: "1:17251318633:web:5080a0bc0243e1a91d1bf8" };
+        // ======================= KONFIGURACJA FIREBASE =======================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE",
+            authDomain: "movie-club-f8ceb.firebaseapp.com",
+            projectId: "movie-club-f8ceb",
+            storageBucket: "movie-club-f8ceb.firebasestorage.app",
+            messagingSenderId: "17251318633",
+            appId: "1:17251318633:web:5080a0bc0243e1a91d1bf8"
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
@@ -630,8 +659,16 @@
 
         function setAdminMode(admin) {
             isAdmin = admin;
-            if (admin) { sessionStorage.setItem('movieclub_admin','true'); document.getElementById('adminBtn').classList.add('admin-active'); document.getElementById('adminBtn').textContent = '👑'; }
-            else { sessionStorage.removeItem('movieclub_admin'); document.getElementById('adminBtn').classList.remove('admin-active'); document.getElementById('adminBtn').textContent = '✕'; }
+            if (admin) {
+                sessionStorage.setItem('movieclub_admin','true');
+                document.getElementById('adminBtn').classList.add('admin-active');
+                document.getElementById('adminBtn').textContent = '👑';
+            } else {
+                sessionStorage.removeItem('movieclub_admin');
+                document.getElementById('adminBtn').classList.remove('admin-active');
+                document.getElementById('adminBtn').textContent = '✕';
+            }
+            if (document.getElementById('proposeModal').style.display === 'flex') loadProposals();
         }
         function checkAdminFromStorage() { if (sessionStorage.getItem('movieclub_admin')==='true') setAdminMode(true); }
         function showAdminLoginModal() { document.getElementById('adminLoginModal').style.display = 'flex'; document.getElementById('adminPassword').value = ''; }
@@ -680,7 +717,8 @@
                             <div class="review-form-grid">
                                 <div class="review-form-row">
                                     <div class="review-form-left"><input type="text" class="review-author-input" placeholder="Imię" maxlength="20"><div class="rating-input" id="starSelector_${movie.id}">${[1,2,3,4,5].map(n=>`<span class="star-select" data-value="${n}">★</span>`).join('')}</div></div>
-                                    <div class="review-form-middle"><textarea class="review-comment-input" placeholder="Napisz kilka słów (Enter aby dodać)" maxlength="256"></textarea><div class="avg-box" data-movie-id="${movie.id}">${avgDisplay}</div></div>
+                                    <div class="review-form-middle"><textarea class="review-comment-input" placeholder="Napisz kilka słów (Enter aby dodać)" maxlength="256"></textarea></div>
+                                    <div class="avg-box" data-movie-id="${movie.id}">${avgDisplay}</div>
                                 </div>
                             </div>
                         </div>
@@ -692,6 +730,7 @@
         function buildCarousel(selectedIndex) {
             const container = document.getElementById('mainContent');
             if (!container) return;
+            container.style.overflow = 'hidden';
             container.innerHTML = `<div class="carousel-viewport"><div class="carousel-track" id="carouselTrack"></div></div>`;
             track = document.getElementById('carouselTrack');
             movies.forEach((m, idx) => {
@@ -711,7 +750,6 @@
         function attachDelegatedEvents() {
             const container = document.getElementById('mainContent');
             if (!container) return;
-            // Edycja filmu
             container.querySelectorAll('.edit-movie-btn').forEach(btn => {
                 btn.onclick = (e) => {
                     e.stopPropagation();
@@ -728,7 +766,6 @@
                     window.currentEditMovieId = movie.id;
                 };
             });
-            // Recenzje – zatwierdzanie, verified, usuwanie
             container.querySelectorAll('.approve-btn, .verify-btn, .delete-review-btn').forEach(btn => {
                 btn.onclick = async (e) => {
                     e.stopPropagation();
@@ -751,7 +788,6 @@
                     await db.collection("movies").doc(movie.id).update({ reviews: updatedReviews });
                 };
             });
-            // Obsługa dodawania recenzji (gwiazdki, textarea Enter, oraz kliknięcie w średnią)
             container.querySelectorAll('.carousel-slide').forEach(slide => {
                 const movieId = slide.dataset.movieId;
                 const movie = movies.find(m => m.id === movieId);
@@ -790,10 +826,7 @@
                         }
                     });
                 }
-                // Kliknięcie w średnią – dodaje recenzję (jak Enter)
-                if (avgBox) {
-                    avgBox.onclick = () => addReview();
-                }
+                if (avgBox) avgBox.onclick = () => addReview();
             });
         }
 
@@ -820,6 +853,7 @@
         function switchToMovie() {
             viewMode = 'movie';
             const container = document.getElementById('mainContent');
+            container.style.overflow = 'hidden';
             container.classList.add('view-transition', 'view-fade-out');
             setTimeout(() => {
                 buildCarousel(currentMovieIndex);
@@ -832,6 +866,7 @@
         function switchToHome() {
             viewMode = 'home';
             const container = document.getElementById('mainContent');
+            container.style.overflow = 'auto';
             container.classList.add('view-transition', 'view-fade-out');
             setTimeout(() => {
                 renderHome();
@@ -906,7 +941,21 @@
                 const props = snap.docs.map(d=> ({id:d.id, ...d.data()}));
                 if (props.length===0) { div.innerHTML = 'Brak propozycji. Bądź pierwszy!'; return; }
                 const voted = JSON.parse(localStorage.getItem('proposal_votes')||'[]');
-                div.innerHTML = props.map(p => `<div class="proposal-item"><div class="proposal-info">${escapeHtml(p.title)}</div><div class="proposal-actions"><div class="proposal-vote ${voted.includes(p.id)?'voted':''}" data-id="${p.id}" style="pointer-events:${voted.includes(p.id)?'none':'auto'}"><span>${p.votes||0}</span><span>${voted.includes(p.id)?'✓':'+1'}</span></div><button class="proposal-delete" data-id="${p.id}">✕</button></div></div>`).join('');
+                div.innerHTML = props.map(p => {
+                    const deleteBtn = isAdmin ? `<button class="proposal-delete" data-id="${p.id}">✕</button>` : '';
+                    return `<div class="proposal-item">
+                        <div class="proposal-info">
+                            <span class="proposal-title">${escapeHtml(p.title)}</span>
+                            ${deleteBtn}
+                        </div>
+                        <div class="proposal-actions">
+                            <div class="proposal-vote ${voted.includes(p.id)?'voted':''}" data-id="${p.id}" style="pointer-events:${voted.includes(p.id)?'none':'auto'}">
+                                <span>${p.votes||0}</span>
+                                <span>${voted.includes(p.id)?'✓':'+1'}</span>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
                 document.querySelectorAll('.proposal-vote').forEach(el => {
                     if (el.classList.contains('voted')) return;
                     el.onclick = async () => {
