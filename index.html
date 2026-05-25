@@ -61,6 +61,7 @@
         .header-buttons {
             display: flex;
             gap: 0.6rem;
+            align-items: center;
         }
         .icon-btn {
             background: transparent;
@@ -467,19 +468,19 @@
             transform: scale(1.02);
             border-color: #d4af37;
         }
-        /* Strzałki – mniejsze, półprzezroczyste */
+        /* Strzałki – przezroczyste, mniejsze */
         .nav-arrow {
             position: fixed;
-            color: #ccc;
+            color: #aaa;
             font-size: 1.8rem;
             cursor: pointer;
             z-index: 100;
             background: none;
             border: none;
-            padding: 0.2rem;
+            padding: 0.3rem;
             transition: color 0.2s, transform 0.2s;
-            text-shadow: 0 0 4px rgba(0,0,0,0.8);
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+            text-shadow: 0 0 4px rgba(0,0,0,0.5);
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
             display: none;
             opacity: 0.5;
         }
@@ -488,15 +489,15 @@
             transform: scale(1.1);
             opacity: 1;
         }
-        .nav-arrow-left { left: 6px; }
-        .nav-arrow-right { right: 6px; }
+        .nav-arrow-left { left: 8px; }
+        .nav-arrow-right { right: 8px; }
         .home-container {
             flex: 1;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
         }
-        /* Karta najbliższego seansu – modyfikacje */
+        /* KARTA NAJBLIŻSZEGO SEANSU – z glowem śledzącym kursor */
         .next-movie-card {
             background: linear-gradient(145deg, #1a1a1a, #111);
             border-radius: 20px;
@@ -504,13 +505,35 @@
             margin-bottom: 1.5rem;
             text-align: center;
             cursor: pointer;
-            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), box-shadow 0.3s;
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
             border: none;
             position: sticky;
             top: 0;
             z-index: 5;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             overflow: hidden;
+            --x: 50%;
+            --y: 50%;
+        }
+        .next-movie-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(
+                circle at var(--x, 50%) var(--y, 50%),
+                rgba(212,175,55,0.15) 0%,
+                transparent 70%
+            );
+            opacity: 0.3;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            border-radius: 20px;
+        }
+        .next-movie-card:hover::after {
+            opacity: 0.7;
         }
         .next-movie-card .poster {
             width: 100%;
@@ -519,33 +542,15 @@
             border-radius: 12px;
             margin-bottom: 0.8rem;
             background: #0f0f0f;
-            transition: filter 0.2s, box-shadow 0.05s linear;
+            transition: filter 0.2s, background 0.05s linear;
             position: relative;
             z-index: 1;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
         .next-movie-card:hover {
             transform: translateY(-2px);
         }
         .next-movie-card:hover .poster {
-            filter: brightness(1.01);
-        }
-        /* Delikatny glow na tekście i plakacie (tło) */
-        .next-movie-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(212,175,55,0.1) 0%, transparent 70%);
-            opacity: 0.3;
-            pointer-events: none;
-            transition: opacity 0.2s;
-            border-radius: 20px;
-        }
-        .next-movie-card:hover::after {
-            opacity: 0.6;
+            filter: brightness(1.02);
         }
         .next-movie-card h2 {
             font-size: 0.85rem;
@@ -563,16 +568,17 @@
             flex-wrap: nowrap;
             gap: 0.8rem;
         }
-        .ranking-header h3 {
+        .ranking-header h3, .clickable-text {
             font-size: 0.8rem;
             font-weight: 500;
-            color: #c0c0c0;
             letter-spacing: 1px;
+        }
+        .ranking-header h3 {
+            color: #c0c0c0;
         }
         .clickable-text {
             cursor: pointer;
-            color: #d4af37; /* żółty */
-            font-size: 0.75rem;
+            color: #d4af37;
             transition: color 0.2s, text-shadow 0.2s;
             white-space: nowrap;
         }
@@ -651,7 +657,7 @@
             .star-select { width: 0.85rem; font-size: 0.8rem; }
             .review-form-middle textarea { font-size: 0.65rem; padding: 0.3rem 0.4rem; }
             .avg-box { flex-basis: 55px; font-size: 0.75rem; padding: 0.3rem 0.1rem; }
-            .nav-arrow { font-size: 1.5rem; opacity: 0.6; }
+            .nav-arrow { font-size: 1.5rem; }
         }
         @media (max-width: 480px) {
             .next-movie-card .poster { max-height: 240px; }
@@ -663,8 +669,7 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             background: rgba(0,0,0,0.8);
             backdrop-filter: blur(8px);
             align-items: center;
@@ -886,47 +891,6 @@
         let currentEditReviewData = null;
         let track = null, currentSlideIndex = 0;
 
-        // Obsługa glow śledzącego kursor – płynnie
-        function setupPosterGlow() {
-            const card = document.querySelector('.next-movie-card');
-            if (!card) return;
-            let rafId = null;
-            const handleMouseMove = (e) => {
-                if (rafId) cancelAnimationFrame(rafId);
-                rafId = requestAnimationFrame(() => {
-                    const rect = card.getBoundingClientRect();
-                    const x = ((e.clientX - rect.left) / rect.width) * 100;
-                    const y = ((e.clientY - rect.top) / rect.height) * 100;
-                    card.style.setProperty('--x', `${x}%`);
-                    card.style.setProperty('--y', `${y}%`);
-                    // dodatkowy mocny glow tylko pod kursorem (dla plakatu)
-                    const poster = card.querySelector('.poster');
-                    if (poster) {
-                        const posterRect = poster.getBoundingClientRect();
-                        const px = ((e.clientX - posterRect.left) / posterRect.width) * 100;
-                        const py = ((e.clientY - posterRect.top) / posterRect.height) * 100;
-                        poster.style.setProperty('--px', `${px}%`);
-                        poster.style.setProperty('--py', `${py}%`);
-                        poster.style.boxShadow = `0 0 0 0 rgba(212,175,55,0)`;
-                        // mocny, skupiony cień pod kursorem – ale nie na całym
-                        poster.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(212,175,55,0.5) 0%, rgba(212,175,55,0) 60%)`;
-                    }
-                });
-            };
-            const handleMouseLeave = () => {
-                if (rafId) cancelAnimationFrame(rafId);
-                card.style.removeProperty('--x');
-                card.style.removeProperty('--y');
-                const poster = card.querySelector('.poster');
-                if (poster) {
-                    poster.style.background = '';
-                    poster.style.boxShadow = '';
-                }
-            };
-            card.addEventListener('mousemove', handleMouseMove);
-            card.addEventListener('mouseleave', handleMouseLeave);
-        }
-
         function setAdminMode(admin) {
             if (adminTimeout) clearTimeout(adminTimeout);
             isAdmin = admin;
@@ -1118,7 +1082,7 @@
                 container.classList.remove('view-fade-out');
                 setTimeout(() => container.classList.remove('view-transition'), 200);
                 showArrows(false);
-                setTimeout(() => setupPosterGlow(), 100);
+                setupPosterGlow();
             }, 150);
         }
 
@@ -1178,7 +1142,49 @@
             }
             showArrows(false);
             showLoading(false);
-            setTimeout(() => setupPosterGlow(), 100);
+            setupPosterGlow();
+        }
+
+        // Funkcja glow z radial-gradient śledzącym kursor
+        function setupPosterGlow() {
+            const card = document.querySelector('.next-movie-card');
+            if (!card) return;
+
+            let rafId = null;
+
+            const handleMouseMove = (e) => {
+                if (rafId) cancelAnimationFrame(rafId);
+                rafId = requestAnimationFrame(() => {
+                    const rect = card.getBoundingClientRect();
+                    const x = ((e.clientX - rect.left) / rect.width) * 100;
+                    const y = ((e.clientY - rect.top) / rect.height) * 100;
+                    card.style.setProperty('--x', `${x}%`);
+                    card.style.setProperty('--y', `${y}%`);
+
+                    const poster = card.querySelector('.poster');
+                    if (poster) {
+                        const posterRect = poster.getBoundingClientRect();
+                        const px = ((e.clientX - posterRect.left) / posterRect.width) * 100;
+                        const py = ((e.clientY - posterRect.top) / posterRect.height) * 100;
+                        poster.style.background = `
+                            radial-gradient(circle at ${px}% ${py}%,
+                            rgba(212,175,55,0.35) 0%,
+                            rgba(212,175,55,0) 70%)
+                        `;
+                    }
+                });
+            };
+            const handleMouseLeave = () => {
+                if (rafId) cancelAnimationFrame(rafId);
+                card.style.removeProperty('--x');
+                card.style.removeProperty('--y');
+                const poster = card.querySelector('.poster');
+                if (poster) {
+                    poster.style.background = '';
+                }
+            };
+            card.addEventListener('mousemove', handleMouseMove);
+            card.addEventListener('mouseleave', handleMouseLeave);
         }
 
         async function loadProposals() {
@@ -1248,6 +1254,7 @@
         function attachDelegatedEvents() {
             const container = document.getElementById('mainContent');
             if (!container) return;
+            // Edycja filmu
             container.querySelectorAll('.edit-movie-btn').forEach(btn => {
                 btn.onclick = (e) => {
                     e.stopPropagation();
@@ -1264,6 +1271,7 @@
                     window.currentEditMovieId = movie.id;
                 };
             });
+            // Akcje recenzji (admin)
             container.querySelectorAll('.approve-btn, .verify-btn, .delete-review-btn').forEach(btn => {
                 btn.onclick = async (e) => {
                     e.stopPropagation();
@@ -1291,6 +1299,7 @@
                     await db.collection("movies").doc(movie.id).update({ reviews: updatedReviews });
                 };
             });
+            // Edycja własnej recenzji
             container.querySelectorAll('.edit-review-btn').forEach(btn => {
                 btn.onclick = (e) => {
                     e.stopPropagation();
@@ -1323,6 +1332,7 @@
                     window.currentEditReviewData = currentEditReviewData;
                 };
             });
+            // Usuwanie własnej recenzji
             container.querySelectorAll('.delete-own-review-btn').forEach(btn => {
                 btn.onclick = async (e) => {
                     e.stopPropagation();
@@ -1343,6 +1353,7 @@
                     await db.collection("movies").doc(movie.id).update({ reviews: updatedReviews });
                 };
             });
+            // Dodawanie recenzji z blokadą antyspamową
             container.querySelectorAll('.carousel-slide').forEach(slide => {
                 const movieId = slide.dataset.movieId;
                 const movie = movies.find(m => m.id === movieId);
@@ -1357,14 +1368,19 @@
                 });
                 const avgBox = slide.querySelector('.avg-box');
                 const addReview = async () => {
+                    const currentToken = getSessionToken();
+                    const existingPending = movie.reviews.some(r => !r.approved && r.sessionToken === currentToken);
+                    if (existingPending) {
+                        alert("Masz już niezatwierdzoną recenzję w tej sesji. Możesz ją edytować lub usunąć, zanim dodasz kolejną.");
+                        return;
+                    }
                     const authorInput = slide.querySelector('.review-author-input');
                     const textarea = slide.querySelector('.review-comment-input');
                     const author = authorInput ? authorInput.value.trim() : '';
                     const comment = textarea ? textarea.value.trim() : '';
                     if (!author) { alert("Podaj imię"); return; }
                     if (selectedStars === 0) { alert("Wybierz gwiazdki"); return; }
-                    const sessionToken = getSessionToken();
-                    const newReview = { author, stars: selectedStars, comment: comment || "(bez komentarza)", approved: false, verified: false, timestamp: Date.now(), sessionToken };
+                    const newReview = { author, stars: selectedStars, comment: comment || "(bez komentarza)", approved: false, verified: false, timestamp: Date.now(), sessionToken: currentToken };
                     const updatedReviews = [...movie.reviews, newReview];
                     await db.collection("movies").doc(movie.id).update({ reviews: updatedReviews });
                     if (authorInput) authorInput.value = '';
