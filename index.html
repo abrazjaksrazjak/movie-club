@@ -47,11 +47,14 @@
             --font-xl: 1.3rem;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none !important; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none !important;
+            -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale; }
         html { background: var(--bg-base); }
         body {
             background: var(--bg-base);
-            background-image: radial-gradient(ellipse at 50% 0%, rgba(201, 168, 76, 0.04) 0%, transparent 55%), radial-gradient(ellipse at 80% 20%, rgba(120, 100, 60, 0.03) 0%, transparent 50%);
+            background-image: radial-gradient(ellipse at 50% 0%, rgba(201, 168, 76, 0.04) 0%, transparent 55%),
+            radial-gradient(ellipse at 80% 20%, rgba(120, 100, 60, 0.03) 0%, transparent 50%);
             background-attachment: fixed;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             color: var(--text-primary);
@@ -122,7 +125,7 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Home */
-        .home-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; padding: 0 0.2rem; margin-top: -0.4rem; }
+        .home-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; padding: 0 0.2rem; margin-top: 0.1rem; }
         .next-movie-card {
             background: rgba(22,22,28,0.8); backdrop-filter: blur(16px);
             border-radius: var(--radius-xl); padding: 1.2rem; text-align: center; cursor: pointer;
@@ -147,7 +150,7 @@
             animation: slideUp 0.4s cubic-bezier(0.22, 1.2, 0.36, 1) both;
             transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
         }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
         .ranking-item::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background: inherit; background-size: cover; background-position: center;
@@ -165,8 +168,12 @@
 
         /* Carousel */
         .carousel-wrapper { width: 100%; height: 100%; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; padding: 0 20px; }
-        .carousel-viewport { width: 100%; height: 100%; position: relative; overflow: hidden; border-radius: var(--radius-lg); background: rgba(18, 18, 24, 0.75); backdrop-filter: blur(18px); border: 1px solid var(--border-default); box-shadow: var(--shadow-lg); }
-        .carousel-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; overflow-y: auto; display: flex; flex-direction: column; }
+        .carousel-viewport { width: 100%; height: 100%; position: relative; overflow: hidden; border-radius: var(--radius-lg); background: rgba(18, 18, 24, 0.75); backdrop-filter: blur(18px); border: 1px solid var(--border-default); box-shadow: var(--shadow-lg); touch-action: pan-y; }
+        .carousel-slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; transition: opacity 0.3s ease;
+            pointer-events: none; overflow-y: auto; display: flex; flex-direction: column;
+        }
         .carousel-slide.active { opacity: 1; pointer-events: auto; z-index: 1; }
         .carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(20,20,25,0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 25; transition: all 0.2s; opacity: 0.8; font-size: 1.4rem; }
         .carousel-arrow:hover { opacity: 1; color: var(--gold); border-color: var(--gold); }
@@ -196,6 +203,21 @@
             transition: color 0.3s, text-shadow 0.3s;
         }
         .movie-title-overlay:hover { color: var(--gold-light); text-shadow: 0 0 20px rgba(201,168,76,0.7), 0 2px 16px rgba(0,0,0,0.9); }
+
+        /* Animacja wejścia karuzeli */
+        .carousel-enter {
+            animation: carouselSlideIn 0.45s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+        }
+        @keyframes carouselSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
 
         /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); align-items: center; justify-content: center; z-index: 1000; opacity: 0; transition: opacity 0.2s; }
@@ -230,228 +252,697 @@
         .edit-movie-btn:hover { opacity: 1; }
         .star-select { transition: color 0.2s ease; }
 
-        @media (max-width: 360px) {
-            .review-comment-input { min-height: 38px; }
+        /* Mobile optimizations */
+        @media (max-width: 600px) {
+            .app-container { padding: 0.5rem 0.5rem 0.4rem 0.5rem; gap: 0.5rem; }
+            .club-header { padding: 0.2rem 0.4rem; border-radius: var(--radius-md); }
+            .club-header h1 { font-size: var(--font-md); }
+            .home-container { gap: 0.6rem; margin-top: 0.1rem; }
+            .next-movie-card { padding: 0.9rem; }
+            .next-movie-card .poster { max-height: 220px; }
+            .ranking-item { padding: 0.7rem 0.9rem; min-height: 64px; }
+            .ranking-title { font-size: 0.9rem; }
+            .carousel-wrapper { padding: 0 10px; }
+            .carousel-arrow { display: none; }
+            .modal-content { padding: 1.2rem; }
+            .db-option-row { flex-wrap: wrap; gap: 0.5rem; }
+            .text-btn { min-width: 100px; padding: 0.4rem 0.9rem; }
+        }
+
+        @media (max-width: 400px) {
+            .club-header h1 { font-size: 0.8rem; }
+            .next-movie-card h2 { font-size: 0.65rem; }
+            .next-movie-card div { font-size: 1.1rem; }
+            .ranking-title { font-size: 0.82rem; }
         }
     </style>
 </head>
 <body>
-    <div class="global-bg" id="globalBg"></div>
-    <div class="app-container">
-        <div class="club-header">
-            <h1 id="homeLogo">JLL MOVIE CLUB<span class="admin-indicator" id="adminIndicator" title="Kliknij, aby wyłączyć tryb administratora"></span></h1>
-            <div class="header-buttons">
-                <button class="icon-btn admin-only" id="dbManageBtn" title="Zarządzanie bazą">
-                    <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-                </button>
-                <button class="icon-btn" id="proposeHeaderBtn" title="Propozycje filmów">
-                    <svg viewBox="0 0 24 24"><path d="M12 2c.38 0 .74.15 1 .41l7 7A1.4 1.4 0 0 1 20 12h-3v7a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-7H4a1.4 1.4 0 0 1-1-2.59l7-7A1.4 1.4 0 0 1 12 2z"/></svg>
-                </button>
-                <button class="icon-btn" id="homeBtn" title="Strona główna">
-                    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                </button>
-            </div>
+<div class="global-bg" id="globalBg"></div>
+<div class="app-container">
+    <div class="club-header">
+        <h1 id="homeLogo">JLL MOVIE CLUB<span class="admin-indicator" id="adminIndicator" title="Kliknij, aby wyłączyć tryb administratora"></span></h1>
+        <div class="header-buttons">
+            <button class="icon-btn admin-only" id="dbManageBtn" title="Zarządzanie bazą">
+                <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            </button>
+            <button class="icon-btn" id="proposeHeaderBtn" title="Propozycje filmów">
+                <svg viewBox="0 0 24 24"><path d="M12 2c.38 0 .74.15 1 .41l7 7A1.4 1.4 0 0 1 20 12h-3v7a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-7H4a1.4 1.4 0 0 1-1-2.59l7-7A1.4 1.4 0 0 1 12 2z"/></svg>
+            </button>
+            <button class="icon-btn" id="homeBtn" title="Strona główna">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </button>
         </div>
-        <div id="mainContent"><div class="loading-indicator"><div class="spinner"></div><p>Ładowanie danych...</p></div></div>
     </div>
+    <div id="mainContent"><div class="loading-indicator"><div class="spinner"></div><p>Ładowanie danych...</p></div></div>
+</div>
 
-    <div id="movieModal" class="modal"><div class="modal-content"><h3>Nowy film</h3><input type="text" id="newTitle" placeholder="Tytuł"><input type="date" id="newDate"><input type="text" id="newPosterUrl" placeholder="URL plakatu"><input type="text" id="newLink" placeholder="Link"><textarea id="newSentimental" rows="2" placeholder="Cytat"></textarea><div class="modal-buttons"><button id="cancelModalBtn">Anuluj</button><button class="primary-btn" id="saveMovieBtn">Dodaj</button></div></div></div>
-    <div id="editMovieModal" class="modal"><div class="modal-content"><h3>Edytuj film</h3><input type="text" id="editTitle"><input type="date" id="editDate"><input type="text" id="editPosterUrl" placeholder="URL plakatu"><input type="text" id="editLink"><textarea id="editSentimental" rows="2" placeholder="Cytat"></textarea><div class="modal-buttons"><button id="cancelEditBtn">Anuluj</button><button id="deleteMovieFromEditBtn" class="danger-btn">Usuń</button><button class="primary-btn" id="saveEditBtn">Zapisz</button></div></div></div>
-    <div id="proposeModal" class="modal"><div class="modal-content"><h3>Propozycje filmów</h3><div id="proposalsList" style="max-height:250px;overflow-y:auto;margin-bottom:1rem;">Ładowanie...</div><input type="text" id="proposeTitle" placeholder="Nowa propozycja"><div class="modal-buttons"><button id="cancelProposeBtn">Anuluj</button><button class="primary-btn" id="submitProposeBtn">Dodaj</button></div></div></div>
-    <div id="editReviewModal" class="modal"><div class="modal-content"><h3>Edytuj recenzję</h3><div class="rating-input" id="editStarSelector" style="justify-content:center;margin:0.5rem 0;"></div><textarea id="editReviewComment" rows="3" placeholder="Treść"></textarea><div class="modal-buttons"><button id="cancelEditReviewBtn">Anuluj</button><button class="primary-btn" id="saveEditReviewBtn">Zapisz</button></div></div></div>
-    <div id="dbManageModal" class="modal"><div class="modal-content"><h3>Zarządzanie danymi</h3><div class="db-option-row"><span>Dodaj nowy film:</span><button id="addMovieFromDbBtn" class="text-btn">Dodaj film</button></div><hr style="border-color:var(--border-default);margin:0.8rem 0;"><div class="db-option-row"><span>Eksportuj dane (JSON):</span><button id="exportDbBtn" class="text-btn">Pobierz JSON</button></div><div class="db-option-row"><span>Eksportuj dane (CSV):</span><button id="exportCsvBtn" class="text-btn">Pobierz CSV</button></div><hr style="border-color:var(--border-default);margin:0.8rem 0;"><div class="db-option-row"><span>Importuj z pliku JSON:</span><label class="text-btn" style="cursor:pointer;" title="Wybierz plik JSON"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><input type="file" id="importFileInput" accept=".json" style="display:none"></label><button id="performImportBtn" class="text-btn">Przywróć</button></div><div class="modal-buttons"><button id="closeDbModalBtn" class="primary-btn">Zamknij</button></div></div></div>
+<div id="movieModal" class="modal"><div class="modal-content"><h3>Nowy film</h3><input type="text" id="newTitle" placeholder="Tytuł"><input type="date" id="newDate"><input type="text" id="newPosterUrl" placeholder="URL plakatu"><input type="text" id="newLink" placeholder="Link"><textarea id="newSentimental" rows="2" placeholder="Cytat"></textarea><div class="modal-buttons"><button id="cancelModalBtn">Anuluj</button><button class="primary-btn" id="saveMovieBtn">Dodaj</button></div></div></div>
+<div id="editMovieModal" class="modal"><div class="modal-content"><h3>Edytuj film</h3><input type="text" id="editTitle"><input type="date" id="editDate"><input type="text" id="editPosterUrl" placeholder="URL plakatu"><input type="text" id="editLink"><textarea id="editSentimental" rows="2" placeholder="Cytat"></textarea><div class="modal-buttons"><button id="cancelEditBtn">Anuluj</button><button id="deleteMovieFromEditBtn" class="danger-btn">Usuń</button><button class="primary-btn" id="saveEditBtn">Zapisz</button></div></div></div>
+<div id="proposeModal" class="modal"><div class="modal-content"><h3>Propozycje filmów</h3><div id="proposalsList" style="max-height:250px;overflow-y:auto;margin-bottom:1rem;">Ładowanie...</div><input type="text" id="proposeTitle" placeholder="Nowa propozycja"><div class="modal-buttons"><button id="cancelProposeBtn">Anuluj</button><button class="primary-btn" id="submitProposeBtn">Dodaj</button></div></div></div>
+<div id="editReviewModal" class="modal"><div class="modal-content"><h3>Edytuj recenzję</h3><div class="rating-input" id="editStarSelector" style="justify-content:center;margin:0.5rem 0;"></div><textarea id="editReviewComment" rows="3" placeholder="Treść"></textarea><div class="modal-buttons"><button id="cancelEditReviewBtn">Anuluj</button><button class="primary-btn" id="saveEditReviewBtn">Zapisz</button></div></div></div>
+<div id="dbManageModal" class="modal"><div class="modal-content"><h3>Zarządzanie danymi</h3><div class="db-option-row"><span>Dodaj nowy film:</span><button id="addMovieFromDbBtn" class="text-btn">Dodaj film</button></div><hr style="border-color:var(--border-default);margin:0.8rem 0;"><div class="db-option-row"><span>Eksportuj dane (JSON):</span><button id="exportDbBtn" class="text-btn">Pobierz JSON</button></div><div class="db-option-row"><span>Eksportuj dane (CSV):</span><button id="exportCsvBtn" class="text-btn">Pobierz CSV</button></div><hr style="border-color:var(--border-default);margin:0.8rem 0;"><div class="db-option-row"><span>Importuj z pliku JSON:</span><label class="text-btn" style="cursor:pointer;" title="Wybierz plik JSON"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><input type="file" id="importFileInput" accept=".json" style="display:none"></label><button id="performImportBtn" class="text-btn">Przywróć</button></div><div class="modal-buttons"><button id="closeDbModalBtn" class="primary-btn">Zamknij</button></div></div></div>
 
-    <script>
-        (function() {
-            function getSessionToken() { let t = sessionStorage.getItem('reviewSessionToken'); if (!t) { t = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2,8); sessionStorage.setItem('reviewSessionToken', t); } return t; }
-            function getDynamicAdminPassword() { const n = new Date(); return `admin${String(n.getDate()).padStart(2,'0')}${String(n.getMonth()+1).padStart(2,'0')}`; }
-            firebase.initializeApp({ apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE", authDomain: "movie-club-f8ceb.firebaseapp.com", projectId: "movie-club-f8ceb", storageBucket: "movie-club-f8ceb.firebasestorage.app", messagingSenderId: "17251318633", appId: "1:17251318633:web:5080a0bc0243e1a91d1bf8" });
-            const db = firebase.firestore();
-            firebase.auth().signInAnonymously().catch(e => console.error("Auth error:", e));
-            let movies = [], currentMovieIndex = 0, viewMode = 'home', unsubscribeMovies = null, isAdmin = false, adminTimeout = null, currentSlideIndex = 0;
-            const ADMIN_DURATION = 5*60*1000;
-            const preloadedImages = {};
-            let retryTimeout = null;
+<script>
+    (function() {
+        function getSessionToken() { let t = sessionStorage.getItem('reviewSessionToken'); if (!t) { t = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2,8); sessionStorage.setItem('reviewSessionToken', t); } return t; }
+        function getDynamicAdminPassword() { const n = new Date(); return `admin${String(n.getDate()).padStart(2,'0')}${String(n.getMonth()+1).padStart(2,'0')}`; }
+        firebase.initializeApp({ apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE", authDomain: "movie-club-f8ceb.firebaseapp.com", projectId: "movie-club-f8ceb", storageBucket: "movie-club-f8ceb.firebasestorage.app", messagingSenderId: "17251318633", appId: "1:17251318633:web:5080a0bc0243e1a91d1bf8" });
+        const db = firebase.firestore();
+        firebase.auth().signInAnonymously().catch(e => console.error("Auth error:", e));
+        let movies = [], currentMovieIndex = 0, viewMode = 'home', unsubscribeMovies = null, isAdmin = false, adminTimeout = null, currentSlideIndex = 0;
+        const ADMIN_DURATION = 5*60*1000;
+        const preloadedImages = {};
+        let retryTimeout = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        window.currentEditMovieId = null;
 
-            function preloadImage(url) { if (!url || preloadedImages[url]) return; preloadedImages[url] = new Promise((resolve) => { const img = new Image(); img.onload = () => { preloadedImages[url] = true; resolve(); }; img.onerror = () => { preloadedImages[url] = false; resolve(); }; img.src = url; }); }
-            function showToast(m, type='') { const old = document.querySelector('.toast'); if (old) old.remove(); const t = document.createElement('div'); t.className = 'toast '+type; t.textContent = m; document.body.appendChild(t); requestAnimationFrame(()=> requestAnimationFrame(()=> t.classList.add('show'))); const hide = setTimeout(()=>{ t.classList.remove('show'); t.addEventListener('transitionend', ()=> t.remove(), {once:true}); setTimeout(()=>{ if(t.parentNode) t.remove(); }, 500); }, 2800); t._hideTimeout = hide; }
-            function openModal(id) { const m = document.getElementById(id); if(!m) return; m.style.display='flex'; requestAnimationFrame(()=> requestAnimationFrame(()=> m.classList.add('open'))); }
-            function closeModal(id) { const m = document.getElementById(id); if(!m) return; m.classList.remove('open'); const h = ()=>{ m.style.display='none'; m.removeEventListener('transitionend', h); }; m.addEventListener('transitionend', h, {once:true}); setTimeout(()=>{ if(!m.classList.contains('open')) { m.style.display='none'; m.removeEventListener('transitionend', h); } }, 350); }
-            function updateAdminIndicator() { const indicator = document.getElementById('adminIndicator'); if (!indicator) return; indicator.classList.toggle('active', isAdmin); }
-            function setAdminMode(a) { if(adminTimeout) clearTimeout(adminTimeout); isAdmin = a; updateAdminIndicator(); if(a) { sessionStorage.setItem('movieclub_admin','true'); adminTimeout = setTimeout(()=>{ setAdminMode(false); showToast("Sesja admina wygasła."); if(viewMode==='movie') renderMovie(); else renderHome(); }, ADMIN_DURATION); } else { sessionStorage.removeItem('movieclub_admin'); if(adminTimeout) clearTimeout(adminTimeout); adminTimeout = null; } }
-            function checkAdminFromStorage() { if(sessionStorage.getItem('movieclub_admin')==='true') setAdminMode(true); }
-            function isAdminAction() { if(isAdmin) return true; showToast("Wymagany tryb administratora.", 'warning'); return false; }
-            function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
-            function renderStars(r) { let h='<span class="stars">'; for(let i=1;i<=5;i++) h+=`<span class="star ${i<=r?'star-filled':''}" style="color:${i<=r?'var(--gold)':'#3a3a44'}">&#9733;</span>`; return h+'</span>'; }
-            function avgWeighted(m) { let t=0,w=0; m.reviews.forEach(r=>{ if(r.approved){ let we=r.verified?2:1; t+=r.stars*we; w+=we; } }); return w===0?'-':(t/w).toFixed(1); }
-            function countApprovedReviews(m) { return m.reviews.filter(r=>r.approved).length; }
-            function parseDate(str) { let p=str.split('.'); return new Date(p[2],p[1]-1,p[0]); }
-            function getNextMovie() { let today=new Date(); today.setHours(0,0,0,0); let future=movies.filter(m=>parseDate(m.date)>=today); if(future.length) return future.sort((a,b)=>parseDate(a.date)-parseDate(b.date))[0]; return movies.length?movies.reduce((a,b)=>parseDate(a.date)-parseDate(b.date)>0?a:b):null; }
-            const SVG_ICONS = {
-                approve: '<svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>',
-                verify: '<svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z"/></svg>',
-                delete: '<svg viewBox="0 0 24 24"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>',
-                edit: '<svg viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',
-                spoiler: '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
+        function preloadImage(url) { if (!url || preloadedImages[url]) return; preloadedImages[url] = new Promise((resolve) => { const img = new Image(); img.onload = () => { preloadedImages[url] = true; resolve(); }; img.onerror = () => { preloadedImages[url] = false; resolve(); }; img.src = url; }); }
+        function showToast(m, type='') { const old = document.querySelector('.toast'); if (old) old.remove(); const t = document.createElement('div'); t.className = 'toast '+type; t.textContent = m; document.body.appendChild(t); requestAnimationFrame(()=> requestAnimationFrame(()=> t.classList.add('show'))); const hide = setTimeout(()=>{ t.classList.remove('show'); t.addEventListener('transitionend', ()=> t.remove(), {once:true}); setTimeout(()=>{ if(t.parentNode) t.remove(); }, 500); }, 2800); t._hideTimeout = hide; }
+        function openModal(id) { const m = document.getElementById(id); if(!m) return; m.style.display='flex'; requestAnimationFrame(()=> requestAnimationFrame(()=> m.classList.add('open'))); }
+        function closeModal(id) { const m = document.getElementById(id); if(!m) return; m.classList.remove('open'); const h = ()=>{ m.style.display='none'; m.removeEventListener('transitionend', h); }; m.addEventListener('transitionend', h, {once:true}); setTimeout(()=>{ if(!m.classList.contains('open')) { m.style.display='none'; m.removeEventListener('transitionend', h); } }, 350); }
+        function updateAdminIndicator() { const indicator = document.getElementById('adminIndicator'); if (!indicator) return; indicator.classList.toggle('active', isAdmin); }
+        function setAdminMode(a) { if(adminTimeout) clearTimeout(adminTimeout); isAdmin = a; updateAdminIndicator(); if(a) { sessionStorage.setItem('movieclub_admin','true'); adminTimeout = setTimeout(()=>{ setAdminMode(false); showToast("Sesja admina wygasła."); if(viewMode==='movie') renderMovie(); else renderHome(); }, ADMIN_DURATION); } else { sessionStorage.removeItem('movieclub_admin'); if(adminTimeout) clearTimeout(adminTimeout); adminTimeout = null; } }
+        function checkAdminFromStorage() { if(sessionStorage.getItem('movieclub_admin')==='true') setAdminMode(true); }
+        function isAdminAction() { if(isAdmin) return true; showToast("Wymagany tryb administratora.", 'warning'); return false; }
+        function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+        function renderStars(r) { let h='<span class="stars">'; for(let i=1;i<=5;i++) h+=`<span class="star ${i<=r?'star-filled':''}" style="color:${i<=r?'var(--gold)':'#3a3a44'}">&#9733;</span>`; return h+'</span>'; }
+        function avgWeighted(m) { let t=0,w=0; m.reviews.forEach(r=>{ if(r.approved){ let we=r.verified?2:1; t+=r.stars*we; w+=we; } }); return w===0?'-':(t/w).toFixed(1); }
+        function countApprovedReviews(m) { return m.reviews.filter(r=>r.approved).length; }
+        function parseDate(str) { let p=str.split('.'); return new Date(p[2],p[1]-1,p[0]); }
+        function getNextMovie() { let today=new Date(); today.setHours(0,0,0,0); let future=movies.filter(m=>parseDate(m.date)>=today); if(future.length) return future.sort((a,b)=>parseDate(a.date)-parseDate(b.date))[0]; return movies.length?movies.reduce((a,b)=>parseDate(a.date)-parseDate(b.date)>0?a:b):null; }
+        const SVG_ICONS = {
+            approve: '<svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>',
+            verify: '<svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z"/></svg>',
+            delete: '<svg viewBox="0 0 24 24"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>',
+            edit: '<svg viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',
+            spoiler: '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
+        };
+
+        function setupStarSelector(container) {
+            if (!container) return;
+            const stars = container.querySelectorAll('.star-select');
+            container.onmouseover = e => {
+                const s = e.target.closest('.star-select');
+                if (s) stars.forEach(st => st.style.color = parseInt(st.dataset.value) <= parseInt(s.dataset.value) ? 'var(--gold)' : '#4a4a54');
             };
-
-            function setupStarSelector(container) {
-                if (!container) return;
-                const stars = container.querySelectorAll('.star-select');
-                container.onmouseover = e => {
-                    const s = e.target.closest('.star-select');
-                    if (s) stars.forEach(st => st.style.color = parseInt(st.dataset.value) <= parseInt(s.dataset.value) ? 'var(--gold)' : '#4a4a54');
-                };
-                container.onmouseleave = () => stars.forEach(s => s.style.color = s.classList.contains('selected') ? 'var(--gold)' : '#4a4a54');
-                container.onclick = e => {
-                    const s = e.target.closest('.star-select');
-                    if (s) stars.forEach(st => {
-                        st.classList.toggle('selected', parseInt(st.dataset.value) <= parseInt(s.dataset.value));
-                        st.style.color = st.classList.contains('selected') ? 'var(--gold)' : '#4a4a54';
-                    });
-                };
-            }
-
-            function generateMovieSlide(movie) {
-                const sorted = [...movie.reviews].sort((a,b)=> a.verified!==b.verified ? (a.verified?-1:1) : (a.approved!==b.approved ? (a.approved?-1:1) : b.timestamp-a.timestamp));
-                let revHtml = '';
-                const curToken = getSessionToken();
-                if(sorted.length===0) revHtml = `<div class="empty-state"><p>Brak recenzji.</p></div>`;
-                else sorted.forEach(r=>{
-                    const origIdx = movie.reviews.findIndex(o=>o.timestamp===r.timestamp && o.author===r.author);
-                    const pending = !r.approved?'pending':'';
-                    const verifiedMark = r.verified?'<span style="display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:rgba(201,168,76,0.12);color:rgba(201,168,76,0.55);font-size:0.5rem;margin-left:0.2rem;">✓</span>':'';
-                    const canEdit = (!r.approved && r.sessionToken===curToken);
-                    let btns = '';
-                    if (!r.approved) {
-                        if (isAdmin) btns += `<button class="review-action-icon approve-btn" data-idx="${origIdx}">${SVG_ICONS.approve}</button>`;
-                        if (canEdit) {
-                            btns += `<button class="review-action-icon edit-review-btn" data-idx="${origIdx}" data-movie-id="${movie.id}">${SVG_ICONS.edit}</button>`;
-                            btns += `<button class="review-action-icon delete-own-review-btn" data-idx="${origIdx}" data-movie-id="${movie.id}">${SVG_ICONS.delete}</button>`;
-                        }
-                        if (isAdmin && !canEdit) btns += `<button class="review-action-icon delete-review-btn" data-idx="${origIdx}">${SVG_ICONS.delete}</button>`;
-                    } else {
-                        if (isAdmin) {
-                            if (!r.verified) btns += `<button class="review-action-icon verify-btn" data-idx="${origIdx}">${SVG_ICONS.verify}</button>`;
-                            btns += `<button class="review-action-icon spoiler-btn" data-idx="${origIdx}" title="Spoiler">${SVG_ICONS.spoiler}</button>`;
-                            btns += `<button class="review-action-icon delete-review-btn" data-idx="${origIdx}">${SVG_ICONS.delete}</button>`;
-                        }
-                    }
-                    const commentClass = r.spoiler ? 'review-comment spoiler-text' : 'review-comment';
-                    revHtml += `<div class="review-card ${pending}"><div class="review-card-left-col" style="flex:0 0 75px;">${renderStars(r.stars)}<div style="font-size:0.7rem;color:#aaa;">${escapeHtml(r.author)}${verifiedMark}</div></div><div class="review-card-right-col"><div class="${commentClass}" onclick="if(this.classList.contains('spoiler-text')) this.classList.toggle('revealed')" style="font-size:0.78rem;line-height:1.5;">${escapeHtml(r.comment)}</div></div><div class="review-card-actions">${btns}</div></div>`;
+            container.onmouseleave = () => stars.forEach(s => s.style.color = s.classList.contains('selected') ? 'var(--gold)' : '#4a4a54');
+            container.onclick = e => {
+                const s = e.target.closest('.star-select');
+                if (s) stars.forEach(st => {
+                    st.classList.toggle('selected', parseInt(st.dataset.value) <= parseInt(s.dataset.value));
+                    st.style.color = st.classList.contains('selected') ? 'var(--gold)' : '#4a4a54';
                 });
-                const sent = movie.sentimentalValue ? `<div style="margin:0.5rem;padding:0.5rem;background:rgba(201,168,76,0.05);border-left:2px solid var(--gold);font-size:0.7rem;color:#b8a878;">${escapeHtml(movie.sentimentalValue)}</div>` : '';
-                const posterUrl = movie.poster || '';
-                const posterImg = posterUrl ? `<img class="poster-img" src="${escapeHtml(posterUrl)}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="width:100%;height:100%;background:#1a1a20;display:flex;align-items:center;justify-content:center;color:#555;">Brak plakatu</div>`;
-                const avg = avgWeighted(movie); const avgDisp = avg!=='-'?avg:'-';
-                const linkHtml = movie.link ? `<div style="text-align:center;margin:0.3rem 0;"><a href="${escapeHtml(movie.link)}" target="_blank" style="color:var(--gold);font-size:0.7rem;">Link do filmu</a></div>` : '';
-                const dateHtml = movie.date ? `<div style="text-align:center;font-size:0.7rem;color:#aaa;margin:0.4rem 0;">${escapeHtml(movie.date)}</div>` : '';
-                const jfUrl = `https://jellyfin.shepardgepard.org/web/#/search.html?query=${encodeURIComponent(movie.title)}`;
-                const editBtnAdminVisible = isAdmin ? ' admin-visible' : '';
-                return `<div class="carousel-slide" data-movie-id="${movie.id}"><div style="display:flex;flex-direction:column;height:100%;"><div style="height:clamp(180px,30vh,280px);position:relative;overflow:hidden;flex-shrink:0;background:#1a1a20;">${posterImg}<a href="${jfUrl}" target="_blank" class="movie-title-overlay">${escapeHtml(movie.title)}</a><button class="review-action-icon edit-movie-btn${editBtnAdminVisible}" data-movie-id="${movie.id}" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);color:#ddd;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:opacity 0.2s;">${SVG_ICONS.edit}</button></div>${dateHtml}${linkHtml}<div style="flex:1;overflow-y:auto;padding:0 0.9rem;">${revHtml}</div>${sent}<div style="background:rgba(20,20,26,0.7);border-top:1px solid var(--border-default);padding:0.7rem 0.9rem;"><div style="display:flex;gap:0.55rem;align-items:stretch;"><div style="flex:0 0 88px;display:flex;flex-direction:column;gap:0.25rem;"><input type="text" class="review-author-input" placeholder="Imię" maxlength="9" style="background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.4rem;font-size:0.7rem;color:#eee;text-align:center;font-family:inherit;width:100%;"><div class="rating-input" style="display:flex;gap:0;background:var(--bg-input);padding:0.15rem 0.25rem;border-radius:20px;justify-content:center;border:1px solid var(--border-default);">${[1,2,3,4,5].map(n=>`<span class="star-select" data-value="${n}" style="font-size:0.75rem;cursor:pointer;color:#4a4a54;">&#9733;</span>`).join('')}</div></div><div style="flex:2;min-width:0;"><textarea class="review-comment-input" placeholder="Napisz kilka słów...\nKliknij enter aby wysłać." style="width:100%;height:100%;min-height:42px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.45rem;font-size:0.7rem;color:#eee;resize:none;font-family:inherit;"></textarea></div><div class="avg-box" data-movie-id="${movie.id}" style="flex:0 0 52px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold);cursor:pointer;font-size:0.85rem;">${avgDisp} ★</div></div></div></div></div>`;
-            }
+            };
+        }
 
-            function buildCarousel(idx) { const c = document.getElementById('mainContent'); c.style.overflow = 'visible'; c.innerHTML = `<div class="carousel-wrapper"><div class="carousel-viewport" id="carouselViewport"></div><button class="carousel-arrow arrow-left" id="carouselPrevBtn">&lsaquo;</button><button class="carousel-arrow arrow-right" id="carouselNextBtn">&rsaquo;</button></div>`; const viewport = document.getElementById('carouselViewport'); movies.forEach((m,i)=>{ const d = document.createElement('div'); d.innerHTML = generateMovieSlide(m); const slide = d.firstChild; if(i===idx) slide.classList.add('active'); viewport.appendChild(slide); }); currentSlideIndex = idx; setGlobalBackground(movies[idx]?.poster); attachDelegatedEvents(); document.getElementById('carouselPrevBtn').onclick = prevSlide; document.getElementById('carouselNextBtn').onclick = nextSlide; }
-            function setGlobalBackground(url) { const bg = document.getElementById('globalBg'); if (!bg) return; if (!url) { bg.style.backgroundImage = 'none'; return; } if (preloadedImages[url] === true) { bg.style.backgroundImage = `url('${url}')`; } else { const img = new Image(); img.onload = () => { preloadedImages[url] = true; bg.style.backgroundImage = `url('${url}')`; }; img.src = url; preloadedImages[url] = img; } }
-            function goToSlide(i) { if(i<0) i=movies.length-1; if(i>=movies.length) i=0; if(i===currentSlideIndex) return; const viewport = document.getElementById('carouselViewport'); if(!viewport) return; const slides = viewport.querySelectorAll('.carousel-slide'); if(slides[currentSlideIndex]) slides[currentSlideIndex].classList.remove('active'); if(slides[i]) { slides[i].classList.add('active'); slides[i].scrollTop = 0; } currentSlideIndex = i; currentMovieIndex = i; setGlobalBackground(movies[i]?.poster); attachDelegatedEvents(); }
-            function nextSlide() { goToSlide(currentSlideIndex+1); } function prevSlide() { goToSlide(currentSlideIndex-1); }
-            function switchToMovie() { viewMode='movie'; const c=document.getElementById('mainContent'); c.classList.add('view-fade-out'); setTimeout(()=>{ buildCarousel(currentMovieIndex); c.classList.remove('view-fade-out'); }, 180); }
-            function switchToHome() { viewMode='home'; const c=document.getElementById('mainContent'); c.classList.add('view-fade-out'); setTimeout(()=>{ renderHome(); c.classList.remove('view-fade-out'); }, 180); }
-
-            function renderHome() {
-                const next = getNextMovie(); const posterUrl = next?.poster || '';
-                setGlobalBackground(posterUrl);
-                const posterHtml = posterUrl ? `<img class="poster" src="${escapeHtml(posterUrl)}" onerror="this.style.display='none'">` : '<div class="poster" style="height:180px;display:flex;align-items:center;justify-content:center;font-size:2rem;color:#444;">Brak plakatu</div>';
-                const c = document.getElementById('mainContent');
-                c.style.overflow = 'auto';
-                c.innerHTML = `<div class="home-container"><div class="next-movie-card" id="nextMovieCard">${posterHtml}<h2 style="color:var(--gold);font-size:0.7rem;text-transform:uppercase;">Najbliższy seans</h2><div style="font-size:1.3rem;font-weight:700;">${escapeHtml(next?.title||'Brak')}</div><div style="font-size:0.7rem;color:#aaa;">${escapeHtml(next?.date||'')}</div></div><div class="ranking-section"><div class="ranking-list" id="rankingList"></div></div></div>`;
-                const rankingDiv = document.getElementById('rankingList'); if(rankingDiv) { const threshold=3; const high=movies.filter(m=>countApprovedReviews(m)>=threshold); const low=movies.filter(m=>countApprovedReviews(m)<threshold); high.sort((a,b)=>parseFloat(avgWeighted(b))-parseFloat(avgWeighted(a))); low.sort((a,b)=>parseFloat(avgWeighted(b))-parseFloat(avgWeighted(a))); const all=[...high,...low]; if(all.length===0) rankingDiv.innerHTML='<div class="empty-state"><p>Brak filmów w rankingu.</p></div>'; else rankingDiv.innerHTML = all.map((m,idx)=>{ const rating=avgWeighted(m); const enough=countApprovedReviews(m)>=threshold; const ratingTxt=enough?(rating!=='-'?`${rating} ★`:'- ★'):'-'; const badge=!enough?'<span style="font-size:0.7rem;color:#888;">(czeka na więcej ocen)</span>':''; const posterStyle=m.poster?`background-image:url('${escapeHtml(m.poster)}');background-size:cover;background-position:center;`:' '; return `<div class="ranking-item" data-idx="${movies.indexOf(m)}" style="${posterStyle}"><span class="ranking-title">${idx+1}. ${escapeHtml(m.title)}${badge}</span><span class="ranking-rating">${ratingTxt}</span></div>`; }).join(''); }
-                document.querySelectorAll('.ranking-item').forEach(el=>{ el.onclick=()=>{ const idx=parseInt(el.dataset.idx); if(!isNaN(idx)&&movies[idx]){ currentMovieIndex=idx; switchToMovie(); } }; });
-                const nextCard = document.getElementById('nextMovieCard');
-                if (nextCard && next) { nextCard.onclick = () => { const i = movies.findIndex(m => m.id === next.id); if (i !== -1) { currentMovieIndex = i; switchToMovie(); } }; nextCard.addEventListener('mousemove', e => { const r = nextCard.getBoundingClientRect(); nextCard.style.setProperty('--x', `${((e.clientX-r.left)/r.width)*100}%`); nextCard.style.setProperty('--y', `${((e.clientY-r.top)/r.height)*100}%`); }); nextCard.addEventListener('mouseleave', () => { nextCard.style.removeProperty('--x'); nextCard.style.removeProperty('--y'); }); }
-            }
-
-            async function loadProposals() { const div=document.getElementById('proposalsList'); if(!div) return; div.innerHTML='Ładowanie...'; try{ const snap=await db.collection("proposals").orderBy("votes","desc").get(); const props=snap.docs.map(d=>({id:d.id,...d.data()})); if(props.length===0){ div.innerHTML='<div class="empty-state"><p>Brak propozycji.</p></div>'; return; } const voted=JSON.parse(localStorage.getItem('proposal_votes')||'[]'); div.innerHTML=props.map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.7rem;background:var(--bg-elevated);border-radius:var(--radius-sm);margin-bottom:0.3rem;border:1px solid var(--border-default);"><span style="font-size:0.85rem;">${escapeHtml(p.title)}</span><div class="proposal-vote ${voted.includes(p.id)?'voted':''}" data-id="${p.id}" style="background:var(--bg-input);padding:0.3rem 0.6rem;border-radius:20px;cursor:pointer;font-size:0.75rem;transition:all 0.2s;">${p.votes||0} ${voted.includes(p.id)?'✓':'+1'}</div></div>`).join(''); document.querySelectorAll('.proposal-vote').forEach(el=>el.onclick=async()=>{ const id=el.dataset.id; let arr=JSON.parse(localStorage.getItem('proposal_votes')||'[]'); if(arr.includes(id)) { showToast("Już zagłosowałeś na tę propozycję"); return; } await db.collection("proposals").doc(id).update({votes:firebase.firestore.FieldValue.increment(1)}); arr.push(id); localStorage.setItem('proposal_votes',JSON.stringify(arr)); loadProposals(); }); }catch(e){ div.innerHTML='Błąd.'; } }
-
-            function attachDelegatedEvents() {
-                document.querySelectorAll('.rating-input').forEach(container => setupStarSelector(container));
-                document.querySelectorAll('.review-author-input').forEach(input=>{ input.addEventListener('blur', ()=>{ if(input.value.trim()===getDynamicAdminPassword()){ setAdminMode(true); input.value=''; showToast("Admin włączony."); } }); });
-                document.querySelectorAll('.review-comment-input').forEach(ta=>ta.onkeydown=e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); submitReview(ta.closest('.carousel-slide').dataset.movieId, ta.closest('.carousel-slide')); } });
-                document.querySelectorAll('.avg-box').forEach(b=>b.onclick=()=>submitReview(b.dataset.movieId, document.querySelector(`.carousel-slide[data-movie-id="${b.dataset.movieId}"]`)));
-                document.querySelectorAll('.approve-btn').forEach(b=>b.onclick=async e=>{ e.stopPropagation(); if(!isAdmin) return; const idx=parseInt(b.dataset.idx); const movie=movies[currentSlideIndex]; if(movie?.reviews[idx]){ movie.reviews[idx].approved=true; await db.collection("movies").doc(movie.id).update({reviews:movie.reviews}); } });
-                document.querySelectorAll('.verify-btn').forEach(b=>b.onclick=async e=>{ e.stopPropagation(); if(!isAdmin) return; const idx=parseInt(b.dataset.idx); const movie=movies[currentSlideIndex]; if(movie?.reviews[idx]){ movie.reviews[idx].verified=true; await db.collection("movies").doc(movie.id).update({reviews:movie.reviews}); } });
-                document.querySelectorAll('.spoiler-btn').forEach(b=>b.onclick=async e=>{ e.stopPropagation(); if(!isAdmin) return; const idx=parseInt(b.dataset.idx); const movie=movies[currentSlideIndex]; if(movie?.reviews[idx]){ movie.reviews[idx].spoiler = !movie.reviews[idx].spoiler; await db.collection("movies").doc(movie.id).update({reviews:movie.reviews}); const commentEl = b.closest('.review-card').querySelector('.review-comment'); if(movie.reviews[idx].spoiler){ commentEl.classList.add('spoiler-text'); commentEl.classList.remove('revealed'); } else { commentEl.classList.remove('spoiler-text'); commentEl.classList.add('revealed'); } } });
-                document.querySelectorAll('.delete-review-btn').forEach(b=>b.onclick=async e=>{ e.stopPropagation(); if(!isAdmin) return; const idx=parseInt(b.dataset.idx); const movie=movies[currentSlideIndex]; if(movie?.reviews[idx]&&confirm("Usunąć recenzję?")){ movie.reviews.splice(idx,1); await db.collection("movies").doc(movie.id).update({reviews:movie.reviews}); } });
-                document.querySelectorAll('.edit-review-btn').forEach(b=>b.onclick=async e=>{ e.stopPropagation(); const idx=parseInt(b.dataset.idx); const movieId=b.dataset.movieId; const movie=movies.find(m=>m.id===movieId); if(!movie?.reviews[idx]) return; document.getElementById('editReviewModal').dataset.movieId=movieId; document.getElementById('editReviewModal').dataset.reviewIdx=idx; const r=movie.reviews[idx]; const sc=document.getElementById('editStarSelector'); sc.innerHTML=[1,2,3,4,5].map(n=>`<span class="star-select${n<=r.stars?' selected':''}" data-value="${n}" style="font-size:0.75rem;cursor:pointer;color:${n<=r.stars?'var(--gold)':'#4a4a54'};">&#9733;</span>`).join(''); setupStarSelector(sc); document.getElementById('editReviewComment').value=r.comment||''; openModal('editReviewModal'); });
-                document.querySelectorAll('.delete-own-review-btn').forEach(b=>b.onclick=async e=>{ e.stopPropagation(); const idx=parseInt(b.dataset.idx); const movieId=b.dataset.movieId; const movie=movies.find(m=>m.id===movieId); if(!movie?.reviews[idx]) return; if(confirm("Usunąć swoją recenzję?")){ movie.reviews.splice(idx,1); await db.collection("movies").doc(movieId).update({reviews:movie.reviews}); } });
-                document.querySelectorAll('.edit-movie-btn').forEach(b=>b.onclick=e=>{
-                    e.stopPropagation();
-                    if(!isAdmin) {
-                        showToast("Wymagany tryb administratora.", 'warning');
-                        return;
+        function generateMovieSlide(movie) {
+            const sorted = [...movie.reviews].sort((a,b)=> a.verified!==b.verified ? (a.verified?-1:1) : (a.approved!==b.approved ? (a.approved?-1:1) : b.timestamp-a.timestamp));
+            let revHtml = '';
+            const curToken = getSessionToken();
+            if(sorted.length===0) revHtml = `<div class="empty-state"><p>Brak recenzji.</p></div>`;
+            else sorted.forEach(r=>{
+                const origIdx = movie.reviews.findIndex(o=>o.timestamp===r.timestamp && o.author===r.author);
+                const pending = !r.approved?'pending':'';
+                const verifiedMark = r.verified?'<span style="display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:rgba(201,168,76,0.12);color:rgba(201,168,76,0.55);font-size:0.5rem;margin-left:0.2rem;">✓</span>':'';
+                const canEdit = (!r.approved && r.sessionToken===curToken);
+                let btns = '';
+                if (!r.approved) {
+                    if (isAdmin) btns += `<button class="review-action-icon approve-btn" data-idx="${origIdx}">${SVG_ICONS.approve}</button>`;
+                    if (canEdit) {
+                        btns += `<button class="review-action-icon edit-review-btn" data-idx="${origIdx}" data-movie-id="${movie.id}">${SVG_ICONS.edit}</button>`;
+                        btns += `<button class="review-action-icon delete-own-review-btn" data-idx="${origIdx}" data-movie-id="${movie.id}">${SVG_ICONS.delete}</button>`;
                     }
-                    const movie=movies.find(m=>m.id===b.dataset.movieId);
-                    if(!movie) return;
-                    window.currentEditMovieId=movie.id;
-                    document.getElementById('editTitle').value=movie.title;
-                    document.getElementById('editDate').value=movie.date.split('.').reverse().join('-');
-                    openModal('editMovieModal');
-                });
-            }
-
-            async function submitReview(movieId, slide) { const author=slide.querySelector('.review-author-input').value.trim(); const comment=slide.querySelector('.review-comment-input').value.trim(); const stars=slide.querySelectorAll('.rating-input .star-select.selected').length; if(!author) return showToast("Podaj imię."); if(stars===0) return showToast("Wybierz ocenę."); const movie=movies.find(m=>m.id===movieId); if(!movie) return; movie.reviews.push({author,stars,comment,spoiler:false,approved:false,verified:false,timestamp:Date.now(),sessionToken:getSessionToken()}); await db.collection("movies").doc(movieId).update({reviews:movie.reviews}); slide.querySelector('.review-author-input').value=''; slide.querySelector('.review-comment-input').value=''; slide.querySelectorAll('.rating-input .star-select').forEach(s=>{ s.classList.remove('selected'); s.style.color='#4a4a54'; }); showToast("Recenzja dodana."); }
-
-            async function seedDefault() { if((await db.collection("movies").get()).empty) for(const m of defaultMoviesData) await db.collection("movies").doc(m.id).set(m); }
-            function startListener(attempt = 0) { if (unsubscribeMovies) unsubscribeMovies(); showLoading(true); if (retryTimeout) clearTimeout(retryTimeout); seedDefault().then(()=>{ unsubscribeMovies = db.collection("movies").onSnapshot(snap => { if (retryTimeout) { clearTimeout(retryTimeout); retryTimeout = null; } movies = []; snap.forEach(d => movies.push(d.data())); if(movies.length===0){ if(viewMode==='home') renderHome(); else switchToHome(); } else { if(viewMode==='home') renderHome(); else { const viewport=document.getElementById('carouselViewport'); if(viewport){ const oldId=movies[currentMovieIndex]?.id; viewport.innerHTML=''; movies.forEach((m,i)=>{ const div=document.createElement('div'); div.innerHTML=generateMovieSlide(m); const slide=div.firstChild; if(m.id===oldId||(i===0&&oldId===undefined)) slide.classList.add('active'); viewport.appendChild(slide); }); currentSlideIndex=oldId?movies.findIndex(m=>m.id===oldId):0; if(currentSlideIndex<0) currentSlideIndex=0; currentMovieIndex=currentSlideIndex; setGlobalBackground(movies[currentSlideIndex]?.poster); attachDelegatedEvents(); } else buildCarousel(currentMovieIndex); } } showLoading(false); }, err => { showToast("Błąd odczytu – ponawiam...", 'warning'); showLoading(false); retryTimeout = setTimeout(() => startListener(attempt + 1), 3000); }); }).catch(e => { showLoading(false); }); }
-            function showLoading(s) { const ld=document.querySelector('.loading-indicator'); if(ld) ld.style.display=s?'flex':'none'; }
-            function renderMovie() { if(document.getElementById('carouselViewport')&&movies[currentMovieIndex]) buildCarousel(currentMovieIndex); else if(movies.length>0) buildCarousel(0); else switchToHome(); }
-
-            async function exportCSV() { if(!isAdmin) return; const rows=[["Tytuł","Data","Autor","Ocena","Treść","Zatwierdzona","Zweryfikowana","Średnia","L.recenzji","Zatwierdzone","Link"]]; for(const m of movies){ const avg=avgWeighted(m); if(m.reviews.length===0) rows.push([m.title,m.date,"","","","","",avg,0,0,m.link||""]); else for(const r of m.reviews) rows.push([m.title,m.date,r.author,r.stars,r.comment||"",r.approved?"Tak":"Nie",r.verified?"Tak":"Nie",avg,m.reviews.length,countApprovedReviews(m),m.link||""]); } const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n"); const blob=new Blob(["\uFEFF"+csv],{type:"text/csv"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`movieclub.csv`; a.click(); }
-            async function exportJSON() { if(!isAdmin) return; const ms=await db.collection("movies").get(); const ps=await db.collection("proposals").get(); const data={movies:ms.docs.map(d=>({id:d.id,...d.data()})),proposals:ps.docs.map(d=>({id:d.id,...d.data()}))}; const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`movieclub.json`; a.click(); }
-            async function importDatabase(file) { if(!isAdmin) return; const reader=new FileReader(); reader.onload=async e=>{ const data=JSON.parse(e.target.result); if(!data.movies) return; const batchSize=20; const ms=await db.collection("movies").get(); for(let i=0;i<ms.docs.length;i+=batchSize){ const batch=db.batch(); ms.docs.slice(i,i+batchSize).forEach(d=>batch.delete(d.ref)); await batch.commit(); } const ps=await db.collection("proposals").get(); for(let i=0;i<ps.docs.length;i+=batchSize){ const batch=db.batch(); ps.docs.slice(i,i+batchSize).forEach(d=>batch.delete(d.ref)); await batch.commit(); } for(const m of data.movies){ const {id,...rest}=m; await db.collection("movies").doc(id).set(rest); } if(data.proposals) for(const p of data.proposals){ const {id,...rest}=p; await db.collection("proposals").doc(id).set(rest); } showToast("Import OK."); startListener(); }; reader.readAsText(file); }
-
-            // Event listeners for static buttons
-            document.getElementById('dbManageBtn').onclick=()=>{ if(!isAdmin) return isAdminAction(); openModal('dbManageModal'); };
-            document.getElementById('proposeHeaderBtn').onclick=()=>{ loadProposals(); openModal('proposeModal'); };
-            document.getElementById('homeBtn').onclick=()=>{ if(viewMode!=='home') switchToHome(); };
-            document.getElementById('cancelModalBtn').onclick=()=>closeModal('movieModal');
-            document.getElementById('cancelEditBtn').onclick=()=>closeModal('editMovieModal');
-            document.getElementById('saveMovieBtn').onclick=async()=>{ if(!isAdmin) return; const t=document.getElementById('newTitle').value.trim(); if(!t) return; const d=document.getElementById('newDate').value.split('-').reverse().join('.'); await db.collection("movies").doc(Date.now().toString()).set({id:Date.now().toString(),date:d,title:t,poster:document.getElementById('newPosterUrl').value.trim(),link:document.getElementById('newLink').value.trim(),reviews:[],sentimentalValue:document.getElementById('newSentimental').value.trim()}); closeModal('movieModal'); };
-            document.getElementById('saveEditBtn').onclick=async()=>{ if(!isAdmin) return; const t=document.getElementById('editTitle').value.trim(); if(!t) return; const d=document.getElementById('editDate').value.split('-').reverse().join('.'); await db.collection("movies").doc(window.currentEditMovieId).update({title:t,date:d}); closeModal('editMovieModal'); };
-            document.getElementById('deleteMovieFromEditBtn').onclick=async()=>{ if(!isAdmin) return; await db.collection("movies").doc(window.currentEditMovieId).delete(); closeModal('editMovieModal'); if(viewMode==='movie') switchToHome(); };
-            document.getElementById('exportDbBtn').onclick=exportJSON;
-            document.getElementById('exportCsvBtn').onclick=exportCSV;
-            document.getElementById('performImportBtn').onclick=()=>document.getElementById('importFileInput').click();
-            document.getElementById('importFileInput').onchange=e=>{ if(e.target.files[0]) importDatabase(e.target.files[0]); };
-            document.getElementById('closeDbModalBtn').onclick=()=>closeModal('dbManageModal');
-            document.getElementById('addMovieFromDbBtn').onclick=()=>{ closeModal('dbManageModal'); setTimeout(()=>openModal('movieModal'),360); };
-            document.getElementById('homeLogo').onclick=()=>{ if(viewMode!=='home') switchToHome(); };
-            document.getElementById('cancelProposeBtn').onclick=()=>closeModal('proposeModal');
-            document.getElementById('submitProposeBtn').onclick=async()=>{ const t=document.getElementById('proposeTitle').value.trim(); if(!t) return; await db.collection("proposals").add({title:t,votes:0,timestamp:Date.now()}); document.getElementById('proposeTitle').value=''; loadProposals(); };
-            document.getElementById('cancelEditReviewBtn').onclick=()=>closeModal('editReviewModal');
-            document.getElementById('saveEditReviewBtn').onclick=async()=>{ const mod=document.getElementById('editReviewModal'); const movieId=mod.dataset.movieId; const idx=parseInt(mod.dataset.reviewIdx); const movie=movies.find(m=>m.id===movieId); if(!movie?.reviews[idx]) return; const stars=document.querySelectorAll('#editStarSelector .star-select.selected').length; movie.reviews[idx].stars=stars; movie.reviews[idx].comment=document.getElementById('editReviewComment').value.trim(); await db.collection("movies").doc(movieId).update({reviews:movie.reviews}); closeModal('editReviewModal'); };
-            window.onclick=e=>{ if(e.target.classList.contains('modal')&&e.target.classList.contains('open')) closeModal(e.target.id); };
-
-            // Admin indicator click to deactivate admin mode
-            document.getElementById('adminIndicator').onclick = (e) => {
-                e.stopPropagation();
-                if (isAdmin) {
-                    setAdminMode(false);
-                    showToast("Tryb administratora wyłączony.");
-                    if (viewMode === 'movie') renderMovie();
-                    else renderHome();
+                    if (isAdmin && !canEdit) btns += `<button class="review-action-icon delete-review-btn" data-idx="${origIdx}">${SVG_ICONS.delete}</button>`;
+                } else {
+                    if (isAdmin) {
+                        if (!r.verified) btns += `<button class="review-action-icon verify-btn" data-idx="${origIdx}">${SVG_ICONS.verify}</button>`;
+                        btns += `<button class="review-action-icon spoiler-btn" data-idx="${origIdx}" title="Spoiler">${SVG_ICONS.spoiler}</button>`;
+                        btns += `<button class="review-action-icon delete-review-btn" data-idx="${origIdx}">${SVG_ICONS.delete}</button>`;
+                    }
                 }
-            };
+                const commentClass = r.spoiler ? 'review-comment spoiler-text' : 'review-comment';
+                revHtml += `<div class="review-card ${pending}"><div class="review-card-left-col" style="flex:0 0 75px;">${renderStars(r.stars)}<div style="font-size:0.7rem;color:#aaa;">${escapeHtml(r.author)}${verifiedMark}</div></div><div class="review-card-right-col"><div class="${commentClass}" onclick="if(this.classList.contains('spoiler-text')) this.classList.toggle('revealed')" style="font-size:0.78rem;line-height:1.5;">${escapeHtml(r.comment)}</div></div><div class="review-card-actions">${btns}</div></div>`;
+            });
+            const sent = movie.sentimentalValue ? `<div style="margin:0.5rem;padding:0.5rem;background:rgba(201,168,76,0.05);border-left:2px solid var(--gold);font-size:0.7rem;color:#b8a878;">${escapeHtml(movie.sentimentalValue)}</div>` : '';
+            const posterUrl = movie.poster || '';
+            const posterImg = posterUrl ? `<img class="poster-img" src="${escapeHtml(posterUrl)}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="width:100%;height:100%;background:#1a1a20;display:flex;align-items:center;justify-content:center;color:#555;">Brak plakatu</div>`;
+            const avg = avgWeighted(movie); const avgDisp = avg!=='-'?avg:'-';
+            const linkHtml = movie.link ? `<div style="text-align:center;margin:0.3rem 0;"><a href="${escapeHtml(movie.link)}" target="_blank" style="color:var(--gold);font-size:0.7rem;">Link do filmu</a></div>` : '';
+            const dateHtml = movie.date ? `<div style="text-align:center;font-size:0.7rem;color:#aaa;margin:0.4rem 0;">${escapeHtml(movie.date)}</div>` : '';
+            const jfUrl = `https://jellyfin.shepardgepard.org/web/#/search.html?query=${encodeURIComponent(movie.title)}`;
+            const editBtnAdminVisible = isAdmin ? ' admin-visible' : '';
+            return `<div class="carousel-slide" data-movie-id="${movie.id}"><div style="display:flex;flex-direction:column;height:100%;"><div style="height:clamp(180px,30vh,280px);position:relative;overflow:hidden;flex-shrink:0;background:#1a1a20;">${posterImg}<a href="${jfUrl}" target="_blank" class="movie-title-overlay">${escapeHtml(movie.title)}</a><button class="review-action-icon edit-movie-btn${editBtnAdminVisible}" data-movie-id="${movie.id}" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);color:#ddd;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:opacity 0.2s;">${SVG_ICONS.edit}</button></div>${dateHtml}${linkHtml}<div style="flex:1;overflow-y:auto;padding:0 0.9rem;">${revHtml}</div>${sent}<div style="background:rgba(20,20,26,0.7);border-top:1px solid var(--border-default);padding:0.7rem 0.9rem;"><div style="display:flex;gap:0.55rem;align-items:stretch;"><div style="flex:0 0 88px;display:flex;flex-direction:column;gap:0.25rem;"><input type="text" class="review-author-input" placeholder="Imię" maxlength="9" style="background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.4rem;font-size:0.7rem;color:#eee;text-align:center;font-family:inherit;width:100%;"><div class="rating-input" style="display:flex;gap:0;background:var(--bg-input);padding:0.15rem 0.25rem;border-radius:20px;justify-content:center;border:1px solid var(--border-default);">${[1,2,3,4,5].map(n=>`<span class="star-select" data-value="${n}" style="font-size:0.75rem;cursor:pointer;color:#4a4a54;">&#9733;</span>`).join('')}</div></div><div style="flex:2;min-width:0;"><textarea class="review-comment-input" placeholder="Napisz kilka słów...\nKliknij enter aby wysłać." style="width:100%;height:100%;min-height:42px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.45rem;font-size:0.7rem;color:#eee;resize:none;font-family:inherit;"></textarea></div><div class="avg-box" data-movie-id="${movie.id}" style="flex:0 0 52px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold);cursor:pointer;font-size:0.85rem;">${avgDisp} ★</div></div></div></div></div>`;
+        }
 
-            const defaultMoviesData = [
-                { id:"lobster_2026", date:"02.04.2026", title:"Lobster", poster:"https://via.placeholder.com/1200x300?text=Lobster", link:"", reviews:[{author:"Sebus",stars:4,comment:"Depresyjny obraz rzeczywistości",approved:true,verified:false,timestamp:1},{author:"Ola",stars:5,comment:"Spoiler: zakończenie jest zaskakujące",spoiler:true,approved:true,verified:false,timestamp:2}], sentimentalValue:"Odbierzemy go..." },
-                { id:"weapons_2026", date:"10.05.2026", title:"WEAPONS", poster:"https://via.placeholder.com/1200x300?text=WEAPONS", link:"", reviews:[], sentimentalValue:"" },
-                { id:"bugonia_2026", date:"17.05.2026", title:"BUGONIA", poster:"https://via.placeholder.com/1200x300?text=Bugonia", link:"", reviews:[], sentimentalValue:"" }
-            ];
-            checkAdminFromStorage();
-            updateAdminIndicator();
-            startListener();
-        })();
-    </script>
+        function addSwipeSupport() {
+            const viewport = document.getElementById('carouselViewport');
+            if (!viewport) return;
+            viewport.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+            }, {passive: true});
+            viewport.addEventListener('touchend', e => {
+                if (touchStartX === 0 && touchStartY === 0) return;
+                const touchEndX = e.changedTouches[0].screenX;
+                const touchEndY = e.changedTouches[0].screenY;
+                const diffX = touchStartX - touchEndX;
+                const diffY = touchStartY - touchEndY;
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                    if (diffX > 0) nextSlide();
+                    else prevSlide();
+                }
+                touchStartX = 0;
+                touchStartY = 0;
+            });
+        }
+
+        function buildCarousel(idx) {
+            const c = document.getElementById('mainContent');
+            c.style.overflow = 'visible';
+            c.innerHTML = `<div class="carousel-wrapper"><div class="carousel-viewport" id="carouselViewport"></div><button class="carousel-arrow arrow-left" id="carouselPrevBtn">&lsaquo;</button><button class="carousel-arrow arrow-right" id="carouselNextBtn">&rsaquo;</button></div>`;
+            const viewport = document.getElementById('carouselViewport');
+            movies.forEach((m,i)=>{
+                const d = document.createElement('div');
+                d.innerHTML = generateMovieSlide(m);
+                const slide = d.firstChild;
+                if(i === idx) slide.classList.add('active');
+                viewport.appendChild(slide);
+            });
+            currentSlideIndex = idx;
+            currentMovieIndex = idx;
+            setGlobalBackground(movies[idx]?.poster);
+            attachDelegatedEvents();
+            document.getElementById('carouselPrevBtn').onclick = prevSlide;
+            document.getElementById('carouselNextBtn').onclick = nextSlide;
+            addSwipeSupport();
+        }
+
+        function setGlobalBackground(url) {
+            const bg = document.getElementById('globalBg');
+            if (!bg) return;
+            if (!url) { bg.style.backgroundImage = 'none'; return; }
+            if (preloadedImages[url] === true) {
+                bg.style.backgroundImage = `url('${url}')`;
+            } else {
+                const img = new Image();
+                img.onload = () => { preloadedImages[url] = true; bg.style.backgroundImage = `url('${url}')`; };
+                img.src = url;
+                preloadedImages[url] = img;
+            }
+        }
+
+        function goToSlide(i) {
+            if(i < 0) i = movies.length - 1;
+            if(i >= movies.length) i = 0;
+            if(i === currentSlideIndex) return;
+            const viewport = document.getElementById('carouselViewport');
+            if(!viewport) return;
+            const slides = viewport.querySelectorAll('.carousel-slide');
+            if(slides[currentSlideIndex]) slides[currentSlideIndex].classList.remove('active');
+            if(slides[i]) {
+                slides[i].classList.add('active');
+                slides[i].scrollTop = 0;
+            }
+            currentSlideIndex = i;
+            currentMovieIndex = i;
+            setGlobalBackground(movies[i]?.poster);
+            attachDelegatedEvents();
+        }
+
+        function nextSlide() { goToSlide(currentSlideIndex + 1); }
+        function prevSlide() { goToSlide(currentSlideIndex - 1); }
+
+        function switchToMovie() {
+            viewMode = 'movie';
+            const c = document.getElementById('mainContent');
+            c.classList.add('view-fade-out');
+            setTimeout(() => {
+                buildCarousel(currentMovieIndex);
+                c.classList.remove('view-fade-out');
+                // Animacja wejścia karuzeli
+                const wrapper = document.querySelector('.carousel-wrapper');
+                if (wrapper) {
+                    wrapper.classList.add('carousel-enter');
+                    wrapper.addEventListener('animationend', function handler() {
+                        wrapper.classList.remove('carousel-enter');
+                        wrapper.removeEventListener('animationend', handler);
+                    }, { once: true });
+                }
+            }, 180);
+        }
+
+        function switchToHome() {
+            viewMode = 'home';
+            const c = document.getElementById('mainContent');
+            c.classList.add('view-fade-out');
+            setTimeout(() => {
+                renderHome();
+                c.classList.remove('view-fade-out');
+            }, 180);
+        }
+
+        function renderHome() {
+            const next = getNextMovie(); const posterUrl = next?.poster || '';
+            setGlobalBackground(posterUrl);
+            const posterHtml = posterUrl ? `<img class="poster" src="${escapeHtml(posterUrl)}" onerror="this.style.display='none'">` : '<div class="poster" style="height:180px;display:flex;align-items:center;justify-content:center;font-size:2rem;color:#444;">Brak plakatu</div>';
+            const c = document.getElementById('mainContent');
+            c.style.overflow = 'auto';
+            c.innerHTML = `<div class="home-container"><div class="next-movie-card" id="nextMovieCard">${posterHtml}<h2 style="color:var(--gold);font-size:0.7rem;text-transform:uppercase;">Najbliższy seans</h2><div style="font-size:1.3rem;font-weight:700;">${escapeHtml(next?.title||'Brak')}</div><div style="font-size:0.7rem;color:#aaa;">${escapeHtml(next?.date||'')}</div></div><div class="ranking-section"><div class="ranking-list" id="rankingList"></div></div></div>`;
+            const rankingDiv = document.getElementById('rankingList');
+            if(rankingDiv) {
+                const threshold = 3;
+                const high = movies.filter(m => countApprovedReviews(m) >= threshold);
+                const low = movies.filter(m => countApprovedReviews(m) < threshold);
+                high.sort((a,b) => parseFloat(avgWeighted(b)) - parseFloat(avgWeighted(a)));
+                low.sort((a,b) => parseFloat(avgWeighted(b)) - parseFloat(avgWeighted(a)));
+                const all = [...high, ...low];
+                if(all.length === 0) rankingDiv.innerHTML = '<div class="empty-state"><p>Brak filmów w rankingu.</p></div>';
+                else rankingDiv.innerHTML = all.map((m,idx) => {
+                    const rating = avgWeighted(m);
+                    const enough = countApprovedReviews(m) >= threshold;
+                    const ratingTxt = enough ? (rating !== '-' ? `${rating} ★` : '- ★') : '-';
+                    const badge = !enough ? '<span style="font-size:0.7rem;color:#888;">(czeka na więcej ocen)</span>' : '';
+                    const posterStyle = m.poster ? `background-image:url('${escapeHtml(m.poster)}');background-size:cover;background-position:center;` : ' ';
+                    return `<div class="ranking-item" data-idx="${movies.indexOf(m)}" style="${posterStyle}; animation-delay: ${idx * 0.06}s;"><span class="ranking-title">${idx+1}. ${escapeHtml(m.title)}${badge}</span><span class="ranking-rating">${ratingTxt}</span></div>`;
+                }).join('');
+            }
+            document.querySelectorAll('.ranking-item').forEach(el => {
+                el.onclick = () => {
+                    const idx = parseInt(el.dataset.idx);
+                    if(!isNaN(idx) && movies[idx]) {
+                        currentMovieIndex = idx;
+                        switchToMovie();
+                    }
+                };
+            });
+            const nextCard = document.getElementById('nextMovieCard');
+            if (nextCard && next) {
+                nextCard.onclick = () => {
+                    const i = movies.findIndex(m => m.id === next.id);
+                    if (i !== -1) {
+                        currentMovieIndex = i;
+                        switchToMovie();
+                    }
+                };
+                nextCard.addEventListener('mousemove', e => {
+                    const r = nextCard.getBoundingClientRect();
+                    nextCard.style.setProperty('--x', `${((e.clientX - r.left) / r.width) * 100}%`);
+                    nextCard.style.setProperty('--y', `${((e.clientY - r.top) / r.height) * 100}%`);
+                });
+                nextCard.addEventListener('mouseleave', () => {
+                    nextCard.style.removeProperty('--x');
+                    nextCard.style.removeProperty('--y');
+                });
+            }
+        }
+
+        async function loadProposals() {
+            const div = document.getElementById('proposalsList');
+            if(!div) return;
+            div.innerHTML = 'Ładowanie...';
+            try {
+                const snap = await db.collection("proposals").orderBy("votes","desc").get();
+                const props = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                if(props.length === 0) {
+                    div.innerHTML = '<div class="empty-state"><p>Brak propozycji.</p></div>';
+                    return;
+                }
+                const voted = JSON.parse(localStorage.getItem('proposal_votes') || '[]');
+                div.innerHTML = props.map(p => `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.7rem;background:var(--bg-elevated);border-radius:var(--radius-sm);margin-bottom:0.3rem;border:1px solid var(--border-default);"><span style="font-size:0.85rem;">${escapeHtml(p.title)}</span><div class="proposal-vote ${voted.includes(p.id)?'voted':''}" data-id="${p.id}" style="background:var(--bg-input);padding:0.3rem 0.6rem;border-radius:20px;cursor:pointer;font-size:0.75rem;transition:all 0.2s;">${p.votes||0} ${voted.includes(p.id)?'✓':'+1'}</div></div>`).join('');
+                document.querySelectorAll('.proposal-vote').forEach(el => {
+                    el.onclick = async () => {
+                        const id = el.dataset.id;
+                        let arr = JSON.parse(localStorage.getItem('proposal_votes') || '[]');
+                        if(arr.includes(id)) {
+                            showToast("Już zagłosowałeś na tę propozycję");
+                            return;
+                        }
+                        await db.collection("proposals").doc(id).update({votes: firebase.firestore.FieldValue.increment(1)});
+                        arr.push(id);
+                        localStorage.setItem('proposal_votes', JSON.stringify(arr));
+                        loadProposals();
+                    };
+                });
+            } catch(e) {
+                div.innerHTML = 'Błąd.';
+            }
+        }
+
+        function attachDelegatedEvents() {
+            document.querySelectorAll('.rating-input').forEach(container => setupStarSelector(container));
+            document.querySelectorAll('.review-author-input').forEach(input => {
+                input.addEventListener('blur', () => {
+                    if(input.value.trim() === getDynamicAdminPassword()) {
+                        setAdminMode(true);
+                        input.value = '';
+                        showToast("Admin włączony.");
+                    }
+                });
+            });
+            document.querySelectorAll('.review-comment-input').forEach(ta => ta.onkeydown = e => {
+                if(e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    submitReview(ta.closest('.carousel-slide').dataset.movieId, ta.closest('.carousel-slide'));
+                }
+            });
+            document.querySelectorAll('.avg-box').forEach(b => b.onclick = () => submitReview(b.dataset.movieId, document.querySelector(`.carousel-slide[data-movie-id="${b.dataset.movieId}"]`)));
+            document.querySelectorAll('.approve-btn').forEach(b => b.onclick = async e => {
+                e.stopPropagation();
+                if(!isAdmin) return;
+                const idx = parseInt(b.dataset.idx);
+                const movie = movies[currentSlideIndex];
+                if(movie?.reviews[idx]) {
+                    movie.reviews[idx].approved = true;
+                    await db.collection("movies").doc(movie.id).update({reviews: movie.reviews});
+                }
+            });
+            document.querySelectorAll('.verify-btn').forEach(b => b.onclick = async e => {
+                e.stopPropagation();
+                if(!isAdmin) return;
+                const idx = parseInt(b.dataset.idx);
+                const movie = movies[currentSlideIndex];
+                if(movie?.reviews[idx]) {
+                    movie.reviews[idx].verified = true;
+                    await db.collection("movies").doc(movie.id).update({reviews: movie.reviews});
+                }
+            });
+            document.querySelectorAll('.spoiler-btn').forEach(b => b.onclick = async e => {
+                e.stopPropagation();
+                if(!isAdmin) return;
+                const idx = parseInt(b.dataset.idx);
+                const movie = movies[currentSlideIndex];
+                if(movie?.reviews[idx]) {
+                    movie.reviews[idx].spoiler = !movie.reviews[idx].spoiler;
+                    await db.collection("movies").doc(movie.id).update({reviews: movie.reviews});
+                    const commentEl = b.closest('.review-card').querySelector('.review-comment');
+                    if(movie.reviews[idx].spoiler) {
+                        commentEl.classList.add('spoiler-text');
+                        commentEl.classList.remove('revealed');
+                    } else {
+                        commentEl.classList.remove('spoiler-text');
+                        commentEl.classList.add('revealed');
+                    }
+                }
+            });
+            document.querySelectorAll('.delete-review-btn').forEach(b => b.onclick = async e => {
+                e.stopPropagation();
+                if(!isAdmin) return;
+                const idx = parseInt(b.dataset.idx);
+                const movie = movies[currentSlideIndex];
+                if(movie?.reviews[idx] && confirm("Usunąć recenzję?")) {
+                    movie.reviews.splice(idx, 1);
+                    await db.collection("movies").doc(movie.id).update({reviews: movie.reviews});
+                }
+            });
+            document.querySelectorAll('.edit-review-btn').forEach(b => b.onclick = async e => {
+                e.stopPropagation();
+                const idx = parseInt(b.dataset.idx);
+                const movieId = b.dataset.movieId;
+                const movie = movies.find(m => m.id === movieId);
+                if(!movie?.reviews[idx]) return;
+                document.getElementById('editReviewModal').dataset.movieId = movieId;
+                document.getElementById('editReviewModal').dataset.reviewIdx = idx;
+                const r = movie.reviews[idx];
+                const sc = document.getElementById('editStarSelector');
+                sc.innerHTML = [1,2,3,4,5].map(n => `<span class="star-select${n <= r.stars ? ' selected' : ''}" data-value="${n}" style="font-size:0.75rem;cursor:pointer;color:${n <= r.stars ? 'var(--gold)' : '#4a4a54'};">&#9733;</span>`).join('');
+                setupStarSelector(sc);
+                document.getElementById('editReviewComment').value = r.comment || '';
+                openModal('editReviewModal');
+            });
+            document.querySelectorAll('.delete-own-review-btn').forEach(b => b.onclick = async e => {
+                e.stopPropagation();
+                const idx = parseInt(b.dataset.idx);
+                const movieId = b.dataset.movieId;
+                const movie = movies.find(m => m.id === movieId);
+                if(!movie?.reviews[idx]) return;
+                if(confirm("Usunąć swoją recenzję?")) {
+                    movie.reviews.splice(idx, 1);
+                    await db.collection("movies").doc(movieId).update({reviews: movie.reviews});
+                }
+            });
+            document.querySelectorAll('.edit-movie-btn').forEach(b => b.onclick = e => {
+                e.stopPropagation();
+                if(!isAdmin) {
+                    showToast("Wymagany tryb administratora.", 'warning');
+                    return;
+                }
+                const movie = movies.find(m => m.id === b.dataset.movieId);
+                if(!movie) return;
+                window.currentEditMovieId = movie.id;
+                document.getElementById('editTitle').value = movie.title;
+                document.getElementById('editDate').value = movie.date.split('.').reverse().join('-');
+                document.getElementById('editPosterUrl').value = movie.poster || '';
+                document.getElementById('editLink').value = movie.link || '';
+                document.getElementById('editSentimental').value = movie.sentimentalValue || '';
+                openModal('editMovieModal');
+            });
+        }
+
+        async function submitReview(movieId, slide) {
+            const author = slide.querySelector('.review-author-input').value.trim();
+            const comment = slide.querySelector('.review-comment-input').value.trim();
+            const stars = slide.querySelectorAll('.rating-input .star-select.selected').length;
+            if(!author) return showToast("Podaj imię.");
+            if(stars === 0) return showToast("Wybierz ocenę.");
+            const movie = movies.find(m => m.id === movieId);
+            if(!movie) return;
+            movie.reviews.push({author, stars, comment, spoiler: false, approved: false, verified: false, timestamp: Date.now(), sessionToken: getSessionToken()});
+            await db.collection("movies").doc(movieId).update({reviews: movie.reviews});
+            slide.querySelector('.review-author-input').value = '';
+            slide.querySelector('.review-comment-input').value = '';
+            slide.querySelectorAll('.rating-input .star-select').forEach(s => {
+                s.classList.remove('selected');
+                s.style.color = '#4a4a54';
+            });
+            showToast("Recenzja dodana.");
+        }
+
+        async function seedDefault() {
+            if((await db.collection("movies").get()).empty)
+                for(const m of defaultMoviesData) await db.collection("movies").doc(m.id).set(m);
+        }
+
+        function startListener(attempt = 0) {
+            if (unsubscribeMovies) unsubscribeMovies();
+            showLoading(true);
+            if (retryTimeout) clearTimeout(retryTimeout);
+            seedDefault().then(() => {
+                unsubscribeMovies = db.collection("movies").onSnapshot(snap => {
+                    if (retryTimeout) { clearTimeout(retryTimeout); retryTimeout = null; }
+                    movies = [];
+                    snap.forEach(d => movies.push(d.data()));
+                    if(movies.length === 0) {
+                        if(viewMode === 'home') renderHome();
+                        else switchToHome();
+                    } else {
+                        if(viewMode === 'home') renderHome();
+                        else {
+                            const oldId = movies[currentMovieIndex]?.id;
+                            let newIdx = oldId ? movies.findIndex(m => m.id === oldId) : -1;
+                            if(newIdx < 0) newIdx = 0;
+                            currentMovieIndex = newIdx;
+                            buildCarousel(currentMovieIndex);
+                        }
+                    }
+                    showLoading(false);
+                }, err => {
+                    showToast("Błąd odczytu – ponawiam...", 'warning');
+                    showLoading(false);
+                    retryTimeout = setTimeout(() => startListener(attempt + 1), 3000);
+                });
+            }).catch(e => { showLoading(false); });
+        }
+
+        function showLoading(s) {
+            const ld = document.querySelector('.loading-indicator');
+            if(ld) ld.style.display = s ? 'flex' : 'none';
+        }
+
+        function renderMovie() {
+            if(movies.length > 0) buildCarousel(currentMovieIndex);
+            else switchToHome();
+        }
+
+        // ---------- Funkcje eksportu / importu ----------
+        async function exportJSON() {
+            try {
+                const data = movies;
+                const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'movieclub_backup_' + new Date().toISOString().slice(0,10) + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast("Eksport JSON pobrany.");
+            } catch(e) {
+                showToast("Błąd eksportu JSON.");
+            }
+        }
+
+        async function exportCSV() {
+            try {
+                let csv = 'Tytuł;Data;Plakat;Link;Cytat;Średnia;Liczba recenzji\n';
+                movies.forEach(m => {
+                    const avg = avgWeighted(m);
+                    const count = countApprovedReviews(m);
+                    csv += `"${m.title}";"${m.date}";"${m.poster||''}";"${m.link||''}";"${m.sentimentalValue||''}";"${avg}";"${count}"\n`;
+                });
+                const blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8;'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'movieclub_ranking_' + new Date().toISOString().slice(0,10) + '.csv';
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast("Eksport CSV pobrany.");
+            } catch(e) {
+                showToast("Błąd eksportu CSV.");
+            }
+        }
+
+        async function importDatabase(file) {
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                if(!Array.isArray(data)) throw new Error('Nieprawidłowy format');
+                if(!confirm(`Zaimportować ${data.length} filmów? Obecne dane zostaną nadpisane.`)) return;
+                // Usuń wszystkie istniejące filmy
+                const existingSnap = await db.collection("movies").get();
+                const batch = db.batch();
+                existingSnap.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                // Dodaj nowe
+                for(const movie of data) {
+                    if(movie.id && movie.title) {
+                        await db.collection("movies").doc(movie.id).set({
+                            id: movie.id,
+                            title: movie.title,
+                            date: movie.date || '',
+                            poster: movie.poster || '',
+                            link: movie.link || '',
+                            sentimentalValue: movie.sentimentalValue || '',
+                            reviews: movie.reviews || []
+                        });
+                    }
+                }
+                showToast("Import zakończony pomyślnie.");
+                closeModal('dbManageModal');
+            } catch(e) {
+                showToast("Błąd importu: " + e.message);
+            }
+        }
+
+        // ---------- Event listeners ----------
+        document.getElementById('dbManageBtn').onclick = () => { if(!isAdmin) { isAdminAction(); return; } openModal('dbManageModal'); };
+        document.getElementById('proposeHeaderBtn').onclick = () => { loadProposals(); openModal('proposeModal'); };
+        document.getElementById('homeBtn').onclick = () => { if(viewMode !== 'home') switchToHome(); };
+        document.getElementById('cancelModalBtn').onclick = () => closeModal('movieModal');
+        document.getElementById('cancelEditBtn').onclick = () => closeModal('editMovieModal');
+
+        document.getElementById('saveMovieBtn').onclick = async () => {
+            const title = document.getElementById('newTitle').value.trim();
+            const dateVal = document.getElementById('newDate').value;
+            const poster = document.getElementById('newPosterUrl').value.trim();
+            const link = document.getElementById('newLink').value.trim();
+            const sentimental = document.getElementById('newSentimental').value.trim();
+            if(!title) { showToast('Podaj tytuł.'); return; }
+            const dateFormatted = dateVal ? dateVal.split('-').reverse().join('.') : '';
+            const id = 'movie_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
+            await db.collection("movies").doc(id).set({
+                id, title, date: dateFormatted, poster, link, sentimentalValue: sentimental, reviews: []
+            });
+            document.getElementById('newTitle').value = '';
+            document.getElementById('newDate').value = '';
+            document.getElementById('newPosterUrl').value = '';
+            document.getElementById('newLink').value = '';
+            document.getElementById('newSentimental').value = '';
+            closeModal('movieModal');
+            showToast('Film dodany.');
+        };
+
+        document.getElementById('saveEditBtn').onclick = async () => {
+            const id = window.currentEditMovieId;
+            if(!id) return;
+            const title = document.getElementById('editTitle').value.trim();
+            const dateVal = document.getElementById('editDate').value;
+            const poster = document.getElementById('editPosterUrl').value.trim();
+            const link = document.getElementById('editLink').value.trim();
+            const sentimental = document.getElementById('editSentimental').value.trim();
+            const dateFormatted = dateVal ? dateVal.split('-').reverse().join('.') : '';
+            await db.collection("movies").doc(id).update({
+                title, date: dateFormatted, poster, link, sentimentalValue: sentimental
+            });
+            closeModal('editMovieModal');
+            showToast('Film zaktualizowany.');
+        };
+
+        document.getElementById('deleteMovieFromEditBtn').onclick = async () => {
+            const id = window.currentEditMovieId;
+            if(!id) return;
+            if(!confirm("Na pewno usunąć ten film?")) return;
+            await db.collection("movies").doc(id).delete();
+            closeModal('editMovieModal');
+            showToast('Film usunięty.');
+        };
+
+        document.getElementById('exportDbBtn').onclick = exportJSON;
+        document.getElementById('exportCsvBtn').onclick = exportCSV;
+        document.getElementById('performImportBtn').onclick = () => document.getElementById('importFileInput').click();
+        document.getElementById('importFileInput').onchange = e => { if(e.target.files[0]) importDatabase(e.target.files[0]); };
+        document.getElementById('closeDbModalBtn').onclick = () => closeModal('dbManageModal');
+        document.getElementById('addMovieFromDbBtn').onclick = () => { closeModal('dbManageModal'); setTimeout(() => openModal('movieModal'), 360); };
+        document.getElementById('homeLogo').onclick = () => { if(viewMode !== 'home') switchToHome(); };
+        document.getElementById('cancelProposeBtn').onclick = () => closeModal('proposeModal');
+
+        document.getElementById('submitProposeBtn').onclick = async () => {
+            const title = document.getElementById('proposeTitle').value.trim();
+            if(!title) { showToast('Podaj tytuł propozycji.'); return; }
+            await db.collection("proposals").add({title, votes: 0});
+            document.getElementById('proposeTitle').value = '';
+            loadProposals();
+            showToast('Propozycja dodana.');
+        };
+
+        document.getElementById('cancelEditReviewBtn').onclick = () => closeModal('editReviewModal');
+
+        document.getElementById('saveEditReviewBtn').onclick = async () => {
+            const modal = document.getElementById('editReviewModal');
+            const movieId = modal.dataset.movieId;
+            const reviewIdx = parseInt(modal.dataset.reviewIdx);
+            const movie = movies.find(m => m.id === movieId);
+            if(!movie || isNaN(reviewIdx) || !movie.reviews[reviewIdx]) return;
+            const stars = document.querySelectorAll('#editStarSelector .star-select.selected').length;
+            const comment = document.getElementById('editReviewComment').value.trim();
+            if(stars === 0) { showToast('Wybierz ocenę.'); return; }
+            movie.reviews[reviewIdx].stars = stars;
+            movie.reviews[reviewIdx].comment = comment;
+            await db.collection("movies").doc(movieId).update({reviews: movie.reviews});
+            closeModal('editReviewModal');
+            showToast('Recenzja zaktualizowana.');
+        };
+
+        window.onclick = e => { if(e.target.classList.contains('modal') && e.target.classList.contains('open')) closeModal(e.target.id); };
+        document.getElementById('adminIndicator').onclick = (e) => { e.stopPropagation(); if (isAdmin) { setAdminMode(false); showToast("Tryb administratora wyłączony."); if (viewMode === 'movie') renderMovie(); else renderHome(); } };
+
+        const defaultMoviesData = [
+            {
+                id: 'default_start',
+                title: 'Przykładowy seans',
+                date: '01.01.2026',
+                poster: '',
+                link: '',
+                sentimentalValue: '',
+                reviews: []
+            }
+        ];
+
+        checkAdminFromStorage();
+        updateAdminIndicator();
+        startListener();
+    })();
+</script>
 </body>
 </html>
