@@ -4,1509 +4,454 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>JLL Movie Club – współdzielony ranking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-auth-compat.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none !important;
-            -webkit-tap-highlight-color: transparent;
+        :root {
+            --gold: #c9a84c;
+            --gold-light: #e0c56e;
+            --gold-glow: rgba(201, 168, 76, 0.35);
+            --gold-soft: rgba(201, 168, 76, 0.1);
+            --gold-soft-hover: rgba(201, 168, 76, 0.18);
+            --bg-base: #08080b;
+            --bg-surface: #101014;
+            --bg-card: #141419;
+            --bg-elevated: #1a1a21;
+            --bg-input: #1c1c24;
+            --border-default: #25252e;
+            --border-hover: #333340;
+            --border-gold: rgba(201, 168, 76, 0.25);
+            --text-primary: #e8e8ed;
+            --text-secondary: #a5a5b0;
+            --text-muted: #6b6b78;
+            --text-inverse: #0a0a0d;
+            --radius-xs: 6px;
+            --radius-sm: 10px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --radius-xl: 26px;
+            --radius-full: 9999px;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.55);
+            --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.7);
+            --shadow-gold: 0 0 24px rgba(201, 168, 76, 0.18);
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --font-xs: 0.7rem;
+            --font-sm: 0.78rem;
+            --font-md: 0.88rem;
+            --font-lg: 1.05rem;
+            --font-xl: 1.3rem;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none !important; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        html { background: var(--bg-base); }
         body {
-            background: #0a0a0a;
-            font-family: 'Inter', system-ui, sans-serif;
-            color: #e5e5e5;
-            height: 100vh;
+            background: var(--bg-base);
+            background-image: radial-gradient(ellipse at 50% 0%, rgba(201, 168, 76, 0.04) 0%, transparent 55%), radial-gradient(ellipse at 80% 20%, rgba(120, 100, 60, 0.03) 0%, transparent 50%);
+            background-attachment: fixed;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: var(--text-primary);
+            height: 100vh; height: 100dvh; width: 100%;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            display: flex; flex-direction: column; align-items: center;
             padding: env(safe-area-inset-top) 0 0 0;
-            min-height: -webkit-fill-available;
+            letter-spacing: -0.01em;
+            position: relative; margin: 0;
         }
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none; }
-
+        :focus-visible { outline: 1.5px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+        .global-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100%;
+            background-size: cover; background-position: center;
+            filter: blur(35px) brightness(0.18) saturate(0.6);
+            z-index: 0; pointer-events: none; transition: background-image 0.5s ease;
+        }
         .app-container {
-            width: 100%;
-            max-width: 1000px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            padding: 1.2rem 1rem 1rem 1rem;
-            overflow: hidden;
+            width: 100%; max-width: 960px; margin: 0 auto;
+            display: flex; flex-direction: column; height: 100%; height: 100dvh;
+            padding: 1rem 1rem 0.8rem 1rem; overflow: hidden; gap: 0.8rem;
+            position: relative; z-index: 1;
         }
         .club-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            flex-shrink: 0;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-shrink: 0; padding: 0.3rem 0.6rem;
+            background: var(--bg-surface); border-radius: var(--radius-lg);
+            border: 1px solid var(--border-default); box-shadow: var(--shadow-sm);
+            gap: 0.5rem; z-index: 20; position: relative;
         }
         .club-header h1 {
-            font-size: clamp(0.9rem, 5vw, 1.1rem);
-            font-weight: 400;
-            color: #c0c0c0;
-            cursor: pointer;
-            transition: color 0.2s, text-shadow 0.2s;
+            font-size: var(--font-lg); font-weight: 700; letter-spacing: 0.06em;
+            cursor: pointer; transition: background-position var(--transition-smooth), filter var(--transition-fast);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--gold-light) 40%, var(--gold) 100%);
+            background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-size: 200% 100%; background-position: 0% 50%;
+            display: flex; align-items: center; gap: 0.35rem; white-space: nowrap;
         }
-        .club-header h1:hover {
-            color: #d4af37;
-            text-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
+        .club-header h1:hover { background-position: 100% 50%; filter: brightness(1.2); }
+        .admin-indicator {
+            display: none; width: 9px; height: 9px; border-radius: 50%; background: var(--gold);
+            box-shadow: 0 0 8px var(--gold-glow); flex-shrink: 0; cursor: pointer;
+            vertical-align: middle; transition: transform 0.15s;
         }
-        .header-buttons {
-            display: flex;
-            gap: 0.6rem;
-            align-items: center;
-        }
+        .admin-indicator.active { display: inline-block; }
+        .admin-indicator:hover { transform: scale(1.3); }
+        .header-buttons { display: flex; gap: 0.35rem; align-items: center; }
         .icon-btn {
-            background: transparent;
-            border: none;
-            color: #a0a0a0;
-            font-size: 1.4rem;
-            cursor: pointer;
-            width: 28px;
-            height: 28px;
-            border-radius: 10px;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            background: var(--bg-elevated); border: 1px solid var(--border-default); color: var(--text-secondary);
+            cursor: pointer; width: 36px; height: 36px; border-radius: var(--radius-sm);
+            transition: color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+            display: inline-flex; align-items: center; justify-content: center; position: relative; overflow: hidden; padding: 0;
         }
-        .icon-btn:hover {
-            color: #d4af37;
-            background: rgba(212,175,55,0.08);
-            transform: scale(1.2);
-        }
-        #mainContent {
-            flex: 1;
-            min-height: 0;
-            position: relative;
-            width: 100%;
-            overflow: auto;
-        }
-        .loading-indicator {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(8px);
-            border-radius: 30px;
-            padding: 1.2rem 1.8rem;
-            text-align: center;
-            z-index: 10;
-            border: 1px solid rgba(212,175,55,0.3);
-            box-shadow: 0 0 15px rgba(212,175,55,0.2);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.8rem;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(212,175,55,0.2);
-            border-top: 3px solid #d4af37;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .loading-indicator p:first-child {
-            color: #d4af37;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        .loading-indicator p:last-child {
-            color: #aaa;
-            font-size: 0.7rem;
-        }
-        .carousel-viewport {
-            width: 100%;
-            overflow: hidden;
-            height: 100%;
-            scrollbar-width: none;
-        }
-        .carousel-viewport::-webkit-scrollbar { display: none; }
-        .carousel-track {
-            display: flex;
-            height: 100%;
-            transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-        }
-        .carousel-slide {
-            width: 100%;
-            flex-shrink: 0;
-            height: 100%;
-            overflow-y: auto;
-        }
-        .slide-fade {
-            transition: opacity 0.25s ease, transform 0.25s ease;
-        }
-        .slide-fade-out {
-            opacity: 0;
-            transform: scale(0.96);
-        }
-        .view-transition { transition: opacity 0.2s ease; }
-        .view-fade-out { opacity: 0; }
+        .icon-btn.admin-only { opacity: 0.45; }
+        .icon-btn.admin-only:hover { opacity: 1; }
+        .icon-btn::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at center, var(--gold-soft) 0%, transparent 70%); opacity: 0; transition: opacity var(--transition-fast); }
+        .icon-btn svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; position: relative; z-index: 1; transition: transform var(--transition-fast); fill: none; }
+        .icon-btn:hover { color: var(--gold); border-color: var(--border-gold); transform: translateY(-1px); box-shadow: var(--shadow-gold); }
+        .icon-btn:hover::after { opacity: 1; }
+        .icon-btn:hover svg { transform: scale(1.1); }
+        .icon-btn:active { transform: scale(0.94); transition: transform 0.08s ease; }
 
-        .carousel-container {
-            background: #111;
-            border-radius: 16px;
-            box-shadow: 0 12px 28px rgba(0,0,0,0.8);
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border: 1px solid rgba(212,175,55,0.2);
-            transition: box-shadow 0.3s;
-        }
-        .carousel-container:hover {
-            box-shadow: 0 16px 32px rgba(0,0,0,0.9), 0 0 0 1px rgba(212,175,55,0.3);
-        }
-        .slide {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            overflow: hidden;
-        }
-        .poster-wrapper {
-            width: 100%;
-            height: clamp(180px, 30vh, 280px);
-            position: relative;
-            overflow: hidden;
-            background: #1a1a1a;
-            flex-shrink: 0;
-        }
-        .poster-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.4s ease;
-        }
-        .poster-wrapper:hover .poster-img {
-            transform: scale(1.03);
-        }
-        .movie-title-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: clamp(1.2rem,5vw,2rem);
-            font-weight: 500;
-            color: #fff;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-            background: linear-gradient(90deg,transparent,rgba(0,0,0,0.6),transparent);
-            padding: 0.4rem;
-            backdrop-filter: blur(3px);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none !important;
-        }
-        .movie-title-overlay:hover {
-            color: #d4af37;
-            font-weight: 600;
-            text-shadow: 0 0 12px rgba(212,175,55,0.8);
-            background: linear-gradient(90deg,transparent,rgba(0,0,0,0.7),transparent);
-        }
-        .edit-movie-btn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(5px);
-            border: none;
-            color: #ddd;
-            font-size: 1rem;
-            width: 32px;
-            height: 32px;
-            border-radius: 30px;
-            cursor: pointer;
-            opacity: 0;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: auto;
-        }
-        .poster-wrapper:hover .edit-movie-btn {
-            opacity: 1;
-            transform: scale(1.05);
-        }
-        .edit-movie-btn:hover {
-            background: #d4af37;
-            color: #0a0a0a;
-            transform: scale(1.1);
-        }
-        .movie-date {
-            text-align: center;
-            font-size: 0.7rem;
-            color: #aaa;
-            margin: 0.6rem 0 0.8rem 0;
-            letter-spacing: 1px;
-        }
-        .movie-link {
-            text-align: center;
-            margin: 0.2rem 0 0.5rem;
-        }
-        .movie-link a {
-            color: #d4af37;
-            font-size: 0.7rem;
-            text-decoration: none;
-            border-bottom: 1px dashed #d4af37;
-            transition: all 0.2s;
-        }
-        .movie-link a:hover {
-            color: #f5d742;
-            border-bottom-style: solid;
-        }
-        .reviews-grid {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        .review-row {
-            display: flex;
-            gap: 0.8rem;
-            position: relative;
-            border-bottom: 1px solid #252525;
-            padding-bottom: 0.7rem;
-            flex-wrap: wrap;
-            transition: all 0.2s;
-        }
-        .review-row:hover .stars .star-filled {
-            text-shadow: 0 0 8px #d4af37;
-        }
-        .review-row.pending { opacity: 0.6; }
-        .review-left {
-            flex: 0 0 100px;
-            display: flex;
-            flex-direction: column;
-            gap: 0.2rem;
-        }
-        .stars {
-            display: inline-flex;
-            gap: 0;
-            align-items: center;
-        }
-        .star {
-            display: inline-block;
-            width: 1rem;
-            text-align: center;
-            font-size: 0.9rem;
-            transition: transform 0.1s;
-        }
-        .star-filled { color: #d4af37; transition: text-shadow 0.2s; }
-        .star-empty { color: #3d3d3d; }
-        .verified-check { color: #d4af37; font-size: 0.8rem; margin-left: 4px; }
-        .review-author { font-size: 0.75rem; color: #b0b0b0; }
-        .review-comment {
-            flex: 1;
-            font-size: 0.8rem;
-            line-height: 1.4;
-            color: #cfcfcf;
-            align-self: flex-end;
-            padding-right: 1.2rem;
-            min-width: 150px;
-            transition: text-shadow 0.2s;
-        }
-        .review-actions {
-            position: absolute;
-            right: 0;
-            top: 0;
-            display: flex;
-            gap: 0.3rem;
-            background: rgba(0,0,0,0.5);
-            border-radius: 20px;
-            padding: 0.1rem 0.3rem;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        .review-row:hover .review-actions { opacity: 1; }
-        .review-action-btn {
-            background: none;
-            border: none;
-            color: #ccc;
-            font-size: 0.7rem;
-            cursor: pointer;
-            border-radius: 20px;
-            padding: 0.1rem 0.3rem;
-            transition: all 0.2s;
-        }
-        .review-action-btn:hover { background: #2a2a2a; color: #d4af37; transform: scale(1.2); }
-        .delete-review-btn:hover { color: #e06c4e; }
-        .edit-review-btn, .delete-own-review-btn {
-            background: none;
-            border: none;
-            color: #d4af37;
-            font-size: 0.7rem;
-            cursor: pointer;
-            border-radius: 20px;
-            padding: 0.1rem 0.3rem;
-        }
-        .edit-review-btn:hover, .delete-own-review-btn:hover { color: #f5d742; transform: scale(1.2); }
-        .sentimental {
-            margin: 0.6rem 1rem;
-            padding: 0.5rem 0.8rem;
-            background: #181818;
-            border-left: 3px solid #d4af37;
-            font-size: 0.75rem;
-            color: #b9a97c;
-            border-radius: 12px;
-            text-align: center;
-        }
-        .add-review {
-            background: #111;
-            border-top: 1px solid #262626;
-            padding: 0.8rem 1rem 1rem;
-        }
-        .review-form-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-        }
-        .review-form-row {
-            display: flex;
-            flex-wrap: nowrap;
-            gap: 0.8rem;
-            align-items: stretch;
-        }
-        .review-form-left {
-            flex: 0 0 100px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 0.3rem;
-        }
-        .review-form-left input {
-            background: #1c1c1c;
-            border: 1px solid #2c2c2c;
-            border-radius: 12px;
-            padding: 0.4rem 0.5rem;
-            font-size: 0.7rem;
-            color: #eee;
-            width: 100%;
-            text-align: center;
-            transition: border 0.2s, box-shadow 0.2s;
-        }
-        .review-form-left input:focus {
-            border-color: #d4af37;
-            outline: none;
-            box-shadow: 0 0 5px rgba(212,175,55,0.5);
-        }
-        .rating-input {
-            display: inline-flex;
-            gap: 0;
-            background: #1c1c1c;
-            padding: 0.2rem 0.4rem;
-            border-radius: 30px;
-            justify-content: center;
-        }
-        .star-select {
-            display: inline-block;
-            width: 1rem;
-            text-align: center;
-            font-size: 0.9rem;
-            cursor: pointer;
-            color: #4a4a4a;
-            transition: transform 0.1s, color 0.1s;
-        }
-        .star-select.selected { color: #d4af37; transform: scale(1.1); }
-        .star-select:hover { transform: scale(1.2); }
-        .review-form-middle {
-            flex: 2;
-            min-width: 150px;
-            display: flex;
-            flex-direction: column;
-        }
-        .review-form-middle textarea {
-            width: 100%;
-            height: 100%;
-            background: #1c1c1c;
-            border: 1px solid #2c2c2c;
-            border-radius: 12px;
-            padding: 0.4rem 0.5rem;
-            font-size: 0.7rem;
-            color: #eee;
-            resize: vertical;
-            font-family: inherit;
-            transition: border 0.2s, box-shadow 0.2s;
-        }
-        .review-form-middle textarea:focus {
-            border-color: #d4af37;
-            outline: none;
-            box-shadow: 0 0 5px rgba(212,175,55,0.5);
-        }
-        .avg-box {
-            flex: 0 0 70px;
-            background: #1c1c1c;
-            border: 1px solid #2c2c2c;
-            border-radius: 12px;
-            padding: 0.5rem 0.2rem;
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: #d4af37;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .avg-box:hover {
-            background: #2a2a2a;
-            transform: scale(1.02);
-            border-color: #d4af37;
-        }
-        /* Strzałki – przezroczyste, mniejsze */
-        .nav-arrow {
-            position: fixed;
-            color: #aaa;
-            font-size: 1.8rem;
-            cursor: pointer;
-            z-index: 100;
-            background: none;
-            border: none;
-            padding: 0.3rem;
-            transition: color 0.2s, transform 0.2s;
-            text-shadow: 0 0 4px rgba(0,0,0,0.5);
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
-            display: none;
-            opacity: 0.5;
-        }
-        .nav-arrow:hover {
-            color: #d4af37;
-            transform: scale(1.1);
-            opacity: 1;
-        }
-        .nav-arrow-left { left: 8px; }
-        .nav-arrow-right { right: 8px; }
-        .home-container {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-        /* KARTA NAJBLIŻSZEGO SEANSU – z glowem śledzącym kursor */
+        #mainContent { flex: 1; min-height: 0; position: relative; width: 100%; border-radius: var(--radius-lg); transition: opacity 0.2s ease; background: transparent; overflow: hidden; }
+        .loading-indicator { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-elevated); backdrop-filter: blur(16px); border-radius: var(--radius-xl); padding: 1.5rem 2rem; text-align: center; z-index: 10; border: 1px solid var(--border-gold); box-shadow: var(--shadow-lg), var(--shadow-gold); display: flex; flex-direction: column; align-items: center; gap: 0.9rem; }
+        .spinner { width: 36px; height: 36px; border: 3px solid rgba(201, 168, 76, 0.15); border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Home */
+        .home-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; padding: 0 0.2rem; margin-top: -0.4rem; }
         .next-movie-card {
-            background: linear-gradient(145deg, #1a1a1a, #111);
-            border-radius: 20px;
-            padding: 1.2rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            border: none;
-            position: sticky;
-            top: 0;
-            z-index: 5;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            overflow: hidden;
-            --x: 50%;
-            --y: 50%;
+            background: rgba(22,22,28,0.8); backdrop-filter: blur(16px);
+            border-radius: var(--radius-xl); padding: 1.2rem; text-align: center; cursor: pointer;
+            transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+            border: 1px solid var(--border-default); z-index: 5;
+            box-shadow: var(--shadow-md); overflow: hidden; --x: 50%; --y: 50%;
         }
         .next-movie-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(
-                circle at var(--x, 50%) var(--y, 50%),
-                rgba(212,175,55,0.15) 0%,
-                transparent 70%
-            );
-            opacity: 0.3;
-            pointer-events: none;
-            transition: opacity 0.2s;
-            border-radius: 20px;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(201,168,76,0.25) 0%, transparent 65%);
+            opacity: 0.35; pointer-events: none; transition: opacity 0.3s ease; border-radius: var(--radius-xl);
         }
-        .next-movie-card:hover::after {
-            opacity: 0.7;
-        }
-        .next-movie-card .poster {
-            width: 100%;
-            max-height: 320px;
-            object-fit: cover;
-            border-radius: 12px;
-            margin-bottom: 0.8rem;
-            background: #0f0f0f;
-            transition: filter 0.2s, background 0.05s linear;
-            position: relative;
-            z-index: 1;
-        }
-        .next-movie-card:hover {
-            transform: translateY(-2px);
-        }
-        .next-movie-card:hover .poster {
-            filter: brightness(1.02);
-        }
-        .next-movie-card h2 {
-            font-size: 0.85rem;
-            color: #d4af37;
-            margin-bottom: 0.3rem;
-            letter-spacing: 1px;
-        }
-        .next-movie-card .title { font-size: 1.4rem; font-weight: 600; margin: 0.3rem 0; }
-        .next-movie-card .date { font-size: 0.7rem; color: #aaa; }
-        .ranking-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin: 0.8rem 0 0.6rem;
-            flex-wrap: nowrap;
-            gap: 0.8rem;
-        }
-        .ranking-header h3, .clickable-text {
-            font-size: 0.8rem;
-            font-weight: 500;
-            letter-spacing: 1px;
-        }
-        .ranking-header h3 {
-            color: #c0c0c0;
-        }
-        .clickable-text {
-            cursor: pointer;
-            color: #d4af37;
-            transition: color 0.2s, text-shadow 0.2s;
-            white-space: nowrap;
-        }
-        .clickable-text:hover {
-            color: #f5d742;
-            text-shadow: 0 0 3px rgba(212,175,55,0.5);
-        }
-        .ranking-section { padding: 0 0.8rem; }
-        .ranking-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.7rem;
-            margin-bottom: 1rem;
-        }
+        .next-movie-card:hover::after { opacity: 0.7; }
+        .next-movie-card:hover { transform: translateY(-3px); border-color: var(--border-gold); box-shadow: var(--shadow-lg), var(--shadow-gold); }
+        .next-movie-card .poster { width: 100%; max-height: 300px; object-fit: cover; border-radius: var(--radius-md); margin-bottom: 0.8rem; background: #14141a; position: relative; z-index: 1; }
+        .ranking-list { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 1.2rem; }
         .ranking-item {
-            position: relative;
-            background: #151515;
-            border-radius: 14px;
-            padding: 0.7rem 0.9rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            border: 1px solid #262626;
-            overflow: hidden;
-            z-index: 1;
-            transition: all 0.2s ease;
-            min-height: 70px;
+            position: relative; background: var(--bg-card); border-radius: var(--radius-md);
+            padding: 0.9rem 1.2rem; display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; border: 1px solid var(--border-default); overflow: hidden;
+            min-height: 72px; background-size: cover; background-position: center;
+            animation: slideUp 0.4s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+            transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
         }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         .ranking-item::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: inherit;
-            background-size: cover;
-            background-position: center;
-            opacity: 0.2;
-            z-index: -2;
-            transition: opacity 0.2s;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: inherit; background-size: cover; background-position: center;
+            opacity: 0.22; z-index: -2; transition: opacity 0.3s, filter 0.3s, transform 0.3s; filter: blur(8px);
         }
         .ranking-item::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(90deg, rgba(15,15,15,0.9) 0%, rgba(15,15,15,0.6) 30%, rgba(15,15,15,0.6) 70%, rgba(15,15,15,0.9) 100%);
-            z-index: -1;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(95deg, rgba(16,16,20,0.92) 0%, rgba(16,16,20,0.7) 28%, rgba(16,16,20,0.55) 55%, rgba(16,16,20,0.7) 78%, rgba(16,16,20,0.92) 100%);
+            z-index: -1; transition: background 0.3s;
         }
-        .ranking-item:hover {
-            transform: scale(1.02);
-            border-color: #d4af37;
-            background: #1f1f1f;
+        .ranking-item:hover::before { filter: blur(2px); opacity: 0.32; transform: scale(1.05); }
+        .ranking-item:hover { border-color: var(--border-gold); transform: translateX(4px); box-shadow: var(--shadow-md), 0 0 20px rgba(201,168,76,0.1); }
+        .ranking-title { font-weight: 600; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem; z-index: 1; position: relative; }
+        .ranking-rating { color: var(--gold); font-weight: 700; background: rgba(201,168,76,0.1); padding: 0.3rem 0.7rem; border-radius: 20px; z-index: 1; position: relative; }
+
+        /* Carousel */
+        .carousel-wrapper { width: 100%; height: 100%; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; padding: 0 20px; }
+        .carousel-viewport { width: 100%; height: 100%; position: relative; overflow: hidden; border-radius: var(--radius-lg); background: rgba(18, 18, 24, 0.75); backdrop-filter: blur(18px); border: 1px solid var(--border-default); box-shadow: var(--shadow-lg); }
+        .carousel-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; overflow-y: auto; display: flex; flex-direction: column; }
+        .carousel-slide.active { opacity: 1; pointer-events: auto; z-index: 1; }
+        .carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(20,20,25,0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 25; transition: all 0.2s; opacity: 0.8; font-size: 1.4rem; }
+        .carousel-arrow:hover { opacity: 1; color: var(--gold); border-color: var(--gold); }
+        .arrow-left { left: -6px; } .arrow-right { right: -6px; }
+
+        /* Reviews */
+        .review-card { display: flex; gap: 0.7rem; padding: 0.55rem 0.65rem; border-radius: var(--radius-sm); background: transparent; border: 1px solid transparent; position: relative; align-items: flex-start; }
+        .review-card:hover { background: rgba(255,255,255,0.025); border-color: rgba(255,255,255,0.06); }
+        .review-card.pending { opacity: 0.65; filter: grayscale(0.2); }
+        .spoiler-text { filter: blur(5px); cursor: pointer; transition: filter 0.2s; }
+        .spoiler-text.revealed { filter: none; }
+        .review-card-actions { position: absolute; top: 0.3rem; right: 0.3rem; display: flex; gap: 0.1rem; opacity: 0; transition: opacity 0.2s; background: rgba(20,20,25,0.85); backdrop-filter: blur(4px); border-radius: 20px; padding: 0.1rem 0.2rem; }
+        .review-card:hover .review-card-actions { opacity: 1; }
+        .review-action-icon { background: transparent; border: none; color: #999; cursor: pointer; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+        .review-action-icon svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2; }
+        .approve-btn:hover { color: #4caf84; background: rgba(76,175,132,0.2); }
+        .verify-btn:hover { color: #5b9bd5; background: rgba(91,155,213,0.2); }
+        .spoiler-btn:hover { color: var(--gold); background: var(--gold-soft-hover); }
+        .delete-review-btn:hover, .delete-own-review-btn:hover { color: #e07060; background: rgba(224,112,96,0.2); }
+
+        .movie-title-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0; text-align: center;
+            font-size: clamp(1.1rem, 4.5vw, 1.8rem); font-weight: 700; color: #fff;
+            text-shadow: 0 2px 16px rgba(0,0,0,0.9);
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+            padding: 1.4rem 0.4rem 0.5rem; cursor: pointer; text-decoration: none; z-index: 2;
+            transition: color 0.3s, text-shadow 0.3s;
         }
-        .ranking-item:hover::before { opacity: 0.3; }
-        .ranking-title {
-            font-size: 0.9rem;
-            font-weight: 500;
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: baseline;
-            gap: 0.3rem;
+        .movie-title-overlay:hover { color: var(--gold-light); text-shadow: 0 0 20px rgba(201,168,76,0.7), 0 2px 16px rgba(0,0,0,0.9); }
+
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); align-items: center; justify-content: center; z-index: 1000; opacity: 0; transition: opacity 0.2s; }
+        .modal.open { display: flex; opacity: 1; }
+        .modal-content { background: var(--bg-surface); max-width: 500px; width: 90%; border-radius: var(--radius-xl); padding: 1.6rem; border: 1px solid var(--border-default); max-height: 80vh; overflow-y: auto; transform: translateY(30px); transition: transform 0.3s; }
+        .modal.open .modal-content { transform: translateY(0); }
+        .modal-content h3 { color: var(--gold-light); margin-bottom: 1rem; font-size: var(--font-lg); }
+        .modal-content input, .modal-content textarea { width: 100%; padding: 0.6rem; margin: 0.4rem 0; background: var(--bg-input); border: 1px solid var(--border-default); border-radius: var(--radius-sm); color: #eee; font-family: inherit; }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.2rem; }
+        .modal-buttons button { background: var(--bg-elevated); border: 1px solid var(--border-default); padding: 0.5rem 1.2rem; border-radius: 20px; color: #eee; cursor: pointer; transition: background 0.2s; font-family: inherit; }
+        .modal-buttons button.primary-btn { background: var(--gold); color: #000; border-color: var(--gold); }
+        .danger-btn { background: #5a2020; color: #ffb0a0; border-color: #7a3030; box-shadow: 0 0 8px rgba(200,80,80,0.15); }
+        .db-option-row { display: flex; justify-content: space-between; align-items: center; margin: 0.7rem 0; gap: 1rem; }
+        .db-option-row span { flex: 1; }
+        .text-btn {
+            background: var(--bg-elevated); border: 1px solid var(--border-default); padding: 0.5rem 1.2rem;
+            border-radius: 20px; color: #eee; cursor: pointer; transition: background 0.2s; white-space: nowrap;
+            min-width: 120px; text-align: center; font-family: inherit; font-size: var(--font-xs);
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;
         }
-        .ranking-rating { color: #d4af37; font-size: 0.8rem; font-weight: 600; position: relative; z-index: 1; }
-        .badge-text {
-            font-size: 0.7rem;
-            color: #888;
-            font-weight: normal;
-            margin-left: 0.5rem;
+        .text-btn:hover { background: #2a2a34; }
+        .toast {
+            position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(140%);
+            background: rgba(22,22,28,0.95); backdrop-filter: blur(12px); border: 1px solid var(--border-gold);
+            border-radius: 20px; padding: 0.6rem 1.5rem; color: #eee; z-index: 2000;
+            transition: transform 0.3s; font-size: var(--font-sm);
         }
-        @media (max-width: 600px) {
-            .ranking-title { flex-direction: column; gap: 0.2rem; }
-            .badge-text { margin-left: 0; }
-            .review-form-left { flex-basis: 80px; }
-            .review-form-left input { font-size: 0.65rem; padding: 0.3rem 0.3rem; }
-            .star-select { width: 0.85rem; font-size: 0.8rem; }
-            .review-form-middle textarea { font-size: 0.65rem; padding: 0.3rem 0.4rem; }
-            .avg-box { flex-basis: 55px; font-size: 0.75rem; padding: 0.3rem 0.1rem; }
-            .nav-arrow { font-size: 1.5rem; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        .edit-movie-btn { opacity: 0; transition: opacity 0.2s; }
+        .edit-movie-btn.admin-visible { opacity: 0.75; }
+        .edit-movie-btn:hover { opacity: 1; }
+        .star-select { transition: color 0.2s ease; }
+
+        @media (max-width: 360px) {
+            .review-comment-input { min-height: 38px; }
         }
-        @media (max-width: 480px) {
-            .next-movie-card .poster { max-height: 240px; }
-            .ranking-header { gap: 0.3rem; }
-            .ranking-header h3, .clickable-text { font-size: 0.7rem; }
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            animation: fadeInModal 0.2s ease;
-        }
-        @keyframes fadeInModal {
-            from { opacity: 0; backdrop-filter: blur(0); }
-            to { opacity: 1; backdrop-filter: blur(8px); }
-        }
-        .modal-content {
-            background: #141414;
-            max-width: 550px;
-            width: 90%;
-            border-radius: 24px;
-            padding: 1.5rem;
-            border: 1px solid #2c2c2c;
-            max-height: 80vh;
-            overflow-y: auto;
-            animation: slideUp 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-        }
-        @keyframes slideUp {
-            from { transform: translateY(30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .modal-content h3 { font-size: 1.2rem; margin-bottom: 1rem; color: #d4af37; }
-        .modal-content input, .modal-content textarea {
-            width: 100%;
-            padding: 0.5rem;
-            margin: 0.5rem 0;
-            border: 1px solid #2c2c2c;
-            border-radius: 12px;
-            background: #1c1c1c;
-            color: #eee;
-            font-size: 0.85rem;
-            transition: border 0.2s;
-        }
-        .modal-content input:focus, .modal-content textarea:focus {
-            border-color: #d4af37;
-            outline: none;
-        }
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        .modal-buttons button {
-            background: #2a2a2a;
-            border: none;
-            padding: 0.5rem 1.2rem;
-            border-radius: 40px;
-            color: #eee;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .modal-buttons button:hover {
-            background: #3a3a3a;
-            transform: scale(1.02);
-        }
-        .modal-buttons button:last-child {
-            background: #d4af37;
-            color: #0a0a0a;
-        }
-        .modal-buttons button:last-child:hover {
-            background: #c99f1a;
-            transform: scale(1.02);
-        }
-        .modal-buttons button.danger-btn {
-            background: #5a2a2a;
-            color: #ffaaaa;
-        }
-        .modal-buttons button.danger-btn:hover {
-            background: #8a3a3a;
-            color: white;
-        }
-        hr { border-color: #2c2c2c; margin: 1rem 0; }
-        .proposals-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.3rem;
-            margin: 0.5rem 0;
-        }
-        .proposal-item {
-            background: #1e1e2a;
-            border-radius: 12px;
-            padding: 0.4rem 0.6rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid #2c2c2c;
-            transition: all 0.2s;
-        }
-        .proposal-item:hover {
-            background: #252530;
-            transform: translateX(2px);
-        }
-        .proposal-info {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            flex: 1;
-        }
-        .proposal-title {
-            font-size: 0.8rem;
-        }
-        .proposal-delete {
-            background: none;
-            border: none;
-            color: #a0a0a0;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: color 0.2s, transform 0.1s;
-        }
-        .proposal-delete:hover {
-            color: #e06c4e;
-            transform: scale(1.1);
-        }
-        .proposal-vote {
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            background: #2a2a2a;
-            padding: 0.2rem 0.5rem;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 0.7rem;
-            transition: all 0.2s;
-        }
-        .proposal-vote:hover {
-            background: #3a3a3a;
-            transform: scale(1.05);
-        }
-        .proposal-vote span:first-child { font-weight: 600; margin-right: 0.2rem; }
-        .proposal-vote.voted { background: #d4af37; color: #0a0a0a; cursor: default; opacity: 0.8; }
     </style>
 </head>
 <body>
+    <div class="global-bg" id="globalBg"></div>
     <div class="app-container">
         <div class="club-header">
-            <h1 id="homeLogo">JLL MOVIE CLUB</h1>
+            <h1 id="homeLogo">JLL MOVIE CLUB<span class="admin-indicator" id="adminIndicator" title="Kliknij, aby wyłączyć tryb administratora"></span></h1>
             <div class="header-buttons">
-                <button class="icon-btn" id="openModalBtn">⊕</button>
-                <button class="icon-btn" id="homeBtn" title="Strona główna">⊗</button>
+                <button class="icon-btn admin-only" id="dbManageBtn" title="Zarządzanie bazą">
+                    <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                </button>
+                <button class="icon-btn" id="proposeHeaderBtn" title="Propozycje filmów">
+                    <svg viewBox="0 0 24 24"><path d="M12 2c.38 0 .74.15 1 .41l7 7A1.4 1.4 0 0 1 20 12h-3v7a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-7H4a1.4 1.4 0 0 1-1-2.59l7-7A1.4 1.4 0 0 1 12 2z"/></svg>
+                </button>
+                <button class="icon-btn" id="homeBtn" title="Strona główna">
+                    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </button>
             </div>
         </div>
-        <div id="mainContent"><div class="loading-indicator"><div class="spinner"></div><p>Ładowanie danych...</p><p>Jeśli dane się nie ładują, odśwież.</p></div></div>
+        <div id="mainContent"><div class="loading-indicator"><div class="spinner"></div><p>Ładowanie danych...</p></div></div>
     </div>
-    <div class="nav-arrow nav-arrow-left" id="prevArrow">←</div>
-    <div class="nav-arrow nav-arrow-right" id="nextArrow">→</div>
 
-    <!-- MODALE -->
-    <div id="movieModal" class="modal"><div class="modal-content"><h3>Nowy film</h3><input type="text" id="newTitle" placeholder="Tytuł" required><input type="date" id="newDate" value="2026-05-22"><input type="text" id="newPosterUrl" placeholder="URL plakatu"><input type="text" id="newLink" placeholder="Link do filmu"><textarea id="newSentimental" rows="2" placeholder="Cytat"></textarea><div class="modal-buttons"><button id="cancelModalBtn">Anuluj</button><button id="saveMovieBtn">Dodaj</button></div></div></div>
-    <div id="editMovieModal" class="modal"><div class="modal-content"><h3>Edytuj film</h3><input type="text" id="editTitle"><input type="date" id="editDate"><input type="text" id="editPosterUrl" placeholder="URL plakatu"><input type="text" id="editLink" placeholder="Link"><textarea id="editSentimental" rows="2" placeholder="Cytat"></textarea><div class="modal-buttons"><button id="cancelEditBtn">Anuluj</button><button id="saveEditBtn">Zapisz</button><button id="deleteMovieFromEditBtn" class="danger-btn">Usuń film</button></div></div></div>
-    <div id="proposeModal" class="modal"><div class="modal-content"><h3>Propozycje filmów</h3><div id="proposalsList">Ładowanie...</div><hr><h4>Zaproponuj nowy film</h4><input type="text" id="proposeTitle" placeholder="Tytuł"><div class="modal-buttons"><button id="cancelProposeBtn">Anuluj</button><button id="submitProposeBtn">Dodaj</button></div></div></div>
-    <div id="adminLoginModal" class="modal"><div class="modal-content"><h3>Logowanie admina</h3><input type="password" id="adminPassword" placeholder="Hasło"><div class="modal-buttons"><button id="cancelAdminLoginBtn">Anuluj</button><button id="confirmAdminLoginBtn">Zaloguj</button></div></div></div>
-    <div id="editReviewModal" class="modal"><div class="modal-content"><h3>Edytuj swoją recenzję</h3><div class="rating-input" id="editStarSelector"></div><textarea id="editReviewComment" rows="3" placeholder="Treść recenzji"></textarea><div class="modal-buttons"><button id="cancelEditReviewBtn">Anuluj</button><button id="saveEditReviewBtn">Zapisz zmiany</button></div></div></div>
+    <div id="movieModal" class="modal"><div class="modal-content"><h3>Nowy film</h3><input type="text" id="newTitle" placeholder="Tytuł"><input type="date" id="newDate"><input type="text" id="newPosterUrl" placeholder="URL plakatu"><input type="text" id="newLink" placeholder="Link"><textarea id="newSentimental" rows="2" placeholder="Cytat"></textarea><div class="modal-buttons"><button id="cancelModalBtn">Anuluj</button><button class="primary-btn" id="saveMovieBtn">Dodaj</button></div></div></div>
+    <div id="editMovieModal" class="modal"><div class="modal-content"><h3>Edytuj film</h3><input type="text" id="editTitle"><input type="date" id="editDate"><input type="text" id="editPosterUrl" placeholder="URL plakatu"><input type="text" id="editLink"><textarea id="editSentimental" rows="2" placeholder="Cytat"></textarea><div class="modal-buttons"><button id="cancelEditBtn">Anuluj</button><button id="deleteMovieFromEditBtn" class="danger-btn">Usuń</button><button class="primary-btn" id="saveEditBtn">Zapisz</button></div></div></div>
+    <div id="proposeModal" class="modal"><div class="modal-content"><h3>Propozycje filmów</h3><div id="proposalsList" style="max-height:250px;overflow-y:auto;margin-bottom:1rem;">Ładowanie...</div><input type="text" id="proposeTitle" placeholder="Nowa propozycja"><div class="modal-buttons"><button id="cancelProposeBtn">Anuluj</button><button class="primary-btn" id="submitProposeBtn">Dodaj</button></div></div></div>
+    <div id="editReviewModal" class="modal"><div class="modal-content"><h3>Edytuj recenzję</h3><div class="rating-input" id="editStarSelector" style="justify-content:center;margin:0.5rem 0;"></div><textarea id="editReviewComment" rows="3" placeholder="Treść"></textarea><div class="modal-buttons"><button id="cancelEditReviewBtn">Anuluj</button><button class="primary-btn" id="saveEditReviewBtn">Zapisz</button></div></div></div>
+    <div id="dbManageModal" class="modal"><div class="modal-content"><h3>Zarządzanie danymi</h3><div class="db-option-row"><span>Dodaj nowy film:</span><button id="addMovieFromDbBtn" class="text-btn">Dodaj film</button></div><hr style="border-color:var(--border-default);margin:0.8rem 0;"><div class="db-option-row"><span>Eksportuj dane (JSON):</span><button id="exportDbBtn" class="text-btn">Pobierz JSON</button></div><div class="db-option-row"><span>Eksportuj dane (CSV):</span><button id="exportCsvBtn" class="text-btn">Pobierz CSV</button></div><hr style="border-color:var(--border-default);margin:0.8rem 0;"><div class="db-option-row"><span>Importuj z pliku JSON:</span><label class="text-btn" style="cursor:pointer;" title="Wybierz plik JSON"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><input type="file" id="importFileInput" accept=".json" style="display:none"></label><button id="performImportBtn" class="text-btn">Przywróć</button></div><div class="modal-buttons"><button id="closeDbModalBtn" class="primary-btn">Zamknij</button></div></div></div>
 
     <script>
-        // ---------- SESSION TOKEN ----------
-        function getSessionToken() {
-            let token = sessionStorage.getItem('reviewSessionToken');
-            if (!token) {
-                token = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-                sessionStorage.setItem('reviewSessionToken', token);
-            }
-            return token;
-        }
+        (function() {
+            function getSessionToken() { let t = sessionStorage.getItem('reviewSessionToken'); if (!t) { t = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2,8); sessionStorage.setItem('reviewSessionToken', t); } return t; }
+            function getDynamicAdminPassword() { const n = new Date(); return `admin${String(n.getDate()).padStart(2,'0')}${String(n.getMonth()+1).padStart(2,'0')}`; }
+            firebase.initializeApp({ apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE", authDomain: "movie-club-f8ceb.firebaseapp.com", projectId: "movie-club-f8ceb", storageBucket: "movie-club-f8ceb.firebasestorage.app", messagingSenderId: "17251318633", appId: "1:17251318633:web:5080a0bc0243e1a91d1bf8" });
+            const db = firebase.firestore();
+            firebase.auth().signInAnonymously().catch(e => console.error("Auth error:", e));
+            let movies = [], currentMovieIndex = 0, viewMode = 'home', unsubscribeMovies = null, isAdmin = false, adminTimeout = null, currentSlideIndex = 0;
+            const ADMIN_DURATION = 5*60*1000;
+            const preloadedImages = {};
+            let retryTimeout = null;
 
-        // Dynamiczne hasło admina
-        function getDynamicAdminPassword() {
-            const now = new Date();
-            const day = String(now.getDate()).padStart(2, '0');
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            return `admin${day}${month}`;
-        }
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE",
-            authDomain: "movie-club-f8ceb.firebaseapp.com",
-            projectId: "movie-club-f8ceb",
-            storageBucket: "movie-club-f8ceb.firebasestorage.app",
-            messagingSenderId: "17251318633",
-            appId: "1:17251318633:web:5080a0bc0243e1a91d1bf8"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        auth.signInAnonymously().catch(console.error);
-
-        const defaultMovies = [
-            { id:"lobster_2026", date:"02.04.2026", title:"Lobster", poster:"https://via.placeholder.com/1200x300?text=Lobster", link:"", reviews:[
-                { author:"Sebuś", stars:4, comment:"Depresyjny obraz...", approved:true, verified:false, timestamp:Date.now() },
-                { author:"Maciek", stars:3, comment:"Hehe geje", approved:true, verified:false, timestamp:Date.now()+1 },
-                { author:"Kuba", stars:5, comment:"Piękny film...", approved:true, verified:false, timestamp:Date.now()+2 },
-                { author:"Maciej D", stars:4, comment:"Odważny film", approved:true, verified:false, timestamp:Date.now()+3 },
-                { author:"Daria", stars:5, comment:"Piękne obrazy", approved:true, verified:false, timestamp:Date.now()+4 },
-                { author:"Ola", stars:5, comment:"Łezka się kręci", approved:true, verified:false, timestamp:Date.now()+5 }
-            ], sentimentalValue:"Odbierzemy go..." },
-            { id:"weapons_2026", date:"10.05.2026", title:"WEAPONS", poster:"https://via.placeholder.com/1200x300?text=WEAPONS", link:"", reviews:[
-                { author:"Sebuś", stars:4, comment:"Ciekawy koncept", approved:true, verified:false, timestamp:Date.now() },
-                { author:"Daria", stars:5, comment:"Oszałamiający", approved:true, verified:false, timestamp:Date.now()+1 }
-            ], sentimentalValue:"" },
-            { id:"bugonia_2026", date:"17.05.2026", title:"BUGONIA", poster:"https://via.placeholder.com/1200x300?text=Bugonia", link:"", reviews:[
-                { author:"Sebuś", stars:5, comment:"Genialne napięcie", approved:true, verified:false, timestamp:Date.now() },
-                { author:"Igor", stars:5, comment:"Zaskakujący", approved:true, verified:false, timestamp:Date.now()+1 },
-                { author:"Daria", stars:5, comment:"Świetne postaci", approved:true, verified:false, timestamp:Date.now()+2 },
-                { author:"Grzegorz", stars:4, comment:"Czwórka", approved:true, verified:false, timestamp:Date.now()+3 },
-                { author:"Maciek", stars:5, comment:"Emma Stone nieziemska", approved:true, verified:false, timestamp:Date.now()+4 },
-                { author:"Kuba", stars:5, comment:"Obejrzałem w całości", approved:true, verified:false, timestamp:Date.now()+5 },
-                { author:"Ola", stars:5, comment:"Świetna gra", approved:true, verified:false, timestamp:Date.now()+6 }
-            ], sentimentalValue:"" }
-        ];
-
-        let movies = [], currentMovieIndex = 0, viewMode = 'home', unsubscribeMovies = null, isAdmin = false;
-        let adminTimeout = null;
-        const ADMIN_SESSION_DURATION = 5 * 60 * 1000;
-        let currentEditReviewData = null;
-        let track = null, currentSlideIndex = 0;
-
-        function setAdminMode(admin) {
-            if (adminTimeout) clearTimeout(adminTimeout);
-            isAdmin = admin;
-            if (admin) {
-                sessionStorage.setItem('movieclub_admin','true');
-                adminTimeout = setTimeout(() => {
-                    setAdminMode(false);
-                    alert("Sesja administratora wygasła po 5 minutach.");
-                    if (viewMode === 'movie') renderMovie(); else renderHome();
-                }, ADMIN_SESSION_DURATION);
-            } else {
-                sessionStorage.removeItem('movieclub_admin');
-                if (adminTimeout) clearTimeout(adminTimeout);
-                adminTimeout = null;
-            }
-            if (document.getElementById('proposeModal').style.display === 'flex') loadProposals();
-        }
-        function checkAdminFromStorage() { if (sessionStorage.getItem('movieclub_admin')==='true') setAdminMode(true); }
-        function showAdminLoginModal() { document.getElementById('adminLoginModal').style.display = 'flex'; document.getElementById('adminPassword').value = ''; }
-        function isAdminAction() { if (isAdmin) return true; const pwd = prompt("Hasło admina:"); if (pwd === getDynamicAdminPassword()) { setAdminMode(true); return true; } return false; }
-
-        function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
-        function renderStars(rating) { let h='<span class="stars">'; for(let i=1;i<=5;i++) h+=`<span class="star ${i<=rating?'star-filled':'star-empty'}">★</span>`; return h+'</span>'; }
-        function avgWeighted(m) { let total=0,weight=0; m.reviews.forEach(r=>{ if(r.approved){ let w=r.verified?2:1; total+=r.stars*w; weight+=w; } }); return weight===0?'—':(total/weight).toFixed(1); }
-        function countApprovedReviews(m) { return m.reviews.filter(r=>r.approved).length; }
-        function parseDate(dateStr) { let p=dateStr.split('.'); return new Date(p[2],p[1]-1,p[0]); }
-        function getNextMovie() { let today=new Date(); today.setHours(0,0,0,0); let future=movies.filter(m=>parseDate(m.date)>=today); if(future.length) return future.sort((a,b)=>parseDate(a.date)-parseDate(b.date))[0]; return movies.length?movies.reduce((a,b)=>parseDate(a.date)-parseDate(b.date)>0?a:b):null; }
-        function showArrows(show) { 
-            const left = document.getElementById('prevArrow');
-            const right = document.getElementById('nextArrow');
-            if (show) {
-                left.style.display = 'block';
-                right.style.display = 'block';
-                setTimeout(() => positionArrows(), 50);
-            } else {
-                left.style.display = 'none';
-                right.style.display = 'none';
-            }
-        }
-
-        function positionArrows() {
-            const titleElement = document.querySelector('.movie-title-overlay');
-            if (!titleElement) return;
-            const rect = titleElement.getBoundingClientRect();
-            const centerY = rect.top + rect.height / 2;
-            const arrows = document.querySelectorAll('.nav-arrow');
-            arrows.forEach(arrow => {
-                arrow.style.top = `${centerY}px`;
-                arrow.style.transform = 'translateY(-50%)';
-            });
-        }
-
-        function animateSlideTransition(direction, callback) {
-            const container = document.getElementById('mainContent');
-            if (!container) return callback();
-            container.classList.add('slide-fade');
-            container.classList.add('slide-fade-out');
-            setTimeout(() => {
-                callback();
-                container.classList.remove('slide-fade-out');
-                setTimeout(() => container.classList.remove('slide-fade'), 200);
-            }, 150);
-        }
-
-        function generateMovieSlide(movie) {
-            const sorted = [...movie.reviews].sort((a,b)=>a.verified!==b.verified?a.verified?-1:1:(a.approved!==b.approved?a.approved?-1:1:b.timestamp-a.timestamp));
-            let revHtml = '';
-            const currentToken = getSessionToken();
-            sorted.forEach((r,idx) => {
-                const origIdx = movie.reviews.findIndex(orig=>orig.timestamp===r.timestamp&&orig.author===r.author);
-                const pending = !r.approved ? 'pending' : '';
-                const verifiedMark = r.verified ? '<span class="verified-check">✓</span>' : '';
-                const canEdit = (!r.approved && r.sessionToken === currentToken);
-                const editButton = canEdit ? `<button class="review-action-btn edit-review-btn" data-idx="${origIdx}" data-movie-id="${movie.id}" title="Edytuj swoją recenzję">✎</button>` : '';
-                const deleteOwnButton = canEdit ? `<button class="review-action-btn delete-own-review-btn" data-idx="${origIdx}" data-movie-id="${movie.id}" title="Usuń swoją recenzję">✕</button>` : '';
-                revHtml += `<div class="review-row ${pending}" data-review-idx="${origIdx}">
-                    <div class="review-left"><div style="display:flex;align-items:center;gap:2px;">${renderStars(r.stars)}${verifiedMark}</div><div class="review-author">${escapeHtml(r.author)}</div></div>
-                    <div class="review-comment">${escapeHtml(r.comment)}</div>
-                    <div class="review-actions">
-                        ${!r.approved ? `<button class="review-action-btn approve-btn" data-idx="${origIdx}">✓</button>` : ''}
-                        ${r.approved && !r.verified ? `<button class="review-action-btn verify-btn" data-idx="${origIdx}">✓</button>` : ''}
-                        <button class="review-action-btn delete-review-btn" data-idx="${origIdx}">✕</button>
-                        ${editButton}
-                        ${deleteOwnButton}
-                    </div>
-                </div>`;
-            });
-            const sentHtml = movie.sentimentalValue ? `<div class="sentimental">✨ ${escapeHtml(movie.sentimentalValue)}</div>` : '';
-            const posterUrl = movie.poster || '';
-            const posterImg = posterUrl ? `<img class="poster-img" src="${escapeHtml(posterUrl)}" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22300%22%3E%3Crect%20width%3D%221200%22%20height%3D%22300%22%20fill%3D%22%231a1a1a%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%20fill%3D%22%23888%22%20font-size%3D%2224%22%3Ebrak%20plakatu%3C%2Ftext%3E%3C%2Fsvg%3E'">` : `<div class="poster-img" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#888;">🎬 brak plakatu</div>`;
-            const avg = avgWeighted(movie);
-            const avgDisplay = avg !== '—' ? `${avg} ★` : '— ★';
-            const linkHtml = movie.link ? `<div class="movie-link"><a href="${escapeHtml(movie.link)}" target="_blank">🔗 Link</a></div>` : '';
-            const jellyfinUrl = `https://jellyfin.shepardgepard.org/web/#/search.html?query=${encodeURIComponent(movie.title)}`;
-            return `<div class="carousel-slide" data-movie-id="${movie.id}">
-                <div class="carousel-container">
-                    <div class="slide">
-                        <div class="poster-wrapper">
-                            ${posterImg}
-                            <a href="${jellyfinUrl}" target="_blank" class="movie-title-overlay">${escapeHtml(movie.title)}</a>
-                            <button class="edit-movie-btn" data-movie-id="${movie.id}">✎</button>
-                        </div>
-                        <div class="movie-date">${escapeHtml(movie.date)}</div>
-                        ${linkHtml}
-                        <div class="reviews-grid">${revHtml}</div>
-                        ${sentHtml}
-                        <div class="add-review">
-                            <div class="review-form-grid">
-                                <div class="review-form-row">
-                                    <div class="review-form-left"><input type="text" class="review-author-input" placeholder="Imię" maxlength="20"><div class="rating-input" id="starSelector_${movie.id}">${[1,2,3,4,5].map(n=>`<span class="star-select" data-value="${n}">★</span>`).join('')}</div></div>
-                                    <div class="review-form-middle"><textarea class="review-comment-input" placeholder="Napisz kilka słów (Enter aby dodać)" maxlength="256"></textarea></div>
-                                    <div class="avg-box" data-movie-id="${movie.id}">${avgDisplay}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-        }
-
-        function buildCarousel(selectedIndex) {
-            const container = document.getElementById('mainContent');
-            if (!container) return;
-            container.style.overflow = 'hidden';
-            container.innerHTML = `<div class="carousel-viewport"><div class="carousel-track" id="carouselTrack"></div></div>`;
-            track = document.getElementById('carouselTrack');
-            movies.forEach((m, idx) => {
-                const slideDiv = document.createElement('div');
-                slideDiv.innerHTML = generateMovieSlide(m);
-                track.appendChild(slideDiv.firstChild);
-            });
-            currentSlideIndex = selectedIndex;
-            updateCarouselPosition(false);
-            attachDelegatedEvents();
-            setTimeout(() => positionArrows(), 100);
-        }
-
-        function updateCarouselPosition(animate = true) {
-            if (!track) return;
-            const slideWidth = track.parentElement.clientWidth;
-            const offset = -currentSlideIndex * slideWidth;
-            track.style.transition = animate ? 'transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1)' : 'none';
-            track.style.transform = `translateX(${offset}px)`;
-        }
-
-        window.addEventListener('resize', () => {
-            if (viewMode === 'movie' && track) {
-                setTimeout(() => updateCarouselPosition(false), 100);
-                setTimeout(() => positionArrows(), 150);
-            }
-        });
-
-        function goToSlide(index, direction) {
-            if (index < 0) index = movies.length - 1;
-            if (index >= movies.length) index = 0;
-            if (index === currentSlideIndex) return;
-            animateSlideTransition(direction, () => {
-                currentSlideIndex = index;
-                currentMovieIndex = index;
-                updateCarouselPosition(false);
-                setTimeout(() => attachDelegatedEvents(), 50);
-                setTimeout(() => positionArrows(), 100);
-            });
-        }
-
-        function nextSlide() { goToSlide(currentSlideIndex + 1, 'right'); }
-        function prevSlide() { goToSlide(currentSlideIndex - 1, 'left'); }
-
-        function switchToMovie() {
-            viewMode = 'movie';
-            const container = document.getElementById('mainContent');
-            container.style.overflow = 'hidden';
-            container.classList.add('view-transition', 'view-fade-out');
-            setTimeout(() => {
-                buildCarousel(currentMovieIndex);
-                container.classList.remove('view-fade-out');
-                setTimeout(() => container.classList.remove('view-transition'), 200);
-                showArrows(true);
-            }, 150);
-        }
-
-        function switchToHome() {
-            viewMode = 'home';
-            const container = document.getElementById('mainContent');
-            container.style.overflow = 'auto';
-            container.classList.add('view-transition', 'view-fade-out');
-            setTimeout(() => {
-                renderHome();
-                container.classList.remove('view-fade-out');
-                setTimeout(() => container.classList.remove('view-transition'), 200);
-                showArrows(false);
-                setupPosterGlow();
-            }, 150);
-        }
-
-        function renderHome() {
-            const next = getNextMovie();
-            const posterUrlNext = next?.poster || '';
-            const nextPosterHtml = posterUrlNext ? `<img class="poster" src="${escapeHtml(posterUrlNext)}" onerror="this.style.display='none'">` : '<div class="poster" style="background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#666;">🎬</div>';
-            document.getElementById('mainContent').innerHTML = `
-                <div class="home-container">
-                    <div class="next-movie-card" id="nextMovieCard">${nextPosterHtml}<h2>NAJBLIŻSZY SEANS</h2><div class="title">${escapeHtml(next?.title||'brak filmów')}</div><div class="date">${escapeHtml(next?.date||'')}</div></div>
-                    <div class="ranking-section"><div class="ranking-header"><h3>RANKING</h3><span class="clickable-text" id="openProposeBtn">PROPONUJ</span></div><div class="ranking-list" id="rankingList"></div></div>
-                </div>`;
-            const rankingDiv = document.getElementById('rankingList');
-            if (rankingDiv) {
-                const threshold = 3;
-                const high = movies.filter(m => countApprovedReviews(m) >= threshold);
-                const low = movies.filter(m => countApprovedReviews(m) < threshold);
-                const sortByAvg = (a,b) => parseFloat(avgWeighted(b)) - parseFloat(avgWeighted(a));
-                high.sort(sortByAvg); low.sort(sortByAvg);
-                const all = [...high, ...low];
-                rankingDiv.innerHTML = all.map((m, idx) => {
-                    const posterStyle = m.poster ? `background-image: url('${escapeHtml(m.poster)}'); background-size: cover;` : '';
-                    const rating = avgWeighted(m);
-                    const enough = countApprovedReviews(m) >= threshold;
-                    const ratingText = enough ? (rating !== '—' ? `${rating} ★` : '— ★') : '–';
-                    const badge = !enough ? '<span class="badge-text">(czeka na więcej ocen)</span>' : '';
-                    return `<div class="ranking-item" data-idx="${movies.indexOf(m)}" style="${posterStyle}">
-                                <span class="ranking-title">${idx+1}. ${escapeHtml(m.title)}${badge}</span>
-                                <span class="ranking-rating">${ratingText}</span>
-                            </div>`;
-                }).join('');
-                document.querySelectorAll('.ranking-item').forEach(el => {
-                    el.onclick = () => {
-                        const idx = parseInt(el.dataset.idx);
-                        if (!isNaN(idx) && movies[idx]) {
-                            currentMovieIndex = idx;
-                            switchToMovie();
-                        }
-                    };
-                });
-            }
-            document.getElementById('openProposeBtn').onclick = () => { loadProposals(); document.getElementById('proposeModal').style.display = 'flex'; };
-            document.getElementById('cancelProposeBtn').onclick = () => document.getElementById('proposeModal').style.display = 'none';
-            document.getElementById('submitProposeBtn').onclick = async () => {
-                const title = document.getElementById('proposeTitle').value.trim();
-                if (!title) return alert("Podaj tytuł");
-                await db.collection("proposals").add({ title, votes: 0, timestamp: Date.now() });
-                document.getElementById('proposeTitle').value = '';
-                loadProposals();
+            function preloadImage(url) { if (!url || preloadedImages[url]) return; preloadedImages[url] = new Promise((resolve) => { const img = new Image(); img.onload = () => { preloadedImages[url] = true; resolve(); }; img.onerror = () => { preloadedImages[url] = false; resolve(); }; img.src = url; }); }
+            function showToast(m, type='') { const old = document.querySelector('.toast'); if (old) old.remove(); const t = document.createElement('div'); t.className = 'toast '+type; t.textContent = m; document.body.appendChild(t); requestAnimationFrame(()=> requestAnimationFrame(()=> t.classList.add('show'))); const hide = setTimeout(()=>{ t.classList.remove('show'); t.addEventListener('transitionend', ()=> t.remove(), {once:true}); setTimeout(()=>{ if(t.parentNode) t.remove(); }, 500); }, 2800); t._hideTimeout = hide; }
+            function openModal(id) { const m = document.getElementById(id); if(!m) return; m.style.display='flex'; requestAnimationFrame(()=> requestAnimationFrame(()=> m.classList.add('open'))); }
+            function closeModal(id) { const m = document.getElementById(id); if(!m) return; m.classList.remove('open'); const h = ()=>{ m.style.display='none'; m.removeEventListener('transitionend', h); }; m.addEventListener('transitionend', h, {once:true}); setTimeout(()=>{ if(!m.classList.contains('open')) { m.style.display='none'; m.removeEventListener('transitionend', h); } }, 350); }
+            function updateAdminIndicator() { const indicator = document.getElementById('adminIndicator'); if (!indicator) return; indicator.classList.toggle('active', isAdmin); }
+            function setAdminMode(a) { if(adminTimeout) clearTimeout(adminTimeout); isAdmin = a; updateAdminIndicator(); if(a) { sessionStorage.setItem('movieclub_admin','true'); adminTimeout = setTimeout(()=>{ setAdminMode(false); showToast("Sesja admina wygasła."); if(viewMode==='movie') renderMovie(); else renderHome(); }, ADMIN_DURATION); } else { sessionStorage.removeItem('movieclub_admin'); if(adminTimeout) clearTimeout(adminTimeout); adminTimeout = null; } }
+            function checkAdminFromStorage() { if(sessionStorage.getItem('movieclub_admin')==='true') setAdminMode(true); }
+            function isAdminAction() { if(isAdmin) return true; showToast("Wymagany tryb administratora.", 'warning'); return false; }
+            function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+            function renderStars(r) { let h='<span class="stars">'; for(let i=1;i<=5;i++) h+=`<span class="star ${i<=r?'star-filled':''}" style="color:${i<=r?'var(--gold)':'#3a3a44'}">&#9733;</span>`; return h+'</span>'; }
+            function avgWeighted(m) { let t=0,w=0; m.reviews.forEach(r=>{ if(r.approved){ let we=r.verified?2:1; t+=r.stars*we; w+=we; } }); return w===0?'-':(t/w).toFixed(1); }
+            function countApprovedReviews(m) { return m.reviews.filter(r=>r.approved).length; }
+            function parseDate(str) { let p=str.split('.'); return new Date(p[2],p[1]-1,p[0]); }
+            function getNextMovie() { let today=new Date(); today.setHours(0,0,0,0); let future=movies.filter(m=>parseDate(m.date)>=today); if(future.length) return future.sort((a,b)=>parseDate(a.date)-parseDate(b.date))[0]; return movies.length?movies.reduce((a,b)=>parseDate(a.date)-parseDate(b.date)>0?a:b):null; }
+            const SVG_ICONS = {
+                approve: '<svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>',
+                verify: '<svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z"/></svg>',
+                delete: '<svg viewBox="0 0 24 24"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>',
+                edit: '<svg viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',
+                spoiler: '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
             };
-            const nextCard = document.getElementById('nextMovieCard');
-            if (nextCard && next) {
-                nextCard.onclick = () => {
-                    const idx = movies.findIndex(m => m.id === next.id);
-                    if (idx !== -1) { currentMovieIndex = idx; switchToMovie(); }
+
+            function setupStarSelector(container) {
+                if (!container) return;
+                const stars = container.querySelectorAll('.star-select');
+                container.onmouseover = e => {
+                    const s = e.target.closest('.star-select');
+                    if (s) stars.forEach(st => st.style.color = parseInt(st.dataset.value) <= parseInt(s.dataset.value) ? 'var(--gold)' : '#4a4a54');
                 };
-            }
-            showArrows(false);
-            showLoading(false);
-            setupPosterGlow();
-        }
-
-        // Funkcja glow z radial-gradient śledzącym kursor
-        function setupPosterGlow() {
-            const card = document.querySelector('.next-movie-card');
-            if (!card) return;
-
-            let rafId = null;
-
-            const handleMouseMove = (e) => {
-                if (rafId) cancelAnimationFrame(rafId);
-                rafId = requestAnimationFrame(() => {
-                    const rect = card.getBoundingClientRect();
-                    const x = ((e.clientX - rect.left) / rect.width) * 100;
-                    const y = ((e.clientY - rect.top) / rect.height) * 100;
-                    card.style.setProperty('--x', `${x}%`);
-                    card.style.setProperty('--y', `${y}%`);
-
-                    const poster = card.querySelector('.poster');
-                    if (poster) {
-                        const posterRect = poster.getBoundingClientRect();
-                        const px = ((e.clientX - posterRect.left) / posterRect.width) * 100;
-                        const py = ((e.clientY - posterRect.top) / posterRect.height) * 100;
-                        poster.style.background = `
-                            radial-gradient(circle at ${px}% ${py}%,
-                            rgba(212,175,55,0.35) 0%,
-                            rgba(212,175,55,0) 70%)
-                        `;
-                    }
-                });
-            };
-            const handleMouseLeave = () => {
-                if (rafId) cancelAnimationFrame(rafId);
-                card.style.removeProperty('--x');
-                card.style.removeProperty('--y');
-                const poster = card.querySelector('.poster');
-                if (poster) {
-                    poster.style.background = '';
-                }
-            };
-            card.addEventListener('mousemove', handleMouseMove);
-            card.addEventListener('mouseleave', handleMouseLeave);
-        }
-
-        async function loadProposals() {
-            const div = document.getElementById('proposalsList');
-            if (!div) return;
-            div.innerHTML = 'Ładowanie...';
-            try {
-                const snap = await db.collection("proposals").orderBy("votes","desc").get();
-                const props = snap.docs.map(d=> ({id:d.id, ...d.data()}));
-                if (props.length===0) { div.innerHTML = 'Brak propozycji. Bądź pierwszy!'; return; }
-                const voted = JSON.parse(localStorage.getItem('proposal_votes')||'[]');
-                div.innerHTML = props.map(p => {
-                    const deleteBtn = isAdmin ? `<button class="proposal-delete" data-id="${p.id}">✕</button>` : '';
-                    return `<div class="proposal-item">
-                        <div class="proposal-info">
-                            <span class="proposal-title">${escapeHtml(p.title)}</span>
-                            ${deleteBtn}
-                        </div>
-                        <div class="proposal-actions">
-                            <div class="proposal-vote ${voted.includes(p.id)?'voted':''}" data-id="${p.id}" style="pointer-events:${voted.includes(p.id)?'none':'auto'}">
-                                <span>${p.votes||0}</span>
-                                <span>${voted.includes(p.id)?'✓':'+1'}</span>
-                            </div>
-                        </div>
-                    </div>`;
-                }).join('');
-                document.querySelectorAll('.proposal-vote').forEach(el => {
-                    if (el.classList.contains('voted')) return;
-                    el.onclick = async () => {
-                        const id = el.dataset.id;
-                        let votedArr = JSON.parse(localStorage.getItem('proposal_votes')||'[]');
-                        if (votedArr.includes(id)) return alert("Już głosowałeś");
-                        const ref = db.collection("proposals").doc(id);
-                        const doc = await ref.get();
-                        if (!doc.exists) return;
-                        await ref.update({ votes: (doc.data().votes||0)+1 });
-                        votedArr.push(id);
-                        localStorage.setItem('proposal_votes', JSON.stringify(votedArr));
-                        loadProposals();
-                    };
-                });
-                document.querySelectorAll('.proposal-delete').forEach(btn => {
-                    btn.onclick = async () => {
-                        if (!isAdmin && !isAdminAction()) return;
-                        if (!confirm("Czy na pewno chcesz usunąć tę propozycję?")) return;
-                        await db.collection("proposals").doc(btn.dataset.id).delete();
-                        loadProposals();
-                    };
-                });
-            } catch(e) { div.innerHTML = 'Błąd ładowania.'; }
-        }
-
-        async function deleteCurrentMovieFromEdit() {
-            if (!window.currentEditMovieId) return;
-            if (!isAdmin && !isAdminAction()) return;
-            if (!confirm("Usunąć ten film? Nie można cofnąć.")) return;
-            await db.collection("movies").doc(window.currentEditMovieId).delete();
-            document.getElementById('editMovieModal').style.display = 'none';
-            if (viewMode === 'movie' && movies[currentMovieIndex]?.id === window.currentEditMovieId) switchToHome();
-        }
-
-        async function seedDefault() {
-            const snap = await db.collection("movies").get();
-            if (snap.empty) for (const m of defaultMovies) await db.collection("movies").doc(m.id).set(m);
-        }
-
-        function attachDelegatedEvents() {
-            const container = document.getElementById('mainContent');
-            if (!container) return;
-            // Edycja filmu
-            container.querySelectorAll('.edit-movie-btn').forEach(btn => {
-                btn.onclick = (e) => {
-                    e.stopPropagation();
-                    const movieId = btn.dataset.movieId;
-                    const movie = movies.find(m => m.id === movieId);
-                    if (!movie) return;
-                    if (!isAdmin && !isAdminAction()) return;
-                    document.getElementById('editTitle').value = movie.title;
-                    document.getElementById('editDate').value = movie.date ? movie.date.split('.').reverse().join('-') : '';
-                    document.getElementById('editPosterUrl').value = movie.poster || '';
-                    document.getElementById('editLink').value = movie.link || '';
-                    document.getElementById('editSentimental').value = movie.sentimentalValue || '';
-                    document.getElementById('editMovieModal').style.display = 'flex';
-                    window.currentEditMovieId = movie.id;
-                };
-            });
-            // Akcje recenzji (admin)
-            container.querySelectorAll('.approve-btn, .verify-btn, .delete-review-btn').forEach(btn => {
-                btn.onclick = async (e) => {
-                    e.stopPropagation();
-                    if (!isAdmin && !isAdminAction()) return;
-                    const reviewIdx = parseInt(btn.dataset.idx);
-                    const slide = btn.closest('.carousel-slide');
-                    const movieId = slide.dataset.movieId;
-                    const movie = movies.find(m => m.id === movieId);
-                    if (!movie) return;
-                    const updatedReviews = [...movie.reviews];
-                    let action = '';
-                    if (btn.classList.contains('approve-btn')) action = 'zatwierdzić';
-                    else if (btn.classList.contains('verify-btn')) action = 'nadać JLL Verified';
-                    else if (btn.classList.contains('delete-review-btn')) action = 'usunąć';
-                    if (action && !confirm(`Czy na pewno chcesz ${action} tę recenzję?`)) return;
-                    if (btn.classList.contains('approve-btn')) {
-                        updatedReviews[reviewIdx].approved = true;
-                        updatedReviews[reviewIdx].timestamp = Date.now();
-                    } else if (btn.classList.contains('verify-btn')) {
-                        updatedReviews[reviewIdx].verified = true;
-                        updatedReviews[reviewIdx].timestamp = Date.now();
-                    } else if (btn.classList.contains('delete-review-btn')) {
-                        updatedReviews.splice(reviewIdx, 1);
-                    }
-                    await db.collection("movies").doc(movie.id).update({ reviews: updatedReviews });
-                };
-            });
-            // Edycja własnej recenzji
-            container.querySelectorAll('.edit-review-btn').forEach(btn => {
-                btn.onclick = (e) => {
-                    e.stopPropagation();
-                    const reviewIdx = parseInt(btn.dataset.idx);
-                    const movieId = btn.dataset.movieId;
-                    const movie = movies.find(m => m.id === movieId);
-                    if (!movie) return;
-                    const review = movie.reviews[reviewIdx];
-                    if (!review || review.approved) return;
-                    const currentToken = getSessionToken();
-                    if (review.sessionToken !== currentToken) {
-                        alert("Nie możesz edytować tej recenzji – sesja wygasła.");
-                        return;
-                    }
-                    currentEditReviewData = { movieId, reviewIdx, stars: review.stars, comment: review.comment };
-                    const editModal = document.getElementById('editReviewModal');
-                    const starContainer = editModal.querySelector('#editStarSelector');
-                    starContainer.innerHTML = [1,2,3,4,5].map(n => `<span class="star-select" data-value="${n}">★</span>`).join('');
-                    const stars = starContainer.querySelectorAll('.star-select');
-                    stars.forEach((s, i) => i < review.stars ? s.classList.add('selected') : s.classList.remove('selected'));
-                    stars.forEach((s, idx) => {
-                        s.onclick = () => {
-                            const val = idx+1;
-                            stars.forEach((ss, j) => j < val ? ss.classList.add('selected') : ss.classList.remove('selected'));
-                            currentEditReviewData.stars = val;
-                        };
+                container.onmouseleave = () => stars.forEach(s => s.style.color = s.classList.contains('selected') ? 'var(--gold)' : '#4a4a54');
+                container.onclick = e => {
+                    const s = e.target.closest('.star-select');
+                    if (s) stars.forEach(st => {
+                        st.classList.toggle('selected', parseInt(st.dataset.value) <= parseInt(s.dataset.value));
+                        st.style.color = st.classList.contains('selected') ? 'var(--gold)' : '#4a4a54';
                     });
-                    document.getElementById('editReviewComment').value = review.comment;
-                    editModal.style.display = 'flex';
-                    window.currentEditReviewData = currentEditReviewData;
                 };
-            });
-            // Usuwanie własnej recenzji
-            container.querySelectorAll('.delete-own-review-btn').forEach(btn => {
-                btn.onclick = async (e) => {
-                    e.stopPropagation();
-                    const reviewIdx = parseInt(btn.dataset.idx);
-                    const movieId = btn.dataset.movieId;
-                    const movie = movies.find(m => m.id === movieId);
-                    if (!movie) return;
-                    const review = movie.reviews[reviewIdx];
-                    if (!review || review.approved) return;
-                    const currentToken = getSessionToken();
-                    if (review.sessionToken !== currentToken) {
-                        alert("Nie możesz usunąć tej recenzji – sesja wygasła.");
-                        return;
-                    }
-                    if (!confirm("Czy na pewno chcesz usunąć swoją recenzję?")) return;
-                    const updatedReviews = [...movie.reviews];
-                    updatedReviews.splice(reviewIdx, 1);
-                    await db.collection("movies").doc(movie.id).update({ reviews: updatedReviews });
-                };
-            });
-            // Dodawanie recenzji z blokadą antyspamową
-            container.querySelectorAll('.carousel-slide').forEach(slide => {
-                const movieId = slide.dataset.movieId;
-                const movie = movies.find(m => m.id === movieId);
-                if (!movie) return;
-                const starSpans = slide.querySelectorAll('.star-select');
-                let selectedStars = 0;
-                starSpans.forEach((span, i) => {
-                    span.onclick = () => {
-                        selectedStars = i+1;
-                        starSpans.forEach((s,j) => s.classList.toggle('selected', j<=i));
-                    };
-                });
-                const avgBox = slide.querySelector('.avg-box');
-                const addReview = async () => {
-                    const currentToken = getSessionToken();
-                    const existingPending = movie.reviews.some(r => !r.approved && r.sessionToken === currentToken);
-                    if (existingPending) {
-                        alert("Masz już niezatwierdzoną recenzję w tej sesji. Możesz ją edytować lub usunąć, zanim dodasz kolejną.");
-                        return;
-                    }
-                    const authorInput = slide.querySelector('.review-author-input');
-                    const textarea = slide.querySelector('.review-comment-input');
-                    const author = authorInput ? authorInput.value.trim() : '';
-                    const comment = textarea ? textarea.value.trim() : '';
-                    if (!author) { alert("Podaj imię"); return; }
-                    if (selectedStars === 0) { alert("Wybierz gwiazdki"); return; }
-                    const newReview = { author, stars: selectedStars, comment: comment || "(bez komentarza)", approved: false, verified: false, timestamp: Date.now(), sessionToken: currentToken };
-                    const updatedReviews = [...movie.reviews, newReview];
-                    await db.collection("movies").doc(movie.id).update({ reviews: updatedReviews });
-                    if (authorInput) authorInput.value = '';
-                    if (textarea) textarea.value = '';
-                    selectedStars = 0;
-                    starSpans.forEach(s => s.classList.remove('selected'));
-                };
-                const textarea = slide.querySelector('.review-comment-input');
-                if (textarea) {
-                    const newTextarea = textarea.cloneNode(true);
-                    textarea.parentNode.replaceChild(newTextarea, textarea);
-                    newTextarea.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            addReview();
-                        }
-                    });
-                }
-                if (avgBox) avgBox.onclick = () => addReview();
-            });
-        }
+            }
 
-        function startListener() {
-            if (unsubscribeMovies) unsubscribeMovies();
-            showLoading(true);
-            seedDefault().then(() => {
-                unsubscribeMovies = db.collection("movies").onSnapshot(snap => {
-                    const newMovies = [];
-                    snap.forEach(doc => newMovies.push(doc.data()));
-                    movies = newMovies;
-                    if (movies.length === 0) {
-                        if (viewMode === 'home') renderHome();
-                        else switchToHome();
+            function generateMovieSlide(movie) {
+                const sorted = [...movie.reviews].sort((a,b)=> a.verified!==b.verified ? (a.verified?-1:1) : (a.approved!==b.approved ? (a.approved?-1:1) : b.timestamp-a.timestamp));
+                let revHtml = '';
+                const curToken = getSessionToken();
+                if(sorted.length===0) revHtml = `<div class="empty-state"><p>Brak recenzji.</p></div>`;
+                else sorted.forEach(r=>{
+                    const origIdx = movie.reviews.findIndex(o=>o.timestamp===r.timestamp && o.author===r.author);
+                    const pending = !r.approved?'pending':'';
+                    const verifiedMark = r.verified?'<span style="display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:rgba(201,168,76,0.12);color:rgba(201,168,76,0.55);font-size:0.5rem;margin-left:0.2rem;">✓</span>':'';
+                    const canEdit = (!r.approved && r.sessionToken===curToken);
+                    let btns = '';
+                    if (!r.approved) {
+                        if (isAdmin) btns += `<button class="review-action-icon approve-btn" data-idx="${origIdx}">${SVG_ICONS.approve}</button>`;
+                        if (canEdit) {
+                            btns += `<button class="review-action-icon edit-review-btn" data-idx="${origIdx}" data-movie-id="${movie.id}">${SVG_ICONS.edit}</button>`;
+                            btns += `<button class="review-action-icon delete-own-review-btn" data-idx="${origIdx}" data-movie-id="${movie.id}">${SVG_ICONS.delete}</button>`;
+                        }
+                        if (isAdmin && !canEdit) btns += `<button class="review-action-icon delete-review-btn" data-idx="${origIdx}">${SVG_ICONS.delete}</button>`;
                     } else {
-                        if (viewMode === 'home') renderHome();
-                        else {
-                            if (track) {
-                                const oldId = movies[currentMovieIndex]?.id;
-                                while (track.firstChild) track.removeChild(track.firstChild);
-                                movies.forEach((m, idx) => {
-                                    const slideDiv = document.createElement('div');
-                                    slideDiv.innerHTML = generateMovieSlide(m);
-                                    track.appendChild(slideDiv.firstChild);
-                                });
-                                if (oldId) {
-                                    const newIdx = movies.findIndex(m => m.id === oldId);
-                                    if (newIdx !== -1) currentMovieIndex = newIdx;
-                                    else currentMovieIndex = 0;
-                                } else currentMovieIndex = 0;
-                                currentSlideIndex = currentMovieIndex;
-                                updateCarouselPosition(false);
-                                attachDelegatedEvents();
-                                setTimeout(() => positionArrows(), 100);
-                            } else {
-                                buildCarousel(currentMovieIndex);
-                            }
+                        if (isAdmin) {
+                            if (!r.verified) btns += `<button class="review-action-icon verify-btn" data-idx="${origIdx}">${SVG_ICONS.verify}</button>`;
+                            btns += `<button class="review-action-icon spoiler-btn" data-idx="${origIdx}" title="Spoiler">${SVG_ICONS.spoiler}</button>`;
+                            btns += `<button class="review-action-icon delete-review-btn" data-idx="${origIdx}">${SVG_ICONS.delete}</button>`;
                         }
                     }
-                    showLoading(false);
+                    const commentClass = r.spoiler ? 'review-comment spoiler-text' : 'review-comment';
+                    revHtml += `<div class="review-card ${pending}"><div class="review-card-left-col" style="flex:0 0 75px;">${renderStars(r.stars)}<div style="font-size:0.7rem;color:#aaa;">${escapeHtml(r.author)}${verifiedMark}</div></div><div class="review-card-right-col"><div class="${commentClass}" onclick="if(this.classList.contains('spoiler-text')) this.classList.toggle('revealed')" style="font-size:0.78rem;line-height:1.5;">${escapeHtml(r.comment)}</div></div><div class="review-card-actions">${btns}</div></div>`;
                 });
-            });
-        }
+                const sent = movie.sentimentalValue ? `<div style="margin:0.5rem;padding:0.5rem;background:rgba(201,168,76,0.05);border-left:2px solid var(--gold);font-size:0.7rem;color:#b8a878;">${escapeHtml(movie.sentimentalValue)}</div>` : '';
+                const posterUrl = movie.poster || '';
+                const posterImg = posterUrl ? `<img class="poster-img" src="${escapeHtml(posterUrl)}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="width:100%;height:100%;background:#1a1a20;display:flex;align-items:center;justify-content:center;color:#555;">Brak plakatu</div>`;
+                const avg = avgWeighted(movie); const avgDisp = avg!=='-'?avg:'-';
+                const linkHtml = movie.link ? `<div style="text-align:center;margin:0.3rem 0;"><a href="${escapeHtml(movie.link)}" target="_blank" style="color:var(--gold);font-size:0.7rem;">Link do filmu</a></div>` : '';
+                const dateHtml = movie.date ? `<div style="text-align:center;font-size:0.7rem;color:#aaa;margin:0.4rem 0;">${escapeHtml(movie.date)}</div>` : '';
+                const jfUrl = `https://jellyfin.shepardgepard.org/web/#/search.html?query=${encodeURIComponent(movie.title)}`;
+                const editBtnAdminVisible = isAdmin ? ' admin-visible' : '';
+                return `<div class="carousel-slide" data-movie-id="${movie.id}"><div style="display:flex;flex-direction:column;height:100%;"><div style="height:clamp(180px,30vh,280px);position:relative;overflow:hidden;flex-shrink:0;background:#1a1a20;">${posterImg}<a href="${jfUrl}" target="_blank" class="movie-title-overlay">${escapeHtml(movie.title)}</a><button class="review-action-icon edit-movie-btn${editBtnAdminVisible}" data-movie-id="${movie.id}" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);color:#ddd;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:opacity 0.2s;">${SVG_ICONS.edit}</button></div>${dateHtml}${linkHtml}<div style="flex:1;overflow-y:auto;padding:0 0.9rem;">${revHtml}</div>${sent}<div style="background:rgba(20,20,26,0.7);border-top:1px solid var(--border-default);padding:0.7rem 0.9rem;"><div style="display:flex;gap:0.55rem;align-items:stretch;"><div style="flex:0 0 88px;display:flex;flex-direction:column;gap:0.25rem;"><input type="text" class="review-author-input" placeholder="Imię" maxlength="9" style="background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.4rem;font-size:0.7rem;color:#eee;text-align:center;font-family:inherit;width:100%;"><div class="rating-input" style="display:flex;gap:0;background:var(--bg-input);padding:0.15rem 0.25rem;border-radius:20px;justify-content:center;border:1px solid var(--border-default);">${[1,2,3,4,5].map(n=>`<span class="star-select" data-value="${n}" style="font-size:0.75rem;cursor:pointer;color:#4a4a54;">&#9733;</span>`).join('')}</div></div><div style="flex:2;min-width:0;"><textarea class="review-comment-input" placeholder="Napisz kilka słów...\nKliknij enter aby wysłać." style="width:100%;height:100%;min-height:42px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.45rem;font-size:0.7rem;color:#eee;resize:none;font-family:inherit;"></textarea></div><div class="avg-box" data-movie-id="${movie.id}" style="flex:0 0 52px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold);cursor:pointer;font-size:0.85rem;">${avgDisp} ★</div></div></div></div></div>`;
+            }
 
-        document.getElementById('cancelEditReviewBtn').onclick = () => document.getElementById('editReviewModal').style.display = 'none';
-        document.getElementById('saveEditReviewBtn').onclick = async () => {
-            const data = window.currentEditReviewData;
-            if (!data) return;
-            const movieId = data.movieId, reviewIdx = data.reviewIdx, newStars = data.stars, newComment = document.getElementById('editReviewComment').value.trim();
-            const movie = movies.find(m => m.id === movieId);
-            if (!movie) return;
-            const review = movie.reviews[reviewIdx];
-            if (!review || review.approved) { alert("Recenzja nie może być edytowana (jest już zatwierdzona)."); document.getElementById('editReviewModal').style.display = 'none'; return; }
-            const currentToken = getSessionToken();
-            if (review.sessionToken !== currentToken) { alert("Nie możesz edytować tej recenzji – sesja wygasła."); document.getElementById('editReviewModal').style.display = 'none'; return; }
-            const updatedReviews = [...movie.reviews];
-            updatedReviews[reviewIdx] = { ...review, stars: newStars, comment: newComment || "(bez komentarza)", timestamp: Date.now() };
-            await db.collection("movies").doc(movieId).update({ reviews: updatedReviews });
-            document.getElementById('editReviewModal').style.display = 'none';
-            if (viewMode === 'movie') renderMovie(); else renderHome();
-        };
+            function buildCarousel(idx) { const c = document.getElementById('mainContent'); c.style.overflow = 'visible'; c.innerHTML = `<div class="carousel-wrapper"><div class="carousel-viewport" id="carouselViewport"></div><button class="carousel-arrow arrow-left" id="carouselPrevBtn">&lsaquo;</button><button class="carousel-arrow arrow-right" id="carouselNextBtn">&rsaquo;</button></div>`; const viewport = document.getElementById('carouselViewport'); movies.forEach((m,i)=>{ const d = document.createElement('div'); d.innerHTML = generateMovieSlide(m); const slide = d.firstChild; if(i===idx) slide.classList.add('active'); viewport.appendChild(slide); }); currentSlideIndex = idx; setGlobalBackground(movies[idx]?.poster); attachDelegatedEvents(); document.getElementById('carouselPrevBtn').onclick = prevSlide; document.getElementById('carouselNextBtn').onclick = nextSlide; }
+            function setGlobalBackground(url) { const bg = document.getElementById('globalBg'); if (!bg) return; if (!url) { bg.style.backgroundImage = 'none'; return; } if (preloadedImages[url] === true) { bg.style.backgroundImage = `url('${url}')`; } else { const img = new Image(); img.onload = () => { preloadedImages[url] = true; bg.style.backgroundImage = `url('${url}')`; }; img.src = url; preloadedImages[url] = img; } }
+            function goToSlide(i) { if(i<0) i=movies.length-1; if(i>=movies.length) i=0; if(i===currentSlideIndex) return; const viewport = document.getElementById('carouselViewport'); if(!viewport) return; const slides = viewport.querySelectorAll('.carousel-slide'); if(slides[currentSlideIndex]) slides[currentSlideIndex].classList.remove('active'); if(slides[i]) { slides[i].classList.add('active'); slides[i].scrollTop = 0; } currentSlideIndex = i; currentMovieIndex = i; setGlobalBackground(movies[i]?.poster); attachDelegatedEvents(); }
+            function nextSlide() { goToSlide(currentSlideIndex+1); } function prevSlide() { goToSlide(currentSlideIndex-1); }
+            function switchToMovie() { viewMode='movie'; const c=document.getElementById('mainContent'); c.classList.add('view-fade-out'); setTimeout(()=>{ buildCarousel(currentMovieIndex); c.classList.remove('view-fade-out'); }, 180); }
+            function switchToHome() { viewMode='home'; const c=document.getElementById('mainContent'); c.classList.add('view-fade-out'); setTimeout(()=>{ renderHome(); c.classList.remove('view-fade-out'); }, 180); }
 
-        document.getElementById('openModalBtn').onclick = () => { if (!isAdmin && !isAdminAction()) return; document.getElementById('movieModal').style.display = 'flex'; };
-        document.getElementById('homeBtn').onclick = () => { if (viewMode !== 'home') switchToHome(); };
-        document.getElementById('cancelModalBtn').onclick = () => document.getElementById('movieModal').style.display = 'none';
-        document.getElementById('cancelEditBtn').onclick = () => document.getElementById('editMovieModal').style.display = 'none';
-        document.getElementById('cancelProposeBtn').onclick = () => document.getElementById('proposeModal').style.display = 'none';
-        document.getElementById('cancelAdminLoginBtn').onclick = () => document.getElementById('adminLoginModal').style.display = 'none';
-        document.getElementById('confirmAdminLoginBtn').onclick = () => {
-            const pwd = document.getElementById('adminPassword').value;
-            if (pwd === getDynamicAdminPassword()) { setAdminMode(true); document.getElementById('adminLoginModal').style.display = 'none'; alert("Tryb admina włączony."); }
-            else alert("Złe hasło");
-        };
-        document.getElementById('deleteMovieFromEditBtn').onclick = deleteCurrentMovieFromEdit;
-        window.onclick = e => { if (e.target.classList.contains('modal')) e.target.style.display = 'none'; };
-        document.getElementById('saveMovieBtn').onclick = async () => {
-            if (!isAdmin && !isAdminAction()) return;
-            const title = document.getElementById('newTitle').value.trim();
-            if (!title) return alert("Tytuł wymagany");
-            const dateRaw = document.getElementById('newDate').value;
-            const date = dateRaw ? dateRaw.split('-').reverse().join('.') : '';
-            const newMovie = { id: Date.now().toString(), date, title, poster: document.getElementById('newPosterUrl').value.trim(), link: document.getElementById('newLink').value.trim(), reviews: [], sentimentalValue: document.getElementById('newSentimental').value.trim() };
-            await db.collection("movies").doc(newMovie.id).set(newMovie);
-            document.getElementById('movieModal').style.display = 'none';
-            document.getElementById('newTitle').value = ''; document.getElementById('newPosterUrl').value = ''; document.getElementById('newLink').value = ''; document.getElementById('newSentimental').value = '';
-        };
-        document.getElementById('saveEditBtn').onclick = async () => {
-            if (!isAdmin && !isAdminAction()) return;
-            const title = document.getElementById('editTitle').value.trim();
-            if (!title) return alert("Tytuł wymagany");
-            const dateRaw = document.getElementById('editDate').value;
-            const date = dateRaw ? dateRaw.split('-').reverse().join('.') : '';
-            const update = { title, date, poster: document.getElementById('editPosterUrl').value.trim(), link: document.getElementById('editLink').value.trim(), sentimentalValue: document.getElementById('editSentimental').value.trim() };
-            await db.collection("movies").doc(window.currentEditMovieId).update(update);
-            document.getElementById('editMovieModal').style.display = 'none';
-        };
-        document.getElementById('homeLogo').onclick = () => { if (viewMode !== 'home') switchToHome(); };
-        document.getElementById('prevArrow').onclick = () => { if (viewMode === 'movie') prevSlide(); };
-        document.getElementById('nextArrow').onclick = () => { if (viewMode === 'movie') nextSlide(); };
+            function renderHome() {
+                const next = getNextMovie(); const posterUrl = next?.poster || '';
+                setGlobalBackground(posterUrl);
+                const posterHtml = posterUrl ? `<img class="poster" src="${escapeHtml(posterUrl)}" onerror="this.style.display='none'">` : '<div class="poster" style="height:180px;display:flex;align-items:center;justify-content:center;font-size:2rem;color:#444;">Brak plakatu</div>';
+                const c = document.getElementById('mainContent');
+                c.style.overflow = 'auto';
+                c.innerHTML = `<div class="home-container"><div class="next-movie-card" id="nextMovieCard">${posterHtml}<h2 style="color:var(--gold);font-size:0.7rem;text-transform:uppercase;">Najbliższy seans</h2><div style="font-size:1.3rem;font-weight:700;">${escapeHtml(next?.title||'Brak')}</div><div style="font-size:0.7rem;color:#aaa;">${escapeHtml(next?.date||'')}</div></div><div class="ranking-section"><div class="ranking-list" id="rankingList"></div></div></div>`;
+                const rankingDiv = document.getElementById('rankingList'); if(rankingDiv) { const threshold=3; const high=movies.filter(m=>countApprovedReviews(m)>=threshold); const low=movies.filter(m=>countApprovedReviews(m)<threshold); high.sort((a,b)=>parseFloat(avgWeighted(b))-parseFloat(avgWeighted(a))); low.sort((a,b)=>parseFloat(avgWeighted(b))-parseFloat(avgWeighted(a))); const all=[...high,...low]; if(all.length===0) rankingDiv.innerHTML='<div class="empty-state"><p>Brak filmów w rankingu.</p></div>'; else rankingDiv.innerHTML = all.map((m,idx)=>{ const rating=avgWeighted(m); const enough=countApprovedReviews(m)>=threshold; const ratingTxt=enough?(rating!=='-'?`${rating} ★`:'- ★'):'-'; const badge=!enough?'<span style="font-size:0.7rem;color:#888;">(czeka na więcej ocen)</span>':''; const posterStyle=m.poster?`background-image:url('${escapeHtml(m.poster)}');background-size:cover;background-position:center;`:' '; return `<div class="ranking-item" data-idx="${movies.indexOf(m)}" style="${posterStyle}"><span class="ranking-title">${idx+1}. ${escapeHtml(m.title)}${badge}</span><span class="ranking-rating">${ratingTxt}</span></div>`; }).join(''); }
+                document.querySelectorAll('.ranking-item').forEach(el=>{ el.onclick=()=>{ const idx=parseInt(el.dataset.idx); if(!isNaN(idx)&&movies[idx]){ currentMovieIndex=idx; switchToMovie(); } }; });
+                const nextCard = document.getElementById('nextMovieCard');
+                if (nextCard && next) { nextCard.onclick = () => { const i = movies.findIndex(m => m.id === next.id); if (i !== -1) { currentMovieIndex = i; switchToMovie(); } }; nextCard.addEventListener('mousemove', e => { const r = nextCard.getBoundingClientRect(); nextCard.style.setProperty('--x', `${((e.clientX-r.left)/r.width)*100}%`); nextCard.style.setProperty('--y', `${((e.clientY-r.top)/r.height)*100}%`); }); nextCard.addEventListener('mouseleave', () => { nextCard.style.removeProperty('--x'); nextCard.style.removeProperty('--y'); }); }
+            }
 
-        function showLoading(show) {
-            const ld = document.querySelector('.loading-indicator');
-            if (ld) ld.style.display = show ? 'flex' : 'none';
-        }
+            async function loadProposals() { const div=document.getElementById('proposalsList'); if(!div) return; div.innerHTML='Ładowanie...'; try{ const snap=await db.collection("proposals").orderBy("votes","desc").get(); const props=snap.docs.map(d=>({id:d.id,...d.data()})); if(props.length===0){ div.innerHTML='<div class="empty-state"><p>Brak propozycji.</p></div>'; return; } const voted=JSON.parse(localStorage.getItem('proposal_votes')||'[]'); div.innerHTML=props.map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.7rem;background:var(--bg-elevated);border-radius:var(--radius-sm);margin-bottom:0.3rem;border:1px solid var(--border-default);"><span style="font-size:0.85rem;">${escapeHtml(p.title)}</span><div class="proposal-vote ${voted.includes(p.id)?'voted':''}" data-id="${p.id}" style="background:var(--bg-input);padding:0.3rem 0.6rem;border-radius:20px;cursor:pointer;font-size:0.75rem;transition:all 0.2s;">${p.votes||0} ${voted.includes(p.id)?'✓':'+1'}</div></div>`).join(''); document.querySelectorAll('.proposal-vote').forEach(el=>el.onclick=async()=>{ const id=el.dataset.id; let arr=JSON.parse(localStorage.getItem('proposal_votes')||'[]'); if(arr.includes(id)) { showToast("Już zagłosowałeś na tę propozycję"); return; } await db.collection("proposals").doc(id).update({votes:firebase.firestore.FieldValue.increment(1)}); arr.push(id); localStorage.setItem('proposal_votes',JSON.stringify(arr)); loadProposals(); }); }catch(e){ div.innerHTML='Błąd.'; } }
 
-        checkAdminFromStorage();
-        startListener();
+            function attachDelegatedEvents() {
+                document.querySelectorAll('.rating-input').forEach(container => setupStarSelector(container));
+                document.querySelectorAll('.review-author-input').forEach(input=>{ input.addEventListener('blur', ()=>{ if(input.value.trim()===getDynamicAdminPassword()){ setAdminMode(true); input.value=''; showToast("Admin włączony."); } }); });
+                document.querySelectorAll('.review-comment-input').forEach(ta=>ta.onkeydown=e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); submitReview(ta.closest('.carousel-slide').dataset.movieId, ta.closest('.carousel-slide')); } });
+                document.querySelectorAll('.avg-box').forEach(b=>b.onclick=()=>submitReview(b.dataset.movieId, document.querySelector(`.carousel-slide[data-movie-id="${b.dataset.movieId}"]`)));
+                document.querySelectorAll('.approve-btn').forEach(b=>b.onclick=async e=>{ e.stopPropagation(); if(!isAdmin) return; const idx=parseInt(b.dataset.idx); const movie=movies[currentSlideIndex]; if(movie?.reviews[idx]){ movie.reviews[idx].approved=true; await db.collection("movies").doc(movie.id).update({reviews:movie.reviews}); } });
+                document.querySelectorAll('.verify-btn').forEach(b=>b.onclick=async e=>{ e.stopPropagation(); if(!isAdmin) return; const idx=parseInt(b.dataset.idx); const movie=movies[currentSlideIndex]; if(movie?.reviews[idx]){ movie.reviews[idx].verified=true; await db.collection("movies").doc(movie.id).update({reviews:movie.reviews}); } });
+                document.querySelectorAll('.spoiler-btn').forEach(b=>b.onclick=async e=>{ e.stopPropagation(); if(!isAdmin) return; const idx=parseInt(b.dataset.idx); const movie=movies[currentSlideIndex]; if(movie?.reviews[idx]){ movie.reviews[idx].spoiler = !movie.reviews[idx].spoiler; await db.collection("movies").doc(movie.id).update({reviews:movie.reviews}); const commentEl = b.closest('.review-card').querySelector('.review-comment'); if(movie.reviews[idx].spoiler){ commentEl.classList.add('spoiler-text'); commentEl.classList.remove('revealed'); } else { commentEl.classList.remove('spoiler-text'); commentEl.classList.add('revealed'); } } });
+                document.querySelectorAll('.delete-review-btn').forEach(b=>b.onclick=async e=>{ e.stopPropagation(); if(!isAdmin) return; const idx=parseInt(b.dataset.idx); const movie=movies[currentSlideIndex]; if(movie?.reviews[idx]&&confirm("Usunąć recenzję?")){ movie.reviews.splice(idx,1); await db.collection("movies").doc(movie.id).update({reviews:movie.reviews}); } });
+                document.querySelectorAll('.edit-review-btn').forEach(b=>b.onclick=async e=>{ e.stopPropagation(); const idx=parseInt(b.dataset.idx); const movieId=b.dataset.movieId; const movie=movies.find(m=>m.id===movieId); if(!movie?.reviews[idx]) return; document.getElementById('editReviewModal').dataset.movieId=movieId; document.getElementById('editReviewModal').dataset.reviewIdx=idx; const r=movie.reviews[idx]; const sc=document.getElementById('editStarSelector'); sc.innerHTML=[1,2,3,4,5].map(n=>`<span class="star-select${n<=r.stars?' selected':''}" data-value="${n}" style="font-size:0.75rem;cursor:pointer;color:${n<=r.stars?'var(--gold)':'#4a4a54'};">&#9733;</span>`).join(''); setupStarSelector(sc); document.getElementById('editReviewComment').value=r.comment||''; openModal('editReviewModal'); });
+                document.querySelectorAll('.delete-own-review-btn').forEach(b=>b.onclick=async e=>{ e.stopPropagation(); const idx=parseInt(b.dataset.idx); const movieId=b.dataset.movieId; const movie=movies.find(m=>m.id===movieId); if(!movie?.reviews[idx]) return; if(confirm("Usunąć swoją recenzję?")){ movie.reviews.splice(idx,1); await db.collection("movies").doc(movieId).update({reviews:movie.reviews}); } });
+                document.querySelectorAll('.edit-movie-btn').forEach(b=>b.onclick=e=>{
+                    e.stopPropagation();
+                    if(!isAdmin) {
+                        showToast("Wymagany tryb administratora.", 'warning');
+                        return;
+                    }
+                    const movie=movies.find(m=>m.id===b.dataset.movieId);
+                    if(!movie) return;
+                    window.currentEditMovieId=movie.id;
+                    document.getElementById('editTitle').value=movie.title;
+                    document.getElementById('editDate').value=movie.date.split('.').reverse().join('-');
+                    openModal('editMovieModal');
+                });
+            }
+
+            async function submitReview(movieId, slide) { const author=slide.querySelector('.review-author-input').value.trim(); const comment=slide.querySelector('.review-comment-input').value.trim(); const stars=slide.querySelectorAll('.rating-input .star-select.selected').length; if(!author) return showToast("Podaj imię."); if(stars===0) return showToast("Wybierz ocenę."); const movie=movies.find(m=>m.id===movieId); if(!movie) return; movie.reviews.push({author,stars,comment,spoiler:false,approved:false,verified:false,timestamp:Date.now(),sessionToken:getSessionToken()}); await db.collection("movies").doc(movieId).update({reviews:movie.reviews}); slide.querySelector('.review-author-input').value=''; slide.querySelector('.review-comment-input').value=''; slide.querySelectorAll('.rating-input .star-select').forEach(s=>{ s.classList.remove('selected'); s.style.color='#4a4a54'; }); showToast("Recenzja dodana."); }
+
+            async function seedDefault() { if((await db.collection("movies").get()).empty) for(const m of defaultMoviesData) await db.collection("movies").doc(m.id).set(m); }
+            function startListener(attempt = 0) { if (unsubscribeMovies) unsubscribeMovies(); showLoading(true); if (retryTimeout) clearTimeout(retryTimeout); seedDefault().then(()=>{ unsubscribeMovies = db.collection("movies").onSnapshot(snap => { if (retryTimeout) { clearTimeout(retryTimeout); retryTimeout = null; } movies = []; snap.forEach(d => movies.push(d.data())); if(movies.length===0){ if(viewMode==='home') renderHome(); else switchToHome(); } else { if(viewMode==='home') renderHome(); else { const viewport=document.getElementById('carouselViewport'); if(viewport){ const oldId=movies[currentMovieIndex]?.id; viewport.innerHTML=''; movies.forEach((m,i)=>{ const div=document.createElement('div'); div.innerHTML=generateMovieSlide(m); const slide=div.firstChild; if(m.id===oldId||(i===0&&oldId===undefined)) slide.classList.add('active'); viewport.appendChild(slide); }); currentSlideIndex=oldId?movies.findIndex(m=>m.id===oldId):0; if(currentSlideIndex<0) currentSlideIndex=0; currentMovieIndex=currentSlideIndex; setGlobalBackground(movies[currentSlideIndex]?.poster); attachDelegatedEvents(); } else buildCarousel(currentMovieIndex); } } showLoading(false); }, err => { showToast("Błąd odczytu – ponawiam...", 'warning'); showLoading(false); retryTimeout = setTimeout(() => startListener(attempt + 1), 3000); }); }).catch(e => { showLoading(false); }); }
+            function showLoading(s) { const ld=document.querySelector('.loading-indicator'); if(ld) ld.style.display=s?'flex':'none'; }
+            function renderMovie() { if(document.getElementById('carouselViewport')&&movies[currentMovieIndex]) buildCarousel(currentMovieIndex); else if(movies.length>0) buildCarousel(0); else switchToHome(); }
+
+            async function exportCSV() { if(!isAdmin) return; const rows=[["Tytuł","Data","Autor","Ocena","Treść","Zatwierdzona","Zweryfikowana","Średnia","L.recenzji","Zatwierdzone","Link"]]; for(const m of movies){ const avg=avgWeighted(m); if(m.reviews.length===0) rows.push([m.title,m.date,"","","","","",avg,0,0,m.link||""]); else for(const r of m.reviews) rows.push([m.title,m.date,r.author,r.stars,r.comment||"",r.approved?"Tak":"Nie",r.verified?"Tak":"Nie",avg,m.reviews.length,countApprovedReviews(m),m.link||""]); } const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n"); const blob=new Blob(["\uFEFF"+csv],{type:"text/csv"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`movieclub.csv`; a.click(); }
+            async function exportJSON() { if(!isAdmin) return; const ms=await db.collection("movies").get(); const ps=await db.collection("proposals").get(); const data={movies:ms.docs.map(d=>({id:d.id,...d.data()})),proposals:ps.docs.map(d=>({id:d.id,...d.data()}))}; const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`movieclub.json`; a.click(); }
+            async function importDatabase(file) { if(!isAdmin) return; const reader=new FileReader(); reader.onload=async e=>{ const data=JSON.parse(e.target.result); if(!data.movies) return; const batchSize=20; const ms=await db.collection("movies").get(); for(let i=0;i<ms.docs.length;i+=batchSize){ const batch=db.batch(); ms.docs.slice(i,i+batchSize).forEach(d=>batch.delete(d.ref)); await batch.commit(); } const ps=await db.collection("proposals").get(); for(let i=0;i<ps.docs.length;i+=batchSize){ const batch=db.batch(); ps.docs.slice(i,i+batchSize).forEach(d=>batch.delete(d.ref)); await batch.commit(); } for(const m of data.movies){ const {id,...rest}=m; await db.collection("movies").doc(id).set(rest); } if(data.proposals) for(const p of data.proposals){ const {id,...rest}=p; await db.collection("proposals").doc(id).set(rest); } showToast("Import OK."); startListener(); }; reader.readAsText(file); }
+
+            // Event listeners for static buttons
+            document.getElementById('dbManageBtn').onclick=()=>{ if(!isAdmin) return isAdminAction(); openModal('dbManageModal'); };
+            document.getElementById('proposeHeaderBtn').onclick=()=>{ loadProposals(); openModal('proposeModal'); };
+            document.getElementById('homeBtn').onclick=()=>{ if(viewMode!=='home') switchToHome(); };
+            document.getElementById('cancelModalBtn').onclick=()=>closeModal('movieModal');
+            document.getElementById('cancelEditBtn').onclick=()=>closeModal('editMovieModal');
+            document.getElementById('saveMovieBtn').onclick=async()=>{ if(!isAdmin) return; const t=document.getElementById('newTitle').value.trim(); if(!t) return; const d=document.getElementById('newDate').value.split('-').reverse().join('.'); await db.collection("movies").doc(Date.now().toString()).set({id:Date.now().toString(),date:d,title:t,poster:document.getElementById('newPosterUrl').value.trim(),link:document.getElementById('newLink').value.trim(),reviews:[],sentimentalValue:document.getElementById('newSentimental').value.trim()}); closeModal('movieModal'); };
+            document.getElementById('saveEditBtn').onclick=async()=>{ if(!isAdmin) return; const t=document.getElementById('editTitle').value.trim(); if(!t) return; const d=document.getElementById('editDate').value.split('-').reverse().join('.'); await db.collection("movies").doc(window.currentEditMovieId).update({title:t,date:d}); closeModal('editMovieModal'); };
+            document.getElementById('deleteMovieFromEditBtn').onclick=async()=>{ if(!isAdmin) return; await db.collection("movies").doc(window.currentEditMovieId).delete(); closeModal('editMovieModal'); if(viewMode==='movie') switchToHome(); };
+            document.getElementById('exportDbBtn').onclick=exportJSON;
+            document.getElementById('exportCsvBtn').onclick=exportCSV;
+            document.getElementById('performImportBtn').onclick=()=>document.getElementById('importFileInput').click();
+            document.getElementById('importFileInput').onchange=e=>{ if(e.target.files[0]) importDatabase(e.target.files[0]); };
+            document.getElementById('closeDbModalBtn').onclick=()=>closeModal('dbManageModal');
+            document.getElementById('addMovieFromDbBtn').onclick=()=>{ closeModal('dbManageModal'); setTimeout(()=>openModal('movieModal'),360); };
+            document.getElementById('homeLogo').onclick=()=>{ if(viewMode!=='home') switchToHome(); };
+            document.getElementById('cancelProposeBtn').onclick=()=>closeModal('proposeModal');
+            document.getElementById('submitProposeBtn').onclick=async()=>{ const t=document.getElementById('proposeTitle').value.trim(); if(!t) return; await db.collection("proposals").add({title:t,votes:0,timestamp:Date.now()}); document.getElementById('proposeTitle').value=''; loadProposals(); };
+            document.getElementById('cancelEditReviewBtn').onclick=()=>closeModal('editReviewModal');
+            document.getElementById('saveEditReviewBtn').onclick=async()=>{ const mod=document.getElementById('editReviewModal'); const movieId=mod.dataset.movieId; const idx=parseInt(mod.dataset.reviewIdx); const movie=movies.find(m=>m.id===movieId); if(!movie?.reviews[idx]) return; const stars=document.querySelectorAll('#editStarSelector .star-select.selected').length; movie.reviews[idx].stars=stars; movie.reviews[idx].comment=document.getElementById('editReviewComment').value.trim(); await db.collection("movies").doc(movieId).update({reviews:movie.reviews}); closeModal('editReviewModal'); };
+            window.onclick=e=>{ if(e.target.classList.contains('modal')&&e.target.classList.contains('open')) closeModal(e.target.id); };
+
+            // Admin indicator click to deactivate admin mode
+            document.getElementById('adminIndicator').onclick = (e) => {
+                e.stopPropagation();
+                if (isAdmin) {
+                    setAdminMode(false);
+                    showToast("Tryb administratora wyłączony.");
+                    if (viewMode === 'movie') renderMovie();
+                    else renderHome();
+                }
+            };
+
+            const defaultMoviesData = [
+                { id:"lobster_2026", date:"02.04.2026", title:"Lobster", poster:"https://via.placeholder.com/1200x300?text=Lobster", link:"", reviews:[{author:"Sebus",stars:4,comment:"Depresyjny obraz rzeczywistości",approved:true,verified:false,timestamp:1},{author:"Ola",stars:5,comment:"Spoiler: zakończenie jest zaskakujące",spoiler:true,approved:true,verified:false,timestamp:2}], sentimentalValue:"Odbierzemy go..." },
+                { id:"weapons_2026", date:"10.05.2026", title:"WEAPONS", poster:"https://via.placeholder.com/1200x300?text=WEAPONS", link:"", reviews:[], sentimentalValue:"" },
+                { id:"bugonia_2026", date:"17.05.2026", title:"BUGONIA", poster:"https://via.placeholder.com/1200x300?text=Bugonia", link:"", reviews:[], sentimentalValue:"" }
+            ];
+            checkAdminFromStorage();
+            updateAdminIndicator();
+            startListener();
+        })();
     </script>
 </body>
 </html>
