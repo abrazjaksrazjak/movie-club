@@ -318,6 +318,15 @@
         let touchStartY = 0;
         window.currentEditMovieId = null;
 
+        // ----- NOWE ZMIENNE DO OCHRONY FORMULARZA -----
+        let pendingSnapshotRebuild = false;
+        let pendingAuthor = '';
+        let pendingComment = '';
+        let pendingStars = 0;
+        let pendingScrollTop = 0;
+        let debounceRebuildTimer = null;
+        let loadingTimeout = null;
+
         function preloadImage(url) { if (!url || preloadedImages[url]) return; preloadedImages[url] = new Promise((resolve) => { const img = new Image(); img.onload = () => { preloadedImages[url] = true; resolve(); }; img.onerror = () => { preloadedImages[url] = false; resolve(); }; img.src = url; }); }
         function showToast(m, type='') { const old = document.querySelector('.toast'); if (old) old.remove(); const t = document.createElement('div'); t.className = 'toast '+type; t.textContent = m; document.body.appendChild(t); requestAnimationFrame(()=> requestAnimationFrame(()=> t.classList.add('show'))); const hide = setTimeout(()=>{ t.classList.remove('show'); t.addEventListener('transitionend', ()=> t.remove(), {once:true}); setTimeout(()=>{ if(t.parentNode) t.remove(); }, 500); }, 2800); t._hideTimeout = hide; }
         function openModal(id) { const m = document.getElementById(id); if(!m) return; m.style.display='flex'; requestAnimationFrame(()=> requestAnimationFrame(()=> m.classList.add('open'))); }
@@ -355,6 +364,47 @@
                     st.style.color = st.classList.contains('selected') ? 'var(--gold)' : '#4a4a54';
                 });
             };
+        }
+
+        // ----- FUNKCJE OCHRONY STANU FORMULARZA -----
+        function captureReviewFormState() {
+            const slide = document.querySelector('.carousel-slide.active');
+            if (!slide) return;
+            const authorEl = slide.querySelector('.review-author-input');
+            const commentEl = slide.querySelector('.review-comment-input');
+            const stars = slide.querySelectorAll('.rating-input .star-select.selected').length;
+            if (authorEl) pendingAuthor = authorEl.value;
+            if (commentEl) pendingComment = commentEl.value;
+            pendingStars = stars;
+            pendingScrollTop = slide.scrollTop;
+            pendingSnapshotRebuild = true;
+        }
+
+        function restoreReviewFormState() {
+            if (!pendingSnapshotRebuild) return;
+            const slide = document.querySelector('.carousel-slide.active');
+            if (!slide) { pendingSnapshotRebuild = false; return; }
+            const authorEl = slide.querySelector('.review-author-input');
+            const commentEl = slide.querySelector('.review-comment-input');
+            const starEls = slide.querySelectorAll('.rating-input .star-select');
+            if (authorEl) authorEl.value = pendingAuthor;
+            if (commentEl) commentEl.value = pendingComment;
+            starEls.forEach(s => {
+                const val = parseInt(s.dataset.value);
+                if (val <= pendingStars) {
+                    s.classList.add('selected');
+                    s.style.color = 'var(--gold)';
+                } else {
+                    s.classList.remove('selected');
+                    s.style.color = '#4a4a54';
+                }
+            });
+            slide.scrollTop = pendingScrollTop;
+            pendingSnapshotRebuild = false;
+            pendingAuthor = '';
+            pendingComment = '';
+            pendingStars = 0;
+            pendingScrollTop = 0;
         }
 
         function generateMovieSlide(movie) {
@@ -724,40 +774,83 @@
                 for(const m of defaultMoviesData) await db.collection("movies").doc(m.id).set(m);
         }
 
+        // ----- POPRAWIONY showLoading Z TIMEOUTEM -----
+        function showLoading(s) {
+            const ld = document.querySelector('.loading-indicator');
+            if (!ld) return;
+            ld.style.display = s ? 'flex' : 'none';
+            if (s) {
+                if (loadingTimeout) clearTimeout(loadingTimeout);
+                loadingTimeout = setTimeout(() => {
+                    const ld2 = document.querySelector('.loading-indicator');
+                    if (ld2 && ld2.style.display !== 'none') {
+                        ld2.innerHTML = '<div style="text-align:center;color:#e07060;">⚠️ Nie udało się załadować.<br><button onclick="location.reload()" style="margin-top:0.5rem;background:var(--gold);border:none;padding:0.5rem 1rem;border-radius:20px;cursor:pointer;color:#000;font-family:inherit;">Odśwież stronę</button></div>';
+                    }
+                }, 12000);
+            } else {
+                if (loadingTimeout) clearTimeout(loadingTimeout);
+                loadingTimeout = null;
+            }
+        }
+
+        // ----- POPRAWIONY startListener (oddzielenie seed od listenera) -----
         function startListener(attempt = 0) {
             if (unsubscribeMovies) unsubscribeMovies();
             showLoading(true);
             if (retryTimeout) clearTimeout(retryTimeout);
-            seedDefault().then(() => {
+
+            // Najpierw sprawdź, czy baza jest pusta – jeśli tak, zaseeduj
+            db.collection("movies").get().then(snap => {
+                if (snap.empty) {
+                    return seedDefault();
+                }
+            }).then(() => {
+                // Dopiero teraz podepnij nasłuch na żywo
                 unsubscribeMovies = db.collection("movies").onSnapshot(snap => {
                     if (retryTimeout) { clearTimeout(retryTimeout); retryTimeout = null; }
+                    
+                    // PRZED przebudową zapamiętaj stan formularza (jeśli jesteśmy w widoku filmu)
+                    if (viewMode === 'movie') {
+                        captureReviewFormState();
+                    }
+                    
                     movies = [];
                     snap.forEach(d => movies.push(d.data()));
-                    if(movies.length === 0) {
-                        if(viewMode === 'home') renderHome();
-                        else switchToHome();
-                    } else {
-                        if(viewMode === 'home') renderHome();
-                        else {
-                            const oldId = movies[currentMovieIndex]?.id;
-                            let newIdx = oldId ? movies.findIndex(m => m.id === oldId) : -1;
-                            if(newIdx < 0) newIdx = 0;
-                            currentMovieIndex = newIdx;
-                            buildCarousel(currentMovieIndex);
+                    
+                    // Opcjonalny debounce – odkomentuj jeśli chcesz uniknąć migotania przy serii snapshotów
+                    // if (debounceRebuildTimer) clearTimeout(debounceRebuildTimer);
+                    // debounceRebuildTimer = setTimeout(() => {
+                        if(movies.length === 0) {
+                            if(viewMode === 'home') renderHome();
+                            else switchToHome();
+                        } else {
+                            if(viewMode === 'home') renderHome();
+                            else {
+                                const oldId = movies[currentMovieIndex]?.id;
+                                let newIdx = oldId ? movies.findIndex(m => m.id === oldId) : -1;
+                                if(newIdx < 0) newIdx = 0;
+                                currentMovieIndex = newIdx;
+                                buildCarousel(currentMovieIndex);
+                            }
                         }
-                    }
-                    showLoading(false);
+                        
+                        // PO przebudowie przywróć stan formularza
+                        if (viewMode === 'movie') {
+                            setTimeout(restoreReviewFormState, 50);
+                        }
+                        
+                        showLoading(false);
+                    // }, 300); // koniec debounce
                 }, err => {
                     showToast("Błąd odczytu – ponawiam...", 'warning');
                     showLoading(false);
                     retryTimeout = setTimeout(() => startListener(attempt + 1), 3000);
                 });
-            }).catch(e => { showLoading(false); });
-        }
-
-        function showLoading(s) {
-            const ld = document.querySelector('.loading-indicator');
-            if(ld) ld.style.display = s ? 'flex' : 'none';
+            }).catch(e => {
+                showLoading(false);
+                showToast("Błąd połączenia – ponawiam...", 'warning');
+                retryTimeout = setTimeout(() => startListener(attempt + 1), 3000);
+            });
         }
 
         function renderMovie() {
