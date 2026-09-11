@@ -74,10 +74,10 @@
         *::-webkit-scrollbar { display: none; }
         :focus-visible { outline: 1.5px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
 
-        /* Wskaźnik koloru dla Safari 26 – niewidzialny pasek na samej górze */
-        #ios-theme-color {
+        /* Wskaźniki koloru dla Safari 26 – niewidzialne paski na górze i dole ekranu */
+        #ios-theme-color,
+        #ios-theme-color-bottom {
             position: fixed;
-            top: 0;
             left: 0;
             right: 0;
             height: 1px;
@@ -85,10 +85,14 @@
             z-index: 9999;
             background-color: #08080b;
         }
-        body.anime-mode:not(.grave-mode) #ios-theme-color {
+        #ios-theme-color { top: 0; }
+        #ios-theme-color-bottom { bottom: 0; }
+        body.anime-mode:not(.grave-mode) #ios-theme-color,
+        body.anime-mode:not(.grave-mode) #ios-theme-color-bottom {
             background-color: #e8e0c8;
         }
-        body.anime-mode.grave-mode #ios-theme-color {
+        body.anime-mode.grave-mode #ios-theme-color,
+        body.anime-mode.grave-mode #ios-theme-color-bottom {
             background-color: #08080b;
         }
 
@@ -829,8 +833,9 @@
     </style>
 </head>
 <body>
-<!-- Wskaźnik koloru dla Safari 26 – niewidzialny pasek na samej górze -->
+<!-- Wskaźniki koloru dla Safari 26 – górny i dolny pasek -->
 <div id="ios-theme-color" aria-hidden="true"></div>
+<div id="ios-theme-color-bottom" aria-hidden="true"></div>
 
 <div class="global-bg" id="globalBg"></div>
 <div class="anime-decor" id="animeDecor" aria-hidden="true"></div>
@@ -1409,11 +1414,15 @@
             // 2. Kolor tła body – Safari 26 to odczytuje
             document.body.style.backgroundColor = color;
 
-            // 3. Niewidzialny pasek na samej górze – dodatkowy wskaźnik dla Safari
-            const fixedEl = document.getElementById('ios-theme-color');
-            if (fixedEl) fixedEl.style.backgroundColor = color;
+            // 3. Niewidzialny pasek na samej górze – wskaźnik dla Safari (górny toolbar)
+            const topEl = document.getElementById('ios-theme-color');
+            if (topEl) topEl.style.backgroundColor = color;
 
-            // 4. color-scheme dla kontrolek / scrollbarów
+            // 4. Niewidzialny pasek na samym dole – wskaźnik dla Safari (dolny toolbar)
+            const bottomEl = document.getElementById('ios-theme-color-bottom');
+            if (bottomEl) bottomEl.style.backgroundColor = color;
+
+            // 5. color-scheme dla kontrolek / scrollbarów
             document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
         }
 
