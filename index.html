@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>JLL Movie Club – współdzielony ranking</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-auth-compat.js"></script>
+    <script src="https://w.soundcloud.com/player/api.js"></script>
     <style>
         :root {
             --gold: #c9a84c;
@@ -64,6 +65,7 @@
             padding: env(safe-area-inset-top) 0 0 0;
             letter-spacing: -0.01em;
             position: relative; margin: 0;
+            transition: background-color 0.6s ease, background-image 0.6s ease, color 0.6s ease;
         }
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none; }
@@ -71,9 +73,157 @@
         .global-bg {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100%;
             background-size: cover; background-position: center;
-            filter: blur(35px) brightness(0.18) saturate(0.6);
-            z-index: 0; pointer-events: none; transition: background-image 0.5s ease;
+            filter: blur(28px) brightness(0.22) saturate(0.65);
+            z-index: 0; pointer-events: none; transition: background-image 0.5s ease, filter 0.9s ease, opacity 0.5s ease;
         }
+
+        .anime-decor {
+            position: fixed; inset: 0; pointer-events: none;
+            overflow: hidden; z-index: 0; display: none;
+        }
+        body.anime-mode .anime-decor { display: block; }
+        .anime-decor::before {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 240px;
+            background:
+                radial-gradient(ellipse 60% 100% at 15% 100%, rgba(90, 117, 88, 0.32) 0%, transparent 70%),
+                radial-gradient(ellipse 70% 100% at 50% 100%, rgba(122, 143, 106, 0.38) 0%, transparent 75%),
+                radial-gradient(ellipse 60% 100% at 85% 100%, rgba(90, 117, 88, 0.32) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 100% at 30% 100%, rgba(168, 197, 214, 0.28) 0%, transparent 70%);
+            pointer-events: none;
+            animation: hillBreath 14s ease-in-out infinite alternate;
+        }
+        @keyframes hillBreath {
+            from { transform: translateY(4px) scaleY(0.98); opacity: 0.9; }
+            to   { transform: translateY(0) scaleY(1.02); opacity: 1; }
+        }
+        .leaf {
+            position: absolute; top: -30px;
+            border-radius: 0 100% 0 100%;
+            box-shadow: 0 2px 8px rgba(60, 40, 20, 0.18);
+            opacity: 0;
+            animation-name: leafFall;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+            will-change: transform, opacity;
+        }
+        @keyframes leafFall {
+            0%   { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
+            8%   { opacity: 0.95; }
+            92%  { opacity: 0.9; }
+            100% { transform: translate3d(var(--sway, 60px), 108vh, 0) rotate(var(--rot, 720deg)); opacity: 0; }
+        }
+
+        /* ---------- TRYB GHIBLI: GROBOWIEC ŚWIETLIKÓW – DYM I ISKRY (tło) ---------- */
+        .anime-grave-effects {
+            position: fixed; inset: 0; pointer-events: none;
+            overflow: hidden; display: none;
+            z-index: 0;
+        }
+        /* ---------- TRYB GHIBLI: GROBOWIEC ŚWIETLIKÓW – DYM I ISKRY (pierwszy plan) ---------- */
+        .anime-grave-effects-front {
+            position: fixed; inset: 0; pointer-events: none;
+            overflow: hidden; display: none;
+            z-index: 60;                       /* nad treścią, pod modalami (1000) i toastami (2000) */
+        }
+        body.grave-mode .anime-grave-effects,
+        body.grave-mode .anime-grave-effects-front { display: block; }
+        body.grave-mode .anime-decor { display: none; }
+        body.grave-mode .anime-sunflare { opacity: 0 !important; }
+        body.grave-mode.anime-mode .global-bg {
+            filter: blur(3px) brightness(0.78) saturate(0.7);
+        }
+
+        .smoke {
+            position: absolute;
+            bottom: -140px;
+            border-radius: 50%;
+            filter: blur(18px);
+            opacity: 0;
+            animation-name: smokeRise;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+            will-change: transform, opacity;
+            pointer-events: none;
+        }
+        @keyframes smokeRise {
+            0%   { transform: translate3d(0, 0, 0) scale(0.7); opacity: 0; }
+            15%  { opacity: 0.55; }
+            55%  { opacity: 0.4; }
+            100% { transform: translate3d(var(--sx, 40px), -118vh, 0) scale(2.7); opacity: 0; }
+        }
+
+        .spark {
+            position: absolute;
+            bottom: -10px;
+            border-radius: 50%;
+            opacity: 0;
+            animation-name: sparkRise;
+            animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+            animation-iteration-count: infinite;
+            will-change: transform, opacity;
+            pointer-events: none;
+        }
+        @keyframes sparkRise {
+            0%   { transform: translate3d(0, 0, 0) scale(1);   opacity: 0; }
+            10%  { opacity: 1; }
+            55%  { opacity: 0.9; }
+            85%  { opacity: 0.35; }
+            100% { transform: translate3d(var(--sx, 20px), -118vh, 0) scale(0.35); opacity: 0; }
+        }
+
+        /* Warianty dla pierwszego planu – mniejsze i bardziej subtelne */
+        .smoke.smoke-front { filter: blur(22px); }
+        .spark.spark-front { filter: blur(0.4px); }
+
+        .anime-sunflare {
+            position: fixed;
+            top: -120px;
+            right: -120px;
+            width: 520px;
+            height: 520px;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 1.4s ease;
+            will-change: opacity, transform;
+        }
+        body.anime-mode .anime-sunflare { opacity: 1; }
+        .anime-sunflare::before {
+            content: ''; position: absolute; inset: 0; border-radius: 50%;
+            background:
+                radial-gradient(circle at 50% 50%,
+                    rgba(255, 252, 220, 0.95) 0%,
+                    rgba(255, 244, 200, 0.65) 12%,
+                    rgba(255, 230, 170, 0.35) 28%,
+                    rgba(255, 215, 150, 0.12) 50%,
+                    transparent 72%);
+            filter: blur(6px);
+            animation: sunPulse 7s ease-in-out infinite;
+        }
+        .anime-sunflare::after {
+            content: ''; position: absolute; inset: -60px;
+            background: conic-gradient(from 0deg,
+                transparent 0deg, rgba(255, 245, 200, 0.18) 6deg, transparent 14deg,
+                transparent 40deg, rgba(255, 245, 200, 0.14) 46deg, transparent 54deg,
+                transparent 90deg, rgba(255, 245, 200, 0.18) 96deg, transparent 106deg,
+                transparent 150deg, rgba(255, 245, 200, 0.12) 156deg, transparent 168deg,
+                transparent 220deg, rgba(255, 245, 200, 0.16) 226deg, transparent 238deg,
+                transparent 290deg, rgba(255, 245, 200, 0.14) 296deg, transparent 306deg,
+                transparent 360deg);
+            border-radius: 50%;
+            filter: blur(10px);
+            animation: sunRotate 42s linear infinite;
+            -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 20%, #000 38%, transparent 78%);
+            mask-image: radial-gradient(circle at 50% 50%, transparent 20%, #000 38%, transparent 78%);
+        }
+        @keyframes sunPulse {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50%      { transform: scale(1.08); opacity: 1; }
+        }
+        @keyframes sunRotate {
+            to { transform: rotate(360deg); }
+        }
+
         .app-container {
             width: 100%; max-width: 960px; margin: 0 auto;
             display: flex; flex-direction: column; height: 100%; height: 100dvh;
@@ -86,10 +236,11 @@
             background: var(--bg-surface); border-radius: var(--radius-lg);
             border: 1px solid var(--border-default); box-shadow: var(--shadow-sm);
             gap: 0.5rem; z-index: 20; position: relative;
+            transition: background 0.5s ease, border-color 0.5s ease;
         }
         .club-header h1 {
             font-size: var(--font-lg); font-weight: 700; letter-spacing: 0.06em;
-            cursor: pointer; transition: background-position var(--transition-smooth), filter var(--transition-fast);
+            cursor: pointer; transition: background-position var(--transition-smooth), filter var(--transition-fast), background 0.6s ease;
             background: linear-gradient(135deg, var(--text-primary) 0%, var(--gold-light) 40%, var(--gold) 100%);
             background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             background-size: 200% 100%; background-position: 0% 50%;
@@ -107,7 +258,7 @@
         .icon-btn {
             background: var(--bg-elevated); border: 1px solid var(--border-default); color: var(--text-secondary);
             cursor: pointer; width: 36px; height: 36px; border-radius: var(--radius-sm);
-            transition: color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+            transition: color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), background 0.5s ease;
             display: inline-flex; align-items: center; justify-content: center; position: relative; overflow: hidden; padding: 0;
         }
         .icon-btn.admin-only { opacity: 0.45; }
@@ -119,17 +270,55 @@
         .icon-btn:hover svg { transform: scale(1.1); }
         .icon-btn:active { transform: scale(0.94); transition: transform 0.08s ease; }
 
+        .anime-toggle-btn {
+            font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho Pro', serif;
+            font-size: 1.1rem; font-weight: 700; line-height: 1;
+            color: var(--text-secondary);
+            padding-bottom: 3px;
+        }
+        .anime-toggle-btn.active {
+            color: var(--gold-light);
+            border-color: var(--border-gold);
+            box-shadow: var(--shadow-gold);
+            background: linear-gradient(135deg, rgba(201,168,76,0.18), rgba(201,168,76,0.05));
+        }
+        body.anime-mode .anime-toggle-btn.active {
+            color: #fffbf0;
+            background: linear-gradient(135deg, #d4a95c, #b8894a);
+            border-color: #b8894a;
+            box-shadow: 0 0 18px rgba(184, 137, 74, 0.55);
+        }
+        .anime-toggle-btn::after { display: none; }
+
         #mainContent { flex: 1; min-height: 0; position: relative; width: 100%; border-radius: var(--radius-lg); transition: opacity 0.2s ease; background: transparent; overflow: hidden; }
         .loading-indicator { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-elevated); backdrop-filter: blur(16px); border-radius: var(--radius-xl); padding: 1.5rem 2rem; text-align: center; z-index: 10; border: 1px solid var(--border-gold); box-shadow: var(--shadow-lg), var(--shadow-gold); display: flex; flex-direction: column; align-items: center; gap: 0.9rem; }
         .spinner { width: 36px; height: 36px; border: 3px solid rgba(201, 168, 76, 0.15); border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        .empty-state {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1.5rem 1rem;
+            min-height: 120px;
+        }
+        .empty-state p {
+            font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho Pro', serif;
+            font-size: 1rem;
+            letter-spacing: 0.18em;
+            color: var(--text-muted);
+            opacity: 0.6;
+            font-weight: 400;
+        }
 
         /* Home */
         .home-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; padding: 0 0.2rem; margin-top: 0.1rem; }
         .next-movie-card {
             background: rgba(22,22,28,0.8); backdrop-filter: blur(16px);
             border-radius: var(--radius-xl); padding: 1.2rem; text-align: center; cursor: pointer;
-            transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+            transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s, background 0.5s ease;
             border: 1px solid var(--border-default); z-index: 5;
             box-shadow: var(--shadow-md); overflow: hidden; --x: 50%; --y: 50%;
         }
@@ -148,7 +337,7 @@
             cursor: pointer; border: 1px solid var(--border-default); overflow: hidden;
             min-height: 72px; background-size: cover; background-position: center;
             animation: slideUp 0.4s cubic-bezier(0.22, 1.2, 0.36, 1) both;
-            transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+            transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s, background 0.5s ease;
         }
         @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
         .ranking-item::before {
@@ -159,14 +348,13 @@
         .ranking-item::after {
             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background: linear-gradient(95deg, rgba(16,16,20,0.92) 0%, rgba(16,16,20,0.7) 28%, rgba(16,16,20,0.55) 55%, rgba(16,16,20,0.7) 78%, rgba(16,16,20,0.92) 100%);
-            z-index: -1; transition: background 0.3s;
+            z-index: -1; transition: background 0.5s;
         }
         .ranking-item:hover::before { filter: blur(2px); opacity: 0.32; transform: scale(1.05); }
         .ranking-item:hover { border-color: var(--border-gold); transform: translateX(4px); box-shadow: var(--shadow-md), 0 0 20px rgba(201,168,76,0.1); }
         .ranking-title { font-weight: 600; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem; z-index: 1; position: relative; }
         .ranking-rating { color: var(--gold); font-weight: 700; background: rgba(201,168,76,0.1); padding: 0.3rem 0.7rem; border-radius: 20px; z-index: 1; position: relative; display: inline-flex; align-items: center; gap: 0.4rem; }
 
-        /* Nowy film – badge */
         .new-badge {
             display: inline-flex; align-items: center; justify-content: center;
             background: linear-gradient(135deg, var(--gold-light), var(--gold));
@@ -177,7 +365,6 @@
             vertical-align: middle;
             margin-right: 0.4rem;
         }
-        /* Kropka "niezaakceptowane oceny" */
         .unapproved-dot {
             display: inline-block; width: 8px; height: 8px; border-radius: 50%;
             background: var(--gold); box-shadow: 0 0 8px var(--gold-glow), 0 0 0 1px rgba(0,0,0,0.4) inset;
@@ -191,7 +378,7 @@
 
         /* Carousel */
         .carousel-wrapper { width: 100%; height: 100%; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; padding: 0 20px; }
-        .carousel-viewport { width: 100%; height: 100%; position: relative; overflow: hidden; border-radius: var(--radius-lg); background: rgba(18, 18, 24, 0.75); backdrop-filter: blur(18px); border: 1px solid var(--border-default); box-shadow: var(--shadow-lg); touch-action: pan-y; }
+        .carousel-viewport { width: 100%; height: 100%; position: relative; overflow: hidden; border-radius: var(--radius-lg); background: rgba(18, 18, 24, 0.75); backdrop-filter: blur(18px); border: 1px solid var(--border-default); box-shadow: var(--shadow-lg); touch-action: pan-y; transition: background 0.5s ease, border-color 0.5s ease; }
         .carousel-slide {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             opacity: 0; transition: opacity 0.3s ease;
@@ -208,9 +395,9 @@
         .review-card.pending { opacity: 0.65; filter: grayscale(0.2); }
         .spoiler-text { filter: blur(5px); cursor: pointer; transition: filter 0.2s; }
         .spoiler-text.revealed { filter: none; }
-        .review-card-actions { position: absolute; top: 0.3rem; right: 0.3rem; display: flex; gap: 0.1rem; opacity: 0; transition: opacity 0.2s; background: rgba(20,20,25,0.85); backdrop-filter: blur(4px); border-radius: 20px; padding: 0.1rem 0.2rem; }
+        .review-card-actions { position: absolute; top: 0.3rem; right: 0.3rem; display: flex; gap: 0.1rem; opacity: 0; transition: opacity 0.2s, background 0.5s; background: rgba(20,20,25,0.85); backdrop-filter: blur(4px); border-radius: 20px; padding: 0.1rem 0.2rem; }
         .review-card:hover .review-card-actions { opacity: 1; }
-        .review-action-icon { background: transparent; border: none; color: #999; cursor: pointer; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+        .review-action-icon { background: transparent; border: none; color: #999; cursor: pointer; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; padding: 0; transition: color 0.2s, background 0.2s; }
         .review-action-icon svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2; }
         .approve-btn:hover { color: #4caf84; background: rgba(76,175,132,0.2); }
         .verify-btn:hover { color: #5b9bd5; background: rgba(91,155,213,0.2); }
@@ -227,37 +414,28 @@
         }
         .movie-title-overlay:hover { color: var(--gold-light); text-shadow: 0 0 20px rgba(201,168,76,0.7), 0 2px 16px rgba(0,0,0,0.9); }
 
-        /* Animacja wejścia karuzeli */
-        .carousel-enter {
-            animation: carouselSlideIn 0.45s cubic-bezier(0.22, 1.2, 0.36, 1) both;
-        }
+        .carousel-enter { animation: carouselSlideIn 0.45s cubic-bezier(0.22, 1.2, 0.36, 1) both; }
         @keyframes carouselSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px) scale(0.96);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+            from { opacity: 0; transform: translateY(30px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); align-items: center; justify-content: center; z-index: 1000; opacity: 0; transition: opacity 0.2s; }
         .modal.open { display: flex; opacity: 1; }
-        .modal-content { background: var(--bg-surface); max-width: 500px; width: 90%; border-radius: var(--radius-xl); padding: 1.6rem; border: 1px solid var(--border-default); max-height: 80vh; overflow-y: auto; transform: translateY(30px); transition: transform 0.3s; }
+        .modal-content { background: var(--bg-surface); max-width: 500px; width: 90%; border-radius: var(--radius-xl); padding: 1.6rem; border: 1px solid var(--border-default); max-height: 80vh; overflow-y: auto; transform: translateY(30px); transition: transform 0.3s, background 0.5s; }
         .modal.open .modal-content { transform: translateY(0); }
         .modal-content h3 { color: var(--gold-light); margin-bottom: 1rem; font-size: var(--font-lg); }
-        .modal-content input, .modal-content textarea { width: 100%; padding: 0.6rem; margin: 0.4rem 0; background: var(--bg-input); border: 1px solid var(--border-default); border-radius: var(--radius-sm); color: #eee; font-family: inherit; }
+        .modal-content input, .modal-content textarea { width: 100%; padding: 0.6rem; margin: 0.4rem 0; background: var(--bg-input); border: 1px solid var(--border-default); border-radius: var(--radius-sm); color: var(--text-primary); font-family: inherit; }
         .modal-buttons { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.2rem; }
-        .modal-buttons button { background: var(--bg-elevated); border: 1px solid var(--border-default); padding: 0.5rem 1.2rem; border-radius: 20px; color: #eee; cursor: pointer; transition: background 0.2s; font-family: inherit; }
-        .modal-buttons button.primary-btn { background: var(--gold); color: #000; border-color: var(--gold); }
+        .modal-buttons button { background: var(--bg-elevated); border: 1px solid var(--border-default); padding: 0.5rem 1.2rem; border-radius: 20px; color: var(--text-primary); cursor: pointer; transition: background 0.2s; font-family: inherit; }
+        .modal-buttons button.primary-btn { background: var(--gold); color: var(--text-inverse); border-color: var(--gold); }
         .danger-btn { background: #5a2020; color: #ffb0a0; border-color: #7a3030; box-shadow: 0 0 8px rgba(200,80,80,0.15); }
         .db-option-row { display: flex; justify-content: space-between; align-items: center; margin: 0.7rem 0; gap: 1rem; }
         .db-option-row span { flex: 1; }
         .text-btn {
             background: var(--bg-elevated); border: 1px solid var(--border-default); padding: 0.5rem 1.2rem;
-            border-radius: 20px; color: #eee; cursor: pointer; transition: background 0.2s; white-space: nowrap;
+            border-radius: 20px; color: var(--text-primary); cursor: pointer; transition: background 0.2s; white-space: nowrap;
             min-width: 120px; text-align: center; font-family: inherit; font-size: var(--font-xs);
             display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;
         }
@@ -266,7 +444,7 @@
             position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(140%);
             background: rgba(22,22,28,0.95); backdrop-filter: blur(12px); border: 1px solid var(--border-gold);
             border-radius: 20px; padding: 0.6rem 1.5rem; color: #eee; z-index: 2000;
-            transition: transform 0.3s; font-size: var(--font-sm);
+            transition: transform 0.3s, background 0.5s; font-size: var(--font-sm);
         }
         .toast.show { transform: translateX(-50%) translateY(0); }
 
@@ -275,7 +453,186 @@
         .edit-movie-btn:hover { opacity: 1; }
         .star-select { transition: color 0.2s ease; }
 
-        /* Mobile optimizations */
+        /* ===================================================== */
+        /* =================== TRYB GHIBLI ===================== */
+        /* ===================================================== */
+
+        body.anime-mode {
+            --gold: #b8894a;
+            --gold-light: #d4a95c;
+            --gold-glow: rgba(184, 137, 74, 0.4);
+            --gold-soft: rgba(184, 137, 74, 0.15);
+            --gold-soft-hover: rgba(184, 137, 74, 0.25);
+            --bg-base: #e8e0c8;
+            --bg-surface: rgba(255, 252, 240, 0.82);
+            --bg-card: rgba(255, 250, 235, 0.9);
+            --bg-elevated: rgba(252, 247, 232, 0.94);
+            --bg-input: rgba(245, 240, 225, 0.9);
+            --border-default: rgba(139, 168, 139, 0.4);
+            --border-hover: rgba(139, 168, 139, 0.65);
+            --border-gold: rgba(184, 137, 74, 0.5);
+            --text-primary: #364836;
+            --text-secondary: #5c6c5c;
+            --text-muted: #8a9a8a;
+            --text-inverse: #fffbf0;
+            --shadow-md: 0 8px 24px rgba(90, 117, 88, 0.18);
+            --shadow-lg: 0 16px 40px rgba(90, 117, 88, 0.22);
+            --shadow-gold: 0 0 24px rgba(184, 137, 74, 0.28);
+
+            background-color: #e8e0c8;
+            background-image:
+                radial-gradient(ellipse 65% 45% at 12% 8%, rgba(168, 220, 200, 0.55) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 88% 12%, rgba(255, 220, 180, 0.5) 0%, transparent 60%),
+                radial-gradient(ellipse 70% 55% at 50% 105%, rgba(200, 180, 220, 0.4) 0%, transparent 65%),
+                linear-gradient(180deg, #a8c8dc 0%, #c8dcc8 28%, #e8e0c8 62%, #f0e6c8 100%);
+        }
+
+        body.anime-mode .global-bg {
+            filter: blur(3px) brightness(1.02) saturate(1.05);
+            opacity: 0.95;
+        }
+
+        body.anime-mode .club-header h1 {
+            background: linear-gradient(135deg, #364836 0%, #b8894a 45%, #d4a95c 100%);
+            background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-size: 200% 100%;
+            letter-spacing: 0.08em;
+        }
+        body.anime-mode .icon-btn {
+            background: rgba(252, 247, 232, 0.88);
+            color: #5c6c5c;
+            border-color: rgba(139, 168, 139, 0.4);
+        }
+        body.anime-mode .icon-btn:hover {
+            color: #b8894a;
+            border-color: rgba(184, 137, 74, 0.6);
+            background: #fffbf0;
+        }
+
+        body.anime-mode .next-movie-card {
+            background: rgba(255, 252, 240, 0.82);
+            border-color: rgba(139, 168, 139, 0.45);
+        }
+        body.anime-mode .next-movie-card::after {
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255, 200, 140, 0.55) 0%, transparent 65%);
+        }
+        body.anime-mode .next-movie-card .poster { background: #d8e0c8; }
+        body.anime-mode .next-movie-card h2 { color: #b8894a !important; }
+        body.anime-mode .next-movie-card > div:last-child,
+        body.anime-mode .next-movie-card > div:nth-last-child(2) { color: #5c6c5c; }
+
+        body.anime-mode .ranking-item {
+            background: rgba(255, 252, 240, 0.86);
+            border-color: rgba(139, 168, 139, 0.4);
+        }
+        body.anime-mode .ranking-item::after {
+            background: linear-gradient(95deg,
+                rgba(255, 252, 240, 0.94) 0%,
+                rgba(255, 252, 240, 0.72) 28%,
+                rgba(255, 252, 240, 0.58) 55%,
+                rgba(255, 252, 240, 0.72) 78%,
+                rgba(255, 252, 240, 0.94) 100%);
+        }
+        body.anime-mode .ranking-title { color: #364836; }
+        body.anime-mode .ranking-rating {
+            color: #fffbf0;
+            background: linear-gradient(135deg, #d4a95c, #b8894a);
+            box-shadow: 0 2px 8px rgba(184, 137, 74, 0.35);
+        }
+        body.anime-mode .new-badge {
+            background: linear-gradient(135deg, #a8c5d6, #8fa88e);
+            color: #fffbf0;
+            box-shadow: 0 0 10px rgba(168, 197, 214, 0.5);
+        }
+
+        body.anime-mode .carousel-viewport {
+            background: rgba(255, 252, 240, 0.85);
+            border-color: rgba(139, 168, 139, 0.45);
+        }
+        body.anime-mode .carousel-arrow {
+            background: rgba(255, 252, 240, 0.92);
+            color: #364836;
+            border-color: rgba(139, 168, 139, 0.5);
+        }
+        body.anime-mode .carousel-arrow:hover {
+            color: #b8894a;
+            border-color: #b8894a;
+            background: #fffbf0;
+        }
+        body.anime-mode .movie-title-overlay {
+            background: linear-gradient(to top, rgba(54, 72, 54, 0.85) 0%, rgba(54, 72, 54, 0.4) 60%, transparent 100%);
+            color: #fffbf0;
+        }
+        body.anime-mode .movie-title-overlay:hover {
+            color: #ffd88a;
+            text-shadow: 0 0 20px rgba(255, 216, 138, 0.8), 0 2px 16px rgba(0,0,0,0.6);
+        }
+
+        body.anime-mode .review-card:hover {
+            background: rgba(184, 137, 74, 0.07);
+            border-color: rgba(139, 168, 139, 0.25);
+        }
+        body.anime-mode .review-card-actions {
+            background: rgba(255, 252, 240, 0.94);
+            border: 1px solid rgba(139, 168, 139, 0.3);
+        }
+        body.anime-mode .review-action-icon { color: #6a7a6a; }
+        body.anime-mode .empty-state p { color: #7a8a7a; }
+
+        body.anime-mode .modal-content {
+            background: rgba(255, 252, 240, 0.98);
+            border-color: rgba(139, 168, 139, 0.45);
+        }
+        body.anime-mode .modal-content h3 { color: #b8894a; }
+        body.anime-mode .modal-content input,
+        body.anime-mode .modal-content textarea {
+            background: rgba(245, 240, 225, 0.95);
+            color: #364836;
+            border-color: rgba(139, 168, 139, 0.4);
+        }
+        body.anime-mode .modal-content input::placeholder,
+        body.anime-mode .modal-content textarea::placeholder { color: #9aaa9a; }
+        body.anime-mode .modal-buttons button {
+            background: rgba(240, 235, 220, 0.95);
+            color: #364836;
+            border-color: rgba(139, 168, 139, 0.4);
+        }
+        body.anime-mode .modal-buttons button:hover { background: #fffbf0; }
+        body.anime-mode .modal-buttons button.primary-btn {
+            background: linear-gradient(135deg, #d4a95c, #b8894a);
+            color: #fffbf0;
+            border-color: #b8894a;
+        }
+        body.anime-mode .text-btn {
+            background: rgba(240, 235, 220, 0.95);
+            color: #364836;
+            border-color: rgba(139, 168, 139, 0.4);
+        }
+        body.anime-mode .text-btn:hover { background: #fffbf0; }
+        body.anime-mode hr { border-color: rgba(139, 168, 139, 0.35) !important; }
+
+        body.anime-mode .toast {
+            background: rgba(255, 252, 240, 0.96);
+            color: #364836;
+            border-color: rgba(184, 137, 74, 0.5);
+        }
+
+        body.anime-mode .loading-indicator { background: rgba(255, 252, 240, 0.96); }
+        body.anime-mode .loading-indicator p { color: #364836; }
+
+        body.anime-mode::after {
+            content: '';
+            position: fixed; inset: 0;
+            background: radial-gradient(ellipse at 50% 100%, rgba(255, 240, 200, 0.35) 0%, transparent 60%),
+                        radial-gradient(ellipse at 20% 0%, rgba(200, 230, 240, 0.2) 0%, transparent 55%);
+            pointer-events: none; z-index: 0;
+            animation: auraShift 18s ease-in-out infinite alternate;
+        }
+        @keyframes auraShift {
+            from { opacity: 0.85; transform: scale(1); }
+            to   { opacity: 1; transform: scale(1.05); }
+        }
+
         @media (max-width: 600px) {
             .app-container { padding: 0.5rem 0.5rem 0.4rem 0.5rem; gap: 0.5rem; }
             .club-header { padding: 0.2rem 0.4rem; border-radius: var(--radius-md); }
@@ -290,6 +647,9 @@
             .modal-content { padding: 1.2rem; }
             .db-option-row { flex-wrap: wrap; gap: 0.5rem; }
             .text-btn { min-width: 100px; padding: 0.4rem 0.9rem; }
+            .anime-toggle-btn { font-size: 0.95rem; }
+            .anime-sunflare { width: 340px; height: 340px; top: -90px; right: -90px; }
+            .empty-state p { font-size: 0.9rem; letter-spacing: 0.14em; }
         }
 
         @media (max-width: 400px) {
@@ -297,15 +657,28 @@
             .next-movie-card h2 { font-size: 0.65rem; }
             .next-movie-card div { font-size: 1.1rem; }
             .ranking-title { font-size: 0.82rem; }
+            .anime-sunflare { width: 240px; height: 240px; top: -60px; right: -60px; }
+            .empty-state p { font-size: 0.82rem; letter-spacing: 0.12em; }
         }
     </style>
 </head>
 <body>
 <div class="global-bg" id="globalBg"></div>
+<div class="anime-decor" id="animeDecor" aria-hidden="true"></div>
+<div class="anime-grave-effects" id="animeGraveEffects" aria-hidden="true"></div>
+<div class="anime-sunflare" id="animeSunflare" aria-hidden="true"></div>
+<!-- Foreground: dym i iskry na pierwszym planie (nad treścią, ale pointer-events: none) -->
+<div class="anime-grave-effects-front" id="animeGraveEffectsFront" aria-hidden="true"></div>
+
+<iframe id="sc-widget" width="0" height="0" scrolling="no" frameborder="no" allow="autoplay"
+        style="position:absolute;left:-9999px;width:0;height:0;"
+        src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fxijin%2Fsailboat-in-the-sky-studio-ghibli-tribute&color=%23b8894a&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"></iframe>
+
 <div class="app-container">
     <div class="club-header">
         <h1 id="homeLogo">JLL MOVIE CLUB<span class="admin-indicator" id="adminIndicator" title="Kliknij, aby wyłączyć tryb admina"></span></h1>
         <div class="header-buttons">
+            <button class="icon-btn anime-toggle-btn" id="animeToggleBtn" title="Tryb Ghibli – Studio Ghibli">愛</button>
             <button class="icon-btn admin-only" id="dbManageBtn" title="Zarządzanie bazą">
                 <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
             </button>
@@ -341,12 +714,17 @@
         let touchStartY = 0;
         window.currentEditMovieId = null;
 
-        // ----- KONFIGURACJA ŚREDNIEJ WAŻONEJ -----
+        // ----- TRYB GHIBLI -----
+        let animeMode = false;
+        let scWidget = null;
+        let currentFeatured = null;
+
         const RATING_PRIOR = 3.0;
         const RATING_PRIOR_WEIGHT = 1.5;
         const RANKING_THRESHOLD = 3;
 
-        // ----- NOWE ZMIENNE DO OCHRONY FORMULARZA -----
+        function getRankingThreshold() { return animeMode ? 1 : RANKING_THRESHOLD; }
+
         let pendingSnapshotRebuild = false;
         let pendingAuthor = '';
         let pendingComment = '';
@@ -364,7 +742,7 @@
         function checkAdminFromStorage() { if(sessionStorage.getItem('movieclub_admin')==='true') setAdminMode(true); }
         function isAdminAction() { if(isAdmin) return true; showToast("Wymagany tryb admina.", 'warning'); return false; }
         function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
-        function renderStars(r) { let h='<span class="stars">'; for(let i=1;i<=5;i++) h+=`<span class="star ${i<=r?'star-filled':''}" style="color:${i<=r?'var(--gold)':'#3a3a44'}">&#9733;</span>`; return h+'</span>'; }
+        function renderStars(r) { let h='<span class="stars">'; for(let i=1;i<=5;i++) h+=`<span class="star ${i<=r?'star-filled':''}" style="color:${i<=r?'var(--gold)':'var(--text-muted)'}">&#9733;</span>`; return h+'</span>'; }
         function avgWeighted(m) {
             let t = 0, w = 0;
             m.reviews.forEach(r => {
@@ -381,18 +759,48 @@
         }
         function countApprovedReviews(m) { return m.reviews.filter(r=>r.approved).length; }
         function parseDate(str) { let p=str.split('.'); return new Date(p[2],p[1]-1,p[0]); }
-        function getNextMovie() { let today=new Date(); today.setHours(0,0,0,0); let future=movies.filter(m=>parseDate(m.date)>=today); if(future.length) return future.sort((a,b)=>parseDate(a.date)-parseDate(b.date))[0]; return movies.length?movies.reduce((a,b)=>parseDate(a.date)-parseDate(b.date)>0?a:b):null; }
+        function getNextMovie() {
+            let today=new Date(); today.setHours(0,0,0,0);
+            const pool = movies.filter(m => !!m.isGhibli === animeMode);
+            let future = pool.filter(m=>parseDate(m.date)>=today);
+            if(future.length) return future.sort((a,b)=>parseDate(a.date)-parseDate(b.date))[0];
+            return pool.length?pool.reduce((a,b)=>parseDate(a.date)-parseDate(b.date)>0?a:b):null;
+        }
 
-        // ----- RANKING – wspólna kolejność dla home i karuzeli -----
+        function getRandomGhibliMovie() {
+            const ghibliMovies = movies.filter(m => m.isGhibli);
+            if (ghibliMovies.length === 0) return null;
+            return ghibliMovies[Math.floor(Math.random() * ghibliMovies.length)];
+        }
+
         function getRankedMovies() {
-            const high = movies.filter(m => countApprovedReviews(m) >= RANKING_THRESHOLD);
-            const low = movies.filter(m => countApprovedReviews(m) < RANKING_THRESHOLD);
+            const thr = getRankingThreshold();
+            const pool = movies.filter(m => !!m.isGhibli === animeMode);
+            const high = pool.filter(m => countApprovedReviews(m) >= thr);
+            const low = pool.filter(m => countApprovedReviews(m) < thr);
             high.sort((a,b) => parseFloat(avgWeighted(b)) - parseFloat(avgWeighted(a)));
             low.sort((a,b) => parseFloat(avgWeighted(b)) - parseFloat(avgWeighted(a)));
             return [...high, ...low];
         }
 
-        // ----- Data dodania filmu + badge + kropka -----
+        function isGraveMovie(m) {
+            if (!m) return false;
+            const t = (m.title || '').toLowerCase();
+            return t.includes('grobowiec') ||
+                   t.includes('świetlik') || t.includes('swietlik') ||
+                   t.includes('firefl') ||
+                   t.includes('hotaru') ||
+                   (m.id && m.id.toLowerCase().includes('grave'));
+        }
+
+        function getCurrentDisplayedMovie() {
+            if (viewMode === 'movie') {
+                const ranked = getRankedMovies();
+                return ranked[currentSlideIndex] || null;
+            }
+            return currentFeatured || null;
+        }
+
         function getMovieAddedTime(m) {
             if (!m) return null;
             if (m.createdAt) {
@@ -427,19 +835,18 @@
             const stars = container.querySelectorAll('.star-select');
             container.onmouseover = e => {
                 const s = e.target.closest('.star-select');
-                if (s) stars.forEach(st => st.style.color = parseInt(st.dataset.value) <= parseInt(s.dataset.value) ? 'var(--gold)' : '#4a4a54');
+                if (s) stars.forEach(st => st.style.color = parseInt(st.dataset.value) <= parseInt(s.dataset.value) ? 'var(--gold)' : 'var(--text-muted)');
             };
-            container.onmouseleave = () => stars.forEach(s => s.style.color = s.classList.contains('selected') ? 'var(--gold)' : '#4a4a54');
+            container.onmouseleave = () => stars.forEach(s => s.style.color = s.classList.contains('selected') ? 'var(--gold)' : 'var(--text-muted)');
             container.onclick = e => {
                 const s = e.target.closest('.star-select');
                 if (s) stars.forEach(st => {
                     st.classList.toggle('selected', parseInt(st.dataset.value) <= parseInt(s.dataset.value));
-                    st.style.color = st.classList.contains('selected') ? 'var(--gold)' : '#4a4a54';
+                    st.style.color = st.classList.contains('selected') ? 'var(--gold)' : 'var(--text-muted)';
                 });
             };
         }
 
-        // ----- FUNKCJE OCHRONY STANU FORMULARZA -----
         function captureReviewFormState() {
             const slide = document.querySelector('.carousel-slide.active');
             if (!slide) return;
@@ -469,7 +876,7 @@
                     s.style.color = 'var(--gold)';
                 } else {
                     s.classList.remove('selected');
-                    s.style.color = '#4a4a54';
+                    s.style.color = 'var(--text-muted)';
                 }
             });
             slide.scrollTop = pendingScrollTop;
@@ -484,7 +891,7 @@
             const sorted = [...movie.reviews].sort((a,b)=> a.verified!==b.verified ? (a.verified?-1:1) : (a.approved!==b.approved ? (a.approved?-1:1) : b.timestamp-a.timestamp));
             let revHtml = '';
             const curToken = getSessionToken();
-            if(sorted.length===0) revHtml = `<div class="empty-state"><p>Brak recenzji.</p></div>`;
+            if(sorted.length===0) revHtml = `<div class="empty-state"><p>レビューはまだありません</p></div>`;
             else sorted.forEach(r=>{
                 const origIdx = movie.reviews.findIndex(o=>o.timestamp===r.timestamp && o.author===r.author);
                 const pending = !r.approved?'pending':'';
@@ -506,17 +913,21 @@
                     }
                 }
                 const commentClass = r.spoiler ? 'review-comment spoiler-text' : 'review-comment';
-                revHtml += `<div class="review-card ${pending}"><div class="review-card-left-col" style="flex:0 0 75px;">${renderStars(r.stars)}<div style="font-size:0.7rem;color:#aaa;">${escapeHtml(r.author)}${verifiedMark}</div></div><div class="review-card-right-col"><div class="${commentClass}" onclick="if(this.classList.contains('spoiler-text')) this.classList.toggle('revealed')" style="font-size:0.78rem;line-height:1.5;">${escapeHtml(r.comment)}</div></div><div class="review-card-actions">${btns}</div></div>`;
+                revHtml += `<div class="review-card ${pending}"><div class="review-card-left-col" style="flex:0 0 75px;">${renderStars(r.stars)}<div style="font-size:0.7rem;color:var(--text-muted);">${escapeHtml(r.author)}${verifiedMark}</div></div><div class="review-card-right-col"><div class="${commentClass}" onclick="if(this.classList.contains('spoiler-text')) this.classList.toggle('revealed')" style="font-size:0.78rem;line-height:1.5;">${escapeHtml(r.comment)}</div></div><div class="review-card-actions">${btns}</div></div>`;
             });
-            const sent = movie.sentimentalValue ? `<div style="margin:0.5rem;padding:0.5rem;background:rgba(201,168,76,0.05);border-left:2px solid var(--gold);font-size:0.7rem;color:#b8a878;">${escapeHtml(movie.sentimentalValue)}</div>` : '';
+            const sent = movie.sentimentalValue ? `<div style="margin:0.5rem;padding:0.5rem;background:rgba(201,168,76,0.05);border-left:2px solid var(--gold);font-size:0.7rem;color:var(--text-secondary);">${escapeHtml(movie.sentimentalValue)}</div>` : '';
+            const dateHtml = (!animeMode && movie.date)
+                ? `<div style="text-align:center;font-size:0.7rem;color:var(--text-muted);margin:0.4rem 0;">${escapeHtml(movie.date)}</div>`
+                : '';
+            const reviewsPadding = animeMode ? '0.7rem 0.9rem 0' : '0.4rem 0.9rem 0';
+
             const posterUrl = movie.poster || '';
-            const posterImg = posterUrl ? `<img class="poster-img" src="${escapeHtml(posterUrl)}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="width:100%;height:100%;background:#1a1a20;display:flex;align-items:center;justify-content:center;color:#555;">Brak plakatu</div>`;
+            const posterImg = posterUrl ? `<img class="poster-img" src="${escapeHtml(posterUrl)}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="width:100%;height:100%;background:linear-gradient(135deg, #c8dcc8, #e8d8b8);display:flex;align-items:center;justify-content:center;color:#7a8a7a;font-family:'Noto Serif JP',serif;font-size:1.4rem;">${animeMode?'森':'Brak plakatu'}</div>`;
             const avg = avgWeighted(movie); const avgDisp = avg!=='-'?avg:'-';
             const linkHtml = movie.link ? `<div style="text-align:center;margin:0.3rem 0;"><a href="${escapeHtml(movie.link)}" target="_blank" style="color:var(--gold);font-size:0.7rem;">Link do filmu</a></div>` : '';
-            const dateHtml = movie.date ? `<div style="text-align:center;font-size:0.7rem;color:#aaa;margin:0.4rem 0;">${escapeHtml(movie.date)}</div>` : '';
             const jfUrl = `https://jellyfin.shepardgepard.org/web/#/search.html?query=${encodeURIComponent(movie.title)}`;
             const editBtnAdminVisible = isAdmin ? ' admin-visible' : '';
-            return `<div class="carousel-slide" data-movie-id="${movie.id}"><div style="display:flex;flex-direction:column;height:100%;"><div style="height:clamp(180px,30vh,280px);position:relative;overflow:hidden;flex-shrink:0;background:#1a1a20;">${posterImg}<a href="${jfUrl}" target="_blank" class="movie-title-overlay">${escapeHtml(movie.title)}</a><button class="review-action-icon edit-movie-btn${editBtnAdminVisible}" data-movie-id="${movie.id}" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);color:#ddd;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:opacity 0.2s;">${SVG_ICONS.edit}</button></div>${dateHtml}${linkHtml}<div style="flex:1;overflow-y:auto;padding:0 0.9rem;">${revHtml}</div>${sent}<div style="background:rgba(20,20,26,0.7);border-top:1px solid var(--border-default);padding:0.7rem 0.9rem;"><div style="display:flex;gap:0.55rem;align-items:stretch;"><div style="flex:0 0 88px;display:flex;flex-direction:column;gap:0.25rem;"><input type="text" class="review-author-input" placeholder="Imię" maxlength="9" style="background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.4rem;font-size:0.7rem;color:#eee;text-align:center;font-family:inherit;width:100%;"><div class="rating-input" style="display:flex;gap:0;background:var(--bg-input);padding:0.15rem 0.25rem;border-radius:20px;justify-content:center;border:1px solid var(--border-default);">${[1,2,3,4,5].map(n=>`<span class="star-select" data-value="${n}" style="font-size:0.75rem;cursor:pointer;color:#4a4a54;">&#9733;</span>`).join('')}</div></div><div style="flex:2;min-width:0;"><textarea class="review-comment-input" placeholder="Napisz kilka słów...\nKliknij enter aby wysłać." style="width:100%;height:100%;min-height:42px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.45rem;font-size:0.7rem;color:#eee;resize:none;font-family:inherit;"></textarea></div><div class="avg-box" data-movie-id="${movie.id}" style="flex:0 0 52px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold);cursor:pointer;font-size:0.85rem;">${avgDisp} ★</div></div></div></div></div>`;
+            return `<div class="carousel-slide" data-movie-id="${movie.id}"><div style="display:flex;flex-direction:column;height:100%;"><div style="height:clamp(180px,30vh,280px);position:relative;overflow:hidden;flex-shrink:0;background:#1a1a20;">${posterImg}<a href="${jfUrl}" target="_blank" class="movie-title-overlay">${escapeHtml(movie.title)}</a><button class="review-action-icon edit-movie-btn${editBtnAdminVisible}" data-movie-id="${movie.id}" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);color:#ddd;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:opacity 0.2s;">${SVG_ICONS.edit}</button></div>${dateHtml}${linkHtml}<div style="flex:1;overflow-y:auto;padding:${reviewsPadding};display:flex;flex-direction:column;">${revHtml}</div>${sent}<div style="background:var(--bg-elevated);border-top:1px solid var(--border-default);padding:0.7rem 0.9rem;transition:background 0.5s;"><div style="display:flex;gap:0.55rem;align-items:stretch;"><div style="flex:0 0 88px;display:flex;flex-direction:column;gap:0.25rem;"><input type="text" class="review-author-input" placeholder="Imię" maxlength="9" style="background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.4rem;font-size:0.7rem;color:var(--text-primary);text-align:center;font-family:inherit;width:100%;"><div class="rating-input" style="display:flex;gap:0;background:var(--bg-input);padding:0.15rem 0.25rem;border-radius:20px;justify-content:center;border:1px solid var(--border-default);">${[1,2,3,4,5].map(n=>`<span class="star-select" data-value="${n}" style="font-size:0.75rem;cursor:pointer;color:var(--text-muted);">&#9733;</span>`).join('')}</div></div><div style="flex:2;min-width:0;"><textarea class="review-comment-input" placeholder="Napisz kilka słów...\nKliknij enter aby wysłać." style="width:100%;height:100%;min-height:42px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.45rem;font-size:0.7rem;color:var(--text-primary);resize:none;font-family:inherit;"></textarea></div><div class="avg-box" data-movie-id="${movie.id}" style="flex:0 0 52px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold);cursor:pointer;font-size:0.85rem;">${avgDisp} ★</div></div></div></div></div>`;
         }
 
         function addSwipeSupport() {
@@ -541,7 +952,6 @@
             });
         }
 
-        // ---- KARUZELA – iteruje po kolejności rankingu ----
         function buildCarousel(idx) {
             const c = document.getElementById('mainContent');
             c.style.overflow = 'visible';
@@ -558,6 +968,7 @@
             currentSlideIndex = idx;
             currentMovieIndex = idx;
             setGlobalBackground(ranked[idx]?.poster);
+            updateEffects();
             attachDelegatedEvents();
             document.getElementById('carouselPrevBtn').onclick = prevSlide;
             document.getElementById('carouselNextBtn').onclick = nextSlide;
@@ -567,6 +978,21 @@
         function setGlobalBackground(url) {
             const bg = document.getElementById('globalBg');
             if (!bg) return;
+
+            if (animeMode) {
+                if (url) {
+                    bg.style.backgroundImage = `url('${url}')`;
+                } else {
+                    bg.style.backgroundImage = 'none';
+                }
+                bg.style.filter = '';
+                bg.style.opacity = '';
+                return;
+            }
+
+            bg.style.filter = '';
+            bg.style.opacity = '';
+
             if (!url) { bg.style.backgroundImage = 'none'; return; }
             if (preloadedImages[url] === true) {
                 bg.style.backgroundImage = `url('${url}')`;
@@ -594,6 +1020,7 @@
             currentSlideIndex = i;
             currentMovieIndex = i;
             setGlobalBackground(ranked[i]?.poster);
+            updateEffects();
             attachDelegatedEvents();
         }
 
@@ -629,28 +1056,43 @@
         }
 
         function renderHome() {
-            const next = getNextMovie(); const posterUrl = next?.poster || '';
+            let featured;
+            if (animeMode) {
+                featured = getRandomGhibliMovie();
+            } else {
+                featured = getNextMovie();
+            }
+            currentFeatured = featured;
+            const posterUrl = featured?.poster || '';
             setGlobalBackground(posterUrl);
-            const posterHtml = posterUrl ? `<img class="poster" src="${escapeHtml(posterUrl)}" onerror="this.style.display='none'">` : '<div class="poster" style="height:180px;display:flex;align-items:center;justify-content:center;font-size:2rem;color:#444;">Brak plakatu</div>';
+            const posterHtml = posterUrl
+                ? `<img class="poster" src="${escapeHtml(posterUrl)}" onerror="this.style.display='none'">`
+                : `<div class="poster" style="height:180px;display:flex;align-items:center;justify-content:center;font-size:2rem;color:${animeMode?'#8a9a8a':'#444'};background:linear-gradient(135deg, #c8dcc8, #e8d8b8);">${animeMode?'森':'★'}</div>`;
+
+            const featuredDateHtml = (!animeMode && featured?.date)
+                ? `<div style="font-size:0.7rem;color:var(--text-muted);">${escapeHtml(featured.date)}</div>`
+                : '';
+
             const c = document.getElementById('mainContent');
             c.style.overflow = 'auto';
-            c.innerHTML = `<div class="home-container"><div class="next-movie-card" id="nextMovieCard">${posterHtml}<h2 style="color:var(--gold);font-size:0.7rem;text-transform:uppercase;">Najbliższy seans</h2><div style="font-size:1.3rem;font-weight:700;">${escapeHtml(next?.title||'Brak')}</div><div style="font-size:0.7rem;color:#aaa;">${escapeHtml(next?.date||'')}</div></div><div class="ranking-section"><div class="ranking-list" id="rankingList"></div></div></div>`;
+            c.innerHTML = `<div class="home-container"><div class="next-movie-card" id="nextMovieCard">${posterHtml}<h2 style="color:var(--gold);font-size:0.7rem;text-transform:uppercase;">${animeMode?'Losowy film Ghibli':'Najbliższy seans'}</h2><div style="font-size:1.3rem;font-weight:700;">${escapeHtml(featured?.title||'Brak')}</div>${featuredDateHtml}</div><div class="ranking-section"><div class="ranking-list" id="rankingList"></div></div></div>`;
             const rankingDiv = document.getElementById('rankingList');
             if(rankingDiv) {
+                const thr = getRankingThreshold();
                 const all = getRankedMovies();
-                if(all.length === 0) rankingDiv.innerHTML = '<div class="empty-state"><p>Brak filmów w rankingu.</p></div>';
+                if(all.length === 0) rankingDiv.innerHTML = '<div class="empty-state"><p>'+(animeMode?'Brak filmów Ghibli w rankingu.':'Brak filmów w rankingu.')+'</p></div>';
                 else rankingDiv.innerHTML = all.map((m,idx) => {
                     const rating = avgWeighted(m);
-                    const enough = countApprovedReviews(m) >= RANKING_THRESHOLD;
-                    const rawCount = countApprovedReviews(m);
+                    const approvedCount = countApprovedReviews(m);
+                    const enough = approvedCount >= thr;
                     const ratingTxt = enough ? (rating !== '-' ? `${rating} ★` : '- ★') : '-';
-                    const badge = !enough ? '<span style="font-size:0.7rem;color:#888;">(czeka na więcej ocen)</span>' : '';
-                    const newBadge = isNewMovie(m) ? '<span class="new-badge" title="Dodany w ostatnim tygodniu">N</span>' : '';
+                    const badge = (!enough && !animeMode) ? '<span style="font-size:0.7rem;color:var(--text-muted);">(czeka na więcej ocen)</span>' : '';
+                    const newBadge = (!animeMode && isNewMovie(m)) ? '<span class="new-badge" title="Dodany w ostatnim tygodniu">N</span>' : '';
                     const pendingDot = hasUnapprovedReviews(m) ? '<span class="unapproved-dot" title="Oczekuje na akceptację ocen"></span>' : '';
                     const ratingTitle = enough
-                        ? `Średnia ważona: ${rating} (z ${rawCount} zatwierdzonych ocen)`
+                        ? `Średnia ważona: ${rating} (z ${approvedCount} zatwierdzonych ocen)`
                         : 'Za mało ocen do wyświetlenia średniej';
-                    const posterStyle = m.poster ? `background-image:url('${escapeHtml(m.poster)}');background-size:cover;background-position:center;` : ' ';
+                    const posterStyle = m.poster ? `background-image:url('${escapeHtml(m.poster)}');background-size:cover;background-position:center;` : (animeMode ? 'background:linear-gradient(120deg, rgba(200,220,200,0.6), rgba(232,216,184,0.6));' : ' ');
                     return `<div class="ranking-item" data-idx="${idx}" style="${posterStyle}; animation-delay: ${idx * 0.06}s;"><span class="ranking-title">${idx+1}. ${escapeHtml(m.title)}${pendingDot}${badge}</span><span class="ranking-rating" title="${ratingTitle}">${newBadge}${ratingTxt}</span></div>`;
                 }).join('');
             }
@@ -664,10 +1106,10 @@
                 };
             });
             const nextCard = document.getElementById('nextMovieCard');
-            if (nextCard && next) {
+            if (nextCard && featured) {
                 nextCard.onclick = () => {
                     const ranked = getRankedMovies();
-                    const i = ranked.findIndex(m => m.id === next.id);
+                    const i = ranked.findIndex(m => m.id === featured.id);
                     if (i !== -1) {
                         currentMovieIndex = i;
                         switchToMovie();
@@ -682,6 +1124,205 @@
                     nextCard.style.removeProperty('--x');
                     nextCard.style.removeProperty('--y');
                 });
+            }
+            updateEffects();
+        }
+
+        // ---------- TRYB GHIBLI: funkcje ----------
+        const LEAF_COLORS = ['#e8b88a', '#c88a5c', '#d4a95c', '#8fa88e', '#a8c5d6', '#e0a890', '#b895a8'];
+        const SMOKE_COLORS = ['#3a3a42', '#4a4a52', '#5a5a60', '#6a6a72', '#2f2f36'];
+        const SPARK_COLORS = ['#ffb347', '#ff8c42', '#ffd700', '#ffa500', '#ff6b35', '#ffcc55'];
+
+        function spawnLeaves() {
+            const container = document.getElementById('animeDecor');
+            if (!container || container.querySelectorAll('.leaf').length > 0) return;
+            const count = window.innerWidth < 600 ? 16 : 26;
+            for (let i = 0; i < count; i++) {
+                const leaf = document.createElement('div');
+                leaf.className = 'leaf';
+                const size = 8 + Math.random() * 11;
+                leaf.style.width = size + 'px';
+                leaf.style.height = size + 'px';
+                leaf.style.left = (Math.random() * 100) + '%';
+                const c1 = LEAF_COLORS[Math.floor(Math.random() * LEAF_COLORS.length)];
+                const c2 = LEAF_COLORS[Math.floor(Math.random() * LEAF_COLORS.length)];
+                leaf.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
+                leaf.style.animationDuration = (9 + Math.random() * 11) + 's';
+                leaf.style.animationDelay = (-Math.random() * 18) + 's';
+                leaf.style.setProperty('--sway', (Math.random() * 240 - 120) + 'px');
+                leaf.style.setProperty('--rot', (360 + Math.random() * 900) + 'deg');
+                container.appendChild(leaf);
+            }
+        }
+
+        function clearLeaves() {
+            const container = document.getElementById('animeDecor');
+            if (container) container.innerHTML = '';
+        }
+
+        // ---- Pomocnicze funkcje tworzące pojedyncze cząsteczki ----
+        function createSmoke(isBackground) {
+            const smoke = document.createElement('div');
+            smoke.className = 'smoke' + (isBackground ? '' : ' smoke-front');
+            // W foreground mniejsze i delikatniejsze
+            const baseSize = isBackground ? (60 + Math.random() * 90) : (40 + Math.random() * 60);
+            smoke.style.width = baseSize + 'px';
+            smoke.style.height = baseSize + 'px';
+            smoke.style.left = (Math.random() * 100) + '%';
+            const color = SMOKE_COLORS[Math.floor(Math.random() * SMOKE_COLORS.length)];
+            smoke.style.background = `radial-gradient(circle, ${color} 0%, transparent 72%)`;
+            smoke.style.animationDuration = (13 + Math.random() * 11) + 's';
+            smoke.style.animationDelay = (-Math.random() * 22) + 's';
+            smoke.style.setProperty('--sx', (Math.random() * 220 - 110) + 'px');
+            if (!isBackground) smoke.style.opacity = '0.85';
+            return smoke;
+        }
+
+        function createSpark(isBackground) {
+            const spark = document.createElement('div');
+            spark.className = 'spark' + (isBackground ? '' : ' spark-front');
+            const baseSize = isBackground ? (2 + Math.random() * 3.5) : (1.8 + Math.random() * 2.6);
+            spark.style.width = baseSize + 'px';
+            spark.style.height = baseSize + 'px';
+            spark.style.left = (Math.random() * 100) + '%';
+            const color = SPARK_COLORS[Math.floor(Math.random() * SPARK_COLORS.length)];
+            spark.style.background = color;
+            spark.style.boxShadow = `0 0 6px ${color}, 0 0 14px ${color}`;
+            spark.style.animationDuration = (4 + Math.random() * 5) + 's';
+            spark.style.animationDelay = (-Math.random() * 12) + 's';
+            spark.style.setProperty('--sx', (Math.random() * 90 - 45) + 'px');
+            if (!isBackground) {
+                // Delikatniejsza poświata dla foreground
+                spark.style.boxShadow = `0 0 4px ${color}, 0 0 9px ${color}`;
+            }
+            return spark;
+        }
+
+        function spawnGraveParticles() {
+            const backContainer = document.getElementById('animeGraveEffects');
+            const frontContainer = document.getElementById('animeGraveEffectsFront');
+            if (!backContainer) return;
+            if (backContainer.querySelectorAll('.smoke, .spark').length > 0) return;
+
+            const smokeCount = window.innerWidth < 600 ? 10 : 16;
+            const sparkCount = window.innerWidth < 600 ? 14 : 22;
+
+            // Tło
+            for (let i = 0; i < smokeCount; i++) backContainer.appendChild(createSmoke(true));
+            for (let i = 0; i < sparkCount; i++) backContainer.appendChild(createSpark(true));
+
+            // Pierwszy plan – trochę mniej, żeby nie przesłaniać UI
+            if (frontContainer) {
+                const frontSmokeCount = window.innerWidth < 600 ? 5 : 8;
+                const frontSparkCount = window.innerWidth < 600 ? 8 : 13;
+                for (let i = 0; i < frontSmokeCount; i++) frontContainer.appendChild(createSmoke(false));
+                for (let i = 0; i < frontSparkCount; i++) frontContainer.appendChild(createSpark(false));
+            }
+        }
+
+        function clearGraveParticles() {
+            const backContainer = document.getElementById('animeGraveEffects');
+            const frontContainer = document.getElementById('animeGraveEffectsFront');
+            if (backContainer) backContainer.innerHTML = '';
+            if (frontContainer) frontContainer.innerHTML = '';
+        }
+
+        function updateEffects() {
+            if (!animeMode) {
+                document.body.classList.remove('grave-mode');
+                clearLeaves();
+                clearGraveParticles();
+                return;
+            }
+            const movie = getCurrentDisplayedMovie();
+            const grave = isGraveMovie(movie);
+            document.body.classList.toggle('grave-mode', grave);
+            if (grave) {
+                clearLeaves();
+                spawnGraveParticles();
+            } else {
+                clearGraveParticles();
+                spawnLeaves();
+            }
+        }
+
+        function initSoundCloudWidget() {
+            if (scWidget) return;
+            const iframe = document.getElementById('sc-widget');
+            if (iframe && window.SC) {
+                scWidget = SC.Widget(iframe);
+                scWidget.bind(SC.Widget.Events.READY, () => {
+                    scWidget.setVolume(0.28);
+                });
+            }
+        }
+
+        function playAnimeMusic() {
+            initSoundCloudWidget();
+            if (scWidget) scWidget.play();
+        }
+
+        function stopAnimeMusic() {
+            if (scWidget) scWidget.pause();
+        }
+
+        function applyAnimeMode(on) {
+            animeMode = !!on;
+            document.body.classList.toggle('anime-mode', animeMode);
+            const btn = document.getElementById('animeToggleBtn');
+            if (btn) btn.classList.toggle('active', animeMode);
+            localStorage.setItem('movieclub_anime', animeMode ? 'true' : 'false');
+            if (animeMode) playAnimeMusic();
+            else stopAnimeMusic();
+            updateEffects();
+        }
+
+        function toggleAnimeMode() {
+            let oldMovieId = null;
+            if (viewMode === 'movie') {
+                const rankedOld = getRankedMovies();
+                oldMovieId = rankedOld[currentMovieIndex]?.id || null;
+            }
+            const goingOn = !animeMode;
+            applyAnimeMode(goingOn);
+            showToast(goingOn ? '✨ Tryb Ghibli włączony' : 'Tryb Ghibli wyłączony');
+
+            if (viewMode === 'movie') {
+                const ranked = getRankedMovies();
+                let newIdx = oldMovieId ? ranked.findIndex(m => m.id === oldMovieId) : -1;
+                if (newIdx < 0) newIdx = 0;
+                currentMovieIndex = newIdx;
+                if (ranked.length > 0) buildCarousel(newIdx);
+                else switchToHome();
+            } else {
+                renderHome();
+            }
+        }
+
+        // ---------- GHIBLI: dane + seed ----------
+        const ghibliMoviesData = [
+            { id: 'ghibli_totoro',   title: 'Mój sąsiad Totoro',            date: '16.04.1988', poster: 'https://placehold.co/400x600/8fa88e/fffbf0.png?text=Totoro',       link: '', sentimentalValue: 'Cudowny świat natury, dzieciństwa i leśnych duszków.', reviews: [], isGhibli: true, createdAt: 1700000000001 },
+            { id: 'ghibli_kiki',     title: 'Podniebna poczta Kiki',         date: '29.07.1989', poster: 'https://placehold.co/400x600/a8c5d6/364836.png?text=Kiki',         link: '', sentimentalValue: 'Latająca miotła, morze i pierwsza samodzielność.',   reviews: [], isGhibli: true, createdAt: 1700000000002 },
+            { id: 'ghibli_mononoke', title: 'Księżniczka Mononoke',          date: '12.07.1997', poster: 'https://placehold.co/400x600/5a7558/fffbf0.png?text=Mononoke',     link: '', sentimentalValue: 'Wielka opowieść o lesie, bogach i równowadze.',     reviews: [], isGhibli: true, createdAt: 1700000000003 },
+            { id: 'ghibli_spirited', title: 'Spirited Away: W krainie bogów',date: '20.07.2001', poster: 'https://placehold.co/400x600/e0a890/364836.png?text=Spirited',    link: '', sentimentalValue: 'Podróż w głąb świata duchów i własnego serca.',      reviews: [], isGhibli: true, createdAt: 1700000000004 },
+            { id: 'ghibli_hauru',    title: 'Ruchomy zamek Hauru',           date: '20.11.2004', poster: 'https://placehold.co/400x600/d4a95c/364836.png?text=Hauru',       link: '', sentimentalValue: 'Chodzący zamek, magia i odwaga bycia sobą.',        reviews: [], isGhibli: true, createdAt: 1700000000005 },
+            { id: 'ghibli_ponyo',    title: 'Ponyo',                         date: '19.07.2008', poster: 'https://placehold.co/400x600/b895a8/fffbf0.png?text=Ponyo',       link: '', sentimentalValue: 'Morze, fale i przyjaźń małej rybki.',              reviews: [], isGhibli: true, createdAt: 1700000000006 },
+            { id: 'ghibli_arrietty', title: 'Sekret świata Arrietty',        date: '17.07.2010', poster: 'https://placehold.co/400x600/8fa88e/364836.png?text=Arrietty',    link: '', sentimentalValue: 'Maleńki świat pod podłogą pełen cudów.',          reviews: [], isGhibli: true, createdAt: 1700000000007 },
+            { id: 'ghibli_kaze',     title: 'Zrywa się wiatr',               date: '20.07.2013', poster: 'https://placehold.co/400x600/a8c5d6/fffbf0.png?text=Kaze',        link: '', sentimentalValue: 'Marzenia, samoloty i wiatr, który niesie życie.',  reviews: [], isGhibli: true, createdAt: 1700000000008 },
+            { id: 'ghibli_kaguya',   title: 'Opowieść o księżniczce Kaguya', date: '23.11.2013', poster: 'https://placehold.co/400x600/e8d8b8/364836.png?text=Kaguya',      link: '', sentimentalValue: 'Baśń o księżycowej dziewczynie i przemijaniu.',    reviews: [], isGhibli: true, createdAt: 1700000000009 },
+            { id: 'ghibli_czapla',   title: 'Chłopiec i czapla',             date: '14.07.2023', poster: 'https://placehold.co/400x600/5a7558/fffbf0.png?text=Czapla',      link: '', sentimentalValue: 'Pożegnanie mistrza – najbardziej osobista opowieść.', reviews: [], isGhibli: true, createdAt: 1700000000010 }
+        ];
+
+        async function seedGhibliMovies() {
+            try {
+                const snap = await db.collection("movies").where("isGhibli", "==", true).limit(1).get();
+                if (snap.empty) {
+                    for (const m of ghibliMoviesData) {
+                        await db.collection("movies").doc(m.id).set(m);
+                    }
+                }
+            } catch (e) {
+                console.warn("Ghibli seed error:", e);
             }
         }
 
@@ -793,7 +1434,7 @@
                 document.getElementById('editReviewModal').dataset.reviewIdx = idx;
                 const r = movie.reviews[idx];
                 const sc = document.getElementById('editStarSelector');
-                sc.innerHTML = [1,2,3,4,5].map(n => `<span class="star-select${n <= r.stars ? ' selected' : ''}" data-value="${n}" style="font-size:0.75rem;cursor:pointer;color:${n <= r.stars ? 'var(--gold)' : '#4a4a54'};">&#9733;</span>`).join('');
+                sc.innerHTML = [1,2,3,4,5].map(n => `<span class="star-select${n <= r.stars ? ' selected' : ''}" data-value="${n}" style="font-size:0.75rem;cursor:pointer;color:${n <= r.stars ? 'var(--gold)' : 'var(--text-muted)'};">&#9733;</span>`).join('');
                 setupStarSelector(sc);
                 document.getElementById('editReviewComment').value = r.comment || '';
                 openModal('editReviewModal');
@@ -841,7 +1482,7 @@
             slide.querySelector('.review-comment-input').value = '';
             slide.querySelectorAll('.rating-input .star-select').forEach(s => {
                 s.classList.remove('selected');
-                s.style.color = '#4a4a54';
+                s.style.color = 'var(--text-muted)';
             });
             showToast("Recenzja dodana.");
         }
@@ -869,21 +1510,20 @@
             }
         }
 
-        // ----- startListener – zachowuje obecny film po ID (odporny na zmianę kolejności) -----
         function startListener(attempt = 0) {
             if (unsubscribeMovies) unsubscribeMovies();
             showLoading(true);
             if (retryTimeout) clearTimeout(retryTimeout);
 
-            db.collection("movies").get().then(snap => {
+            db.collection("movies").get().then(async snap => {
                 if (snap.empty) {
-                    return seedDefault();
+                    await seedDefault();
                 }
+                await seedGhibliMovies();
             }).then(() => {
                 unsubscribeMovies = db.collection("movies").onSnapshot(snap => {
                     if (retryTimeout) { clearTimeout(retryTimeout); retryTimeout = null; }
 
-                    // PRZED aktualizacją zapamiętaj ID obecnie oglądanego filmu (po rankingu)
                     let oldMovieId = null;
                     if (viewMode === 'movie' && movies.length > 0) {
                         const rankedOld = getRankedMovies();
@@ -894,13 +1534,13 @@
                     movies = [];
                     snap.forEach(d => movies.push(d.data()));
 
-                    if(movies.length === 0) {
+                    const ranked = getRankedMovies();
+                    if(ranked.length === 0) {
                         if(viewMode === 'home') renderHome();
                         else switchToHome();
                     } else {
                         if(viewMode === 'home') renderHome();
                         else {
-                            const ranked = getRankedMovies();
                             let newIdx = oldMovieId ? ranked.findIndex(m => m.id === oldMovieId) : -1;
                             if(newIdx < 0) newIdx = 0;
                             currentMovieIndex = newIdx;
@@ -926,11 +1566,10 @@
         }
 
         function renderMovie() {
-            if(movies.length > 0) buildCarousel(currentMovieIndex);
+            if(getRankedMovies().length > 0) buildCarousel(currentMovieIndex);
             else switchToHome();
         }
 
-        // ---------- Funkcje eksportu / importu ----------
         async function exportJSON() {
             try {
                 const data = movies;
@@ -980,7 +1619,7 @@
                 await batch.commit();
                 for(const movie of data) {
                     if(movie.id && movie.title) {
-                        await db.collection("movies").doc(movie.id).set({
+                        const payload = {
                             id: movie.id,
                             title: movie.title,
                             date: movie.date || '',
@@ -988,10 +1627,13 @@
                             link: movie.link || '',
                             sentimentalValue: movie.sentimentalValue || '',
                             reviews: movie.reviews || [],
-                            ...(movie.createdAt ? { createdAt: movie.createdAt } : {})
-                        });
+                            ...(movie.createdAt ? { createdAt: movie.createdAt } : {}),
+                            ...(movie.isGhibli ? { isGhibli: true } : {})
+                        };
+                        await db.collection("movies").doc(movie.id).set(payload);
                     }
                 }
+                await seedGhibliMovies();
                 showToast("Import zakończony pomyślnie.");
                 closeModal('dbManageModal');
             } catch(e) {
@@ -1000,6 +1642,7 @@
         }
 
         // ---------- Event listeners ----------
+        document.getElementById('animeToggleBtn').onclick = toggleAnimeMode;
         document.getElementById('dbManageBtn').onclick = () => { if(!isAdmin) { isAdminAction(); return; } openModal('dbManageModal'); };
         document.getElementById('proposeHeaderBtn').onclick = () => { loadProposals(); openModal('proposeModal'); };
         document.getElementById('homeBtn').onclick = () => { if(viewMode !== 'home') switchToHome(); };
@@ -1017,7 +1660,8 @@
             const id = 'movie_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
             await db.collection("movies").doc(id).set({
                 id, title, date: dateFormatted, poster, link, sentimentalValue: sentimental, reviews: [],
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                ...(animeMode ? { isGhibli: true } : {})
             });
             document.getElementById('newTitle').value = '';
             document.getElementById('newDate').value = '';
@@ -1092,16 +1736,13 @@
         window.onclick = e => { if(e.target.classList.contains('modal') && e.target.classList.contains('open')) closeModal(e.target.id); };
         document.getElementById('adminIndicator').onclick = (e) => { e.stopPropagation(); if (isAdmin) { setAdminMode(false); showToast("Tryb admina wyłączony."); if (viewMode === 'movie') renderMovie(); else renderHome(); } };
 
-        // ---------- Nawigacja klawiaturą (strzałki ←/→) ----------
         document.addEventListener('keydown', (e) => {
             if (viewMode !== 'movie') return;
-            // Nie przechwytuj, gdy użytkownik pisze w input/textarea
             const ae = document.activeElement;
             if (ae) {
                 const tag = ae.tagName ? ae.tagName.toLowerCase() : '';
                 if (tag === 'input' || tag === 'textarea' || ae.isContentEditable) return;
             }
-            // Nie przechwytuj, gdy otwarty jest jakikolwiek modal
             if (document.querySelector('.modal.open')) return;
             if (e.key === 'ArrowRight') { e.preventDefault(); nextSlide(); }
             else if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
@@ -1119,8 +1760,36 @@
             }
         ];
 
+        // ---------- Inicjalizacja ----------
         checkAdminFromStorage();
         updateAdminIndicator();
+
+        if (localStorage.getItem('movieclub_anime') === 'true') {
+            applyAnimeMode(true);
+            const unlockMusic = () => {
+                playAnimeMusic();
+                document.removeEventListener('click', unlockMusic);
+                document.removeEventListener('touchstart', unlockMusic);
+            };
+            document.addEventListener('click', unlockMusic);
+            document.addEventListener('touchstart', unlockMusic);
+        } else {
+            applyAnimeMode(false);
+        }
+
+        let resizeTimer = null;
+        window.addEventListener('resize', () => {
+            if (!animeMode) return;
+            if (resizeTimer) clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                const wasGrave = document.body.classList.contains('grave-mode');
+                clearLeaves();
+                clearGraveParticles();
+                if (wasGrave) spawnGraveParticles();
+                else spawnLeaves();
+            }, 400);
+        });
+
         startListener();
     })();
 </script>
