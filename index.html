@@ -53,7 +53,11 @@
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none !important;
             -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale; }
-        html { background: var(--bg-base); color-scheme: dark; touch-action: manipulation; }
+        html {
+            background: var(--bg-base);
+            color-scheme: dark;
+            touch-action: pan-y;
+        }
         body {
             background: var(--bg-base);
             background-image: radial-gradient(ellipse at 50% 0%, rgba(201, 168, 76, 0.04) 0%, transparent 55%),
@@ -66,7 +70,7 @@
             display: flex; flex-direction: column; align-items: center;
             padding: env(safe-area-inset-top) 0 0 0;
             letter-spacing: -0.01em;
-            touch-action: manipulation;
+            touch-action: pan-y;
             position: relative; margin: 0;
             transition: background-color 0.6s ease, background-image 0.6s ease, color 0.6s ease;
         }
@@ -80,7 +84,7 @@
             position: fixed;
             left: 0;
             right: 0;
-            height: 1px;
+            height: 2px;
             pointer-events: none;
             z-index: 9999;
             background-color: #08080b;
@@ -874,6 +878,16 @@
 
 <script>
     (function() {
+        // ---- Blokada pinch-zoom w Safari iOS ----
+        // Safari-specific gesture events – preventDefault na nich wyłącza pinch-zoom.
+        ['gesturestart', 'gesturechange', 'gestureend'].forEach(function(evt) {
+            document.addEventListener(evt, function(e) { e.preventDefault(); }, { passive: false });
+        });
+        // Zapasowo – blokuj touchmove z więcej niż jednym palcem.
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches && e.touches.length > 1) e.preventDefault();
+        }, { passive: false });
+
         function getSessionToken() { let t = sessionStorage.getItem('reviewSessionToken'); if (!t) { t = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2,8); sessionStorage.setItem('reviewSessionToken', t); } return t; }
         function getDynamicAdminPassword() { const n = new Date(); return `admin${String(n.getDate()).padStart(2,'0')}${String(n.getMonth()+1).padStart(2,'0')}`; }
         firebase.initializeApp({ apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE", authDomain: "movie-club-f8ceb.firebaseapp.com", projectId: "movie-club-f8ceb", storageBucket: "movie-club-f8ceb.firebasestorage.app", messagingSenderId: "17251318633", appId: "1:17251318633:web:5080a0bc0243e1a91d1bf8" });
@@ -1404,26 +1418,39 @@
 
         // ---- Aktualizacja koloru paska przeglądarki (Safari + Chrome) ----
         function updateThemeColor() {
-            const meta = document.querySelector('meta[name="theme-color"]');
             const isLight = animeMode && !document.body.classList.contains('grave-mode');
             const color = isLight ? '#e8e0c8' : '#08080b';
 
-            // 1. Klasyczny meta tag (Chrome, Android)
-            if (meta) meta.setAttribute('content', color);
+            // 1. Meta theme-color
+            let meta = document.querySelector('meta[name="theme-color"]');
+            if (!meta) {
+                meta = document.createElement('meta');
+                meta.name = 'theme-color';
+                document.head.appendChild(meta);
+            }
+            meta.setAttribute('content', color);
 
-            // 2. Kolor tła body – Safari 26 to odczytuje
+            // 2. Meta color-scheme
+            let metaCS = document.querySelector('meta[name="color-scheme"]');
+            if (metaCS) metaCS.setAttribute('content', isLight ? 'light' : 'dark');
+
+            // 3. Tło elementu <html> – Safari czasem próbkuje właśnie to
+            document.documentElement.style.backgroundColor = color;
+
+            // 4. Tło elementu <body>
             document.body.style.backgroundColor = color;
 
-            // 3. Niewidzialny pasek na samej górze – wskaźnik dla Safari (górny toolbar)
-            const topEl = document.getElementById('ios-theme-color');
-            if (topEl) topEl.style.backgroundColor = color;
+            // 5. color-scheme na <html> (kontroluje pasek w wielu wersjach Safari)
+            document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
 
-            // 4. Niewidzialny pasek na samym dole – wskaźnik dla Safari (dolny toolbar)
+            // 6. Niewidzialne paski pomocnicze (2px na górze i na dole)
+            const topEl = document.getElementById('ios-theme-color');
             const bottomEl = document.getElementById('ios-theme-color-bottom');
+            if (topEl) topEl.style.backgroundColor = color;
             if (bottomEl) bottomEl.style.backgroundColor = color;
 
-            // 5. color-scheme dla kontrolek / scrollbarów
-            document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
+            // Wymuś reflow – niektóre wersje Safari leniwie aktualizują pasek.
+            void document.documentElement.offsetHeight;
         }
 
         function updateEffects() {
