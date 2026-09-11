@@ -164,7 +164,30 @@
         .ranking-item:hover::before { filter: blur(2px); opacity: 0.32; transform: scale(1.05); }
         .ranking-item:hover { border-color: var(--border-gold); transform: translateX(4px); box-shadow: var(--shadow-md), 0 0 20px rgba(201,168,76,0.1); }
         .ranking-title { font-weight: 600; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem; z-index: 1; position: relative; }
-        .ranking-rating { color: var(--gold); font-weight: 700; background: rgba(201,168,76,0.1); padding: 0.3rem 0.7rem; border-radius: 20px; z-index: 1; position: relative; }
+        .ranking-rating { color: var(--gold); font-weight: 700; background: rgba(201,168,76,0.1); padding: 0.3rem 0.7rem; border-radius: 20px; z-index: 1; position: relative; display: inline-flex; align-items: center; gap: 0.4rem; }
+
+        /* Nowy film – badge */
+        .new-badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            color: var(--text-inverse); font-size: 0.58rem; font-weight: 800;
+            padding: 0.08rem 0.4rem; border-radius: 10px; letter-spacing: 0.06em;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px var(--gold-glow);
+            vertical-align: middle;
+            margin-right: 0.4rem;
+        }
+        /* Kropka "niezaakceptowane oceny" */
+        .unapproved-dot {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            background: var(--gold); box-shadow: 0 0 8px var(--gold-glow), 0 0 0 1px rgba(0,0,0,0.4) inset;
+            vertical-align: middle;
+            animation: pulseDot 1.8s ease-in-out infinite;
+        }
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 8px var(--gold-glow); }
+            50% { opacity: 0.75; transform: scale(1.25); box-shadow: 0 0 14px var(--gold-glow); }
+        }
 
         /* Carousel */
         .carousel-wrapper { width: 100%; height: 100%; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; padding: 0 20px; }
@@ -318,6 +341,11 @@
         let touchStartY = 0;
         window.currentEditMovieId = null;
 
+        // ----- KONFIGURACJA ŚREDNIEJ WAŻONEJ -----
+        const RATING_PRIOR = 3.0;
+        const RATING_PRIOR_WEIGHT = 1.5;
+        const RANKING_THRESHOLD = 3;
+
         // ----- NOWE ZMIENNE DO OCHRONY FORMULARZA -----
         let pendingSnapshotRebuild = false;
         let pendingAuthor = '';
@@ -337,10 +365,55 @@
         function isAdminAction() { if(isAdmin) return true; showToast("Wymagany tryb admina.", 'warning'); return false; }
         function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
         function renderStars(r) { let h='<span class="stars">'; for(let i=1;i<=5;i++) h+=`<span class="star ${i<=r?'star-filled':''}" style="color:${i<=r?'var(--gold)':'#3a3a44'}">&#9733;</span>`; return h+'</span>'; }
-        function avgWeighted(m) { let t=0,w=0; m.reviews.forEach(r=>{ if(r.approved){ let we=r.verified?2:1; t+=r.stars*we; w+=we; } }); return w===0?'-':(t/w).toFixed(1); }
+        function avgWeighted(m) {
+            let t = 0, w = 0;
+            m.reviews.forEach(r => {
+                if (r.approved) {
+                    const we = r.verified ? 2 : 1;
+                    t += r.stars * we;
+                    w += we;
+                }
+            });
+            if (w === 0) return '-';
+            const raw = t / w;
+            const adjusted = (w * raw + RATING_PRIOR_WEIGHT * RATING_PRIOR) / (w + RATING_PRIOR_WEIGHT);
+            return adjusted.toFixed(1);
+        }
         function countApprovedReviews(m) { return m.reviews.filter(r=>r.approved).length; }
         function parseDate(str) { let p=str.split('.'); return new Date(p[2],p[1]-1,p[0]); }
         function getNextMovie() { let today=new Date(); today.setHours(0,0,0,0); let future=movies.filter(m=>parseDate(m.date)>=today); if(future.length) return future.sort((a,b)=>parseDate(a.date)-parseDate(b.date))[0]; return movies.length?movies.reduce((a,b)=>parseDate(a.date)-parseDate(b.date)>0?a:b):null; }
+
+        // ----- RANKING – wspólna kolejność dla home i karuzeli -----
+        function getRankedMovies() {
+            const high = movies.filter(m => countApprovedReviews(m) >= RANKING_THRESHOLD);
+            const low = movies.filter(m => countApprovedReviews(m) < RANKING_THRESHOLD);
+            high.sort((a,b) => parseFloat(avgWeighted(b)) - parseFloat(avgWeighted(a)));
+            low.sort((a,b) => parseFloat(avgWeighted(b)) - parseFloat(avgWeighted(a)));
+            return [...high, ...low];
+        }
+
+        // ----- Data dodania filmu + badge + kropka -----
+        function getMovieAddedTime(m) {
+            if (!m) return null;
+            if (m.createdAt) {
+                return typeof m.createdAt === 'number' ? m.createdAt : new Date(m.createdAt).getTime();
+            }
+            if (m.id && typeof m.id === 'string' && m.id.startsWith('movie_')) {
+                const ts = parseInt(m.id.split('_')[1], 10);
+                if (!isNaN(ts)) return ts;
+            }
+            return null;
+        }
+        const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+        function isNewMovie(m) {
+            const t = getMovieAddedTime(m);
+            if (!t) return false;
+            return (Date.now() - t) < ONE_WEEK_MS;
+        }
+        function hasUnapprovedReviews(m) {
+            return Array.isArray(m.reviews) && m.reviews.some(r => !r.approved);
+        }
+
         const SVG_ICONS = {
             approve: '<svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>',
             verify: '<svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z"/></svg>',
@@ -468,12 +541,14 @@
             });
         }
 
+        // ---- KARUZELA – iteruje po kolejności rankingu ----
         function buildCarousel(idx) {
             const c = document.getElementById('mainContent');
             c.style.overflow = 'visible';
             c.innerHTML = `<div class="carousel-wrapper"><div class="carousel-viewport" id="carouselViewport"></div><button class="carousel-arrow arrow-left" id="carouselPrevBtn">&lsaquo;</button><button class="carousel-arrow arrow-right" id="carouselNextBtn">&rsaquo;</button></div>`;
             const viewport = document.getElementById('carouselViewport');
-            movies.forEach((m,i)=>{
+            const ranked = getRankedMovies();
+            ranked.forEach((m,i)=>{
                 const d = document.createElement('div');
                 d.innerHTML = generateMovieSlide(m);
                 const slide = d.firstChild;
@@ -482,7 +557,7 @@
             });
             currentSlideIndex = idx;
             currentMovieIndex = idx;
-            setGlobalBackground(movies[idx]?.poster);
+            setGlobalBackground(ranked[idx]?.poster);
             attachDelegatedEvents();
             document.getElementById('carouselPrevBtn').onclick = prevSlide;
             document.getElementById('carouselNextBtn').onclick = nextSlide;
@@ -504,8 +579,9 @@
         }
 
         function goToSlide(i) {
-            if(i < 0) i = movies.length - 1;
-            if(i >= movies.length) i = 0;
+            const ranked = getRankedMovies();
+            if(i < 0) i = ranked.length - 1;
+            if(i >= ranked.length) i = 0;
             if(i === currentSlideIndex) return;
             const viewport = document.getElementById('carouselViewport');
             if(!viewport) return;
@@ -517,7 +593,7 @@
             }
             currentSlideIndex = i;
             currentMovieIndex = i;
-            setGlobalBackground(movies[i]?.poster);
+            setGlobalBackground(ranked[i]?.poster);
             attachDelegatedEvents();
         }
 
@@ -531,7 +607,6 @@
             setTimeout(() => {
                 buildCarousel(currentMovieIndex);
                 c.classList.remove('view-fade-out');
-                // Animacja wejścia karuzeli
                 const wrapper = document.querySelector('.carousel-wrapper');
                 if (wrapper) {
                     wrapper.classList.add('carousel-enter');
@@ -562,26 +637,27 @@
             c.innerHTML = `<div class="home-container"><div class="next-movie-card" id="nextMovieCard">${posterHtml}<h2 style="color:var(--gold);font-size:0.7rem;text-transform:uppercase;">Najbliższy seans</h2><div style="font-size:1.3rem;font-weight:700;">${escapeHtml(next?.title||'Brak')}</div><div style="font-size:0.7rem;color:#aaa;">${escapeHtml(next?.date||'')}</div></div><div class="ranking-section"><div class="ranking-list" id="rankingList"></div></div></div>`;
             const rankingDiv = document.getElementById('rankingList');
             if(rankingDiv) {
-                const threshold = 3;
-                const high = movies.filter(m => countApprovedReviews(m) >= threshold);
-                const low = movies.filter(m => countApprovedReviews(m) < threshold);
-                high.sort((a,b) => parseFloat(avgWeighted(b)) - parseFloat(avgWeighted(a)));
-                low.sort((a,b) => parseFloat(avgWeighted(b)) - parseFloat(avgWeighted(a)));
-                const all = [...high, ...low];
+                const all = getRankedMovies();
                 if(all.length === 0) rankingDiv.innerHTML = '<div class="empty-state"><p>Brak filmów w rankingu.</p></div>';
                 else rankingDiv.innerHTML = all.map((m,idx) => {
                     const rating = avgWeighted(m);
-                    const enough = countApprovedReviews(m) >= threshold;
+                    const enough = countApprovedReviews(m) >= RANKING_THRESHOLD;
+                    const rawCount = countApprovedReviews(m);
                     const ratingTxt = enough ? (rating !== '-' ? `${rating} ★` : '- ★') : '-';
                     const badge = !enough ? '<span style="font-size:0.7rem;color:#888;">(czeka na więcej ocen)</span>' : '';
+                    const newBadge = isNewMovie(m) ? '<span class="new-badge" title="Dodany w ostatnim tygodniu">Nowy</span>' : '';
+                    const pendingDot = hasUnapprovedReviews(m) ? '<span class="unapproved-dot" title="Oczekuje na akceptację ocen"></span>' : '';
+                    const ratingTitle = enough
+                        ? `Średnia ważona: ${rating} (z ${rawCount} zatwierdzonych ocen)`
+                        : 'Za mało ocen do wyświetlenia średniej';
                     const posterStyle = m.poster ? `background-image:url('${escapeHtml(m.poster)}');background-size:cover;background-position:center;` : ' ';
-                    return `<div class="ranking-item" data-idx="${movies.indexOf(m)}" style="${posterStyle}; animation-delay: ${idx * 0.06}s;"><span class="ranking-title">${idx+1}. ${escapeHtml(m.title)}${badge}</span><span class="ranking-rating">${ratingTxt}</span></div>`;
+                    return `<div class="ranking-item" data-idx="${idx}" style="${posterStyle}; animation-delay: ${idx * 0.06}s;"><span class="ranking-title">${idx+1}. ${escapeHtml(m.title)}${pendingDot}${badge}</span><span class="ranking-rating" title="${ratingTitle}">${newBadge}${ratingTxt}</span></div>`;
                 }).join('');
             }
             document.querySelectorAll('.ranking-item').forEach(el => {
                 el.onclick = () => {
                     const idx = parseInt(el.dataset.idx);
-                    if(!isNaN(idx) && movies[idx]) {
+                    if(!isNaN(idx) && getRankedMovies()[idx]) {
                         currentMovieIndex = idx;
                         switchToMovie();
                     }
@@ -590,7 +666,8 @@
             const nextCard = document.getElementById('nextMovieCard');
             if (nextCard && next) {
                 nextCard.onclick = () => {
-                    const i = movies.findIndex(m => m.id === next.id);
+                    const ranked = getRankedMovies();
+                    const i = ranked.findIndex(m => m.id === next.id);
                     if (i !== -1) {
                         currentMovieIndex = i;
                         switchToMovie();
@@ -662,7 +739,7 @@
                 e.stopPropagation();
                 if(!isAdmin) return;
                 const idx = parseInt(b.dataset.idx);
-                const movie = movies[currentSlideIndex];
+                const movie = getRankedMovies()[currentSlideIndex];
                 if(movie?.reviews[idx]) {
                     movie.reviews[idx].approved = true;
                     await db.collection("movies").doc(movie.id).update({reviews: movie.reviews});
@@ -672,7 +749,7 @@
                 e.stopPropagation();
                 if(!isAdmin) return;
                 const idx = parseInt(b.dataset.idx);
-                const movie = movies[currentSlideIndex];
+                const movie = getRankedMovies()[currentSlideIndex];
                 if(movie?.reviews[idx]) {
                     movie.reviews[idx].verified = true;
                     await db.collection("movies").doc(movie.id).update({reviews: movie.reviews});
@@ -682,7 +759,7 @@
                 e.stopPropagation();
                 if(!isAdmin) return;
                 const idx = parseInt(b.dataset.idx);
-                const movie = movies[currentSlideIndex];
+                const movie = getRankedMovies()[currentSlideIndex];
                 if(movie?.reviews[idx]) {
                     movie.reviews[idx].spoiler = !movie.reviews[idx].spoiler;
                     await db.collection("movies").doc(movie.id).update({reviews: movie.reviews});
@@ -700,7 +777,7 @@
                 e.stopPropagation();
                 if(!isAdmin) return;
                 const idx = parseInt(b.dataset.idx);
-                const movie = movies[currentSlideIndex];
+                const movie = getRankedMovies()[currentSlideIndex];
                 if(movie?.reviews[idx] && confirm("Usunąć recenzję?")) {
                     movie.reviews.splice(idx, 1);
                     await db.collection("movies").doc(movie.id).update({reviews: movie.reviews});
@@ -774,7 +851,6 @@
                 for(const m of defaultMoviesData) await db.collection("movies").doc(m.id).set(m);
         }
 
-        // ----- POPRAWIONY showLoading Z TIMEOUTEM -----
         function showLoading(s) {
             const ld = document.querySelector('.loading-indicator');
             if (!ld) return;
@@ -793,54 +869,50 @@
             }
         }
 
-        // ----- POPRAWIONY startListener (oddzielenie seed od listenera) -----
+        // ----- startListener – zachowuje obecny film po ID (odporny na zmianę kolejności) -----
         function startListener(attempt = 0) {
             if (unsubscribeMovies) unsubscribeMovies();
             showLoading(true);
             if (retryTimeout) clearTimeout(retryTimeout);
 
-            // Najpierw sprawdź, czy baza jest pusta – jeśli tak, zaseeduj
             db.collection("movies").get().then(snap => {
                 if (snap.empty) {
                     return seedDefault();
                 }
             }).then(() => {
-                // Dopiero teraz podepnij nasłuch na żywo
                 unsubscribeMovies = db.collection("movies").onSnapshot(snap => {
                     if (retryTimeout) { clearTimeout(retryTimeout); retryTimeout = null; }
-                    
-                    // PRZED przebudową zapamiętaj stan formularza (jeśli jesteśmy w widoku filmu)
-                    if (viewMode === 'movie') {
+
+                    // PRZED aktualizacją zapamiętaj ID obecnie oglądanego filmu (po rankingu)
+                    let oldMovieId = null;
+                    if (viewMode === 'movie' && movies.length > 0) {
+                        const rankedOld = getRankedMovies();
+                        oldMovieId = rankedOld[currentMovieIndex]?.id || null;
                         captureReviewFormState();
                     }
-                    
+
                     movies = [];
                     snap.forEach(d => movies.push(d.data()));
-                    
-                    // Opcjonalny debounce – odkomentuj jeśli chcesz uniknąć migotania przy serii snapshotów
-                    // if (debounceRebuildTimer) clearTimeout(debounceRebuildTimer);
-                    // debounceRebuildTimer = setTimeout(() => {
-                        if(movies.length === 0) {
-                            if(viewMode === 'home') renderHome();
-                            else switchToHome();
-                        } else {
-                            if(viewMode === 'home') renderHome();
-                            else {
-                                const oldId = movies[currentMovieIndex]?.id;
-                                let newIdx = oldId ? movies.findIndex(m => m.id === oldId) : -1;
-                                if(newIdx < 0) newIdx = 0;
-                                currentMovieIndex = newIdx;
-                                buildCarousel(currentMovieIndex);
-                            }
+
+                    if(movies.length === 0) {
+                        if(viewMode === 'home') renderHome();
+                        else switchToHome();
+                    } else {
+                        if(viewMode === 'home') renderHome();
+                        else {
+                            const ranked = getRankedMovies();
+                            let newIdx = oldMovieId ? ranked.findIndex(m => m.id === oldMovieId) : -1;
+                            if(newIdx < 0) newIdx = 0;
+                            currentMovieIndex = newIdx;
+                            buildCarousel(currentMovieIndex);
                         }
-                        
-                        // PO przebudowie przywróć stan formularza
-                        if (viewMode === 'movie') {
-                            setTimeout(restoreReviewFormState, 50);
-                        }
-                        
-                        showLoading(false);
-                    // }, 300); // koniec debounce
+                    }
+
+                    if (viewMode === 'movie') {
+                        setTimeout(restoreReviewFormState, 50);
+                    }
+
+                    showLoading(false);
                 }, err => {
                     showToast("Błąd odczytu – ponawiam...", 'warning');
                     showLoading(false);
@@ -902,12 +974,10 @@
                 const data = JSON.parse(text);
                 if(!Array.isArray(data)) throw new Error('Nieprawidłowy format');
                 if(!confirm(`Zaimportować ${data.length} filmów? Obecne dane zostaną nadpisane.`)) return;
-                // Usuń wszystkie istniejące filmy
                 const existingSnap = await db.collection("movies").get();
                 const batch = db.batch();
                 existingSnap.forEach(doc => batch.delete(doc.ref));
                 await batch.commit();
-                // Dodaj nowe
                 for(const movie of data) {
                     if(movie.id && movie.title) {
                         await db.collection("movies").doc(movie.id).set({
@@ -917,7 +987,8 @@
                             poster: movie.poster || '',
                             link: movie.link || '',
                             sentimentalValue: movie.sentimentalValue || '',
-                            reviews: movie.reviews || []
+                            reviews: movie.reviews || [],
+                            ...(movie.createdAt ? { createdAt: movie.createdAt } : {})
                         });
                     }
                 }
@@ -945,7 +1016,8 @@
             const dateFormatted = dateVal ? dateVal.split('-').reverse().join('.') : '';
             const id = 'movie_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
             await db.collection("movies").doc(id).set({
-                id, title, date: dateFormatted, poster, link, sentimentalValue: sentimental, reviews: []
+                id, title, date: dateFormatted, poster, link, sentimentalValue: sentimental, reviews: [],
+                createdAt: Date.now()
             });
             document.getElementById('newTitle').value = '';
             document.getElementById('newDate').value = '';
@@ -1019,6 +1091,21 @@
 
         window.onclick = e => { if(e.target.classList.contains('modal') && e.target.classList.contains('open')) closeModal(e.target.id); };
         document.getElementById('adminIndicator').onclick = (e) => { e.stopPropagation(); if (isAdmin) { setAdminMode(false); showToast("Tryb admina wyłączony."); if (viewMode === 'movie') renderMovie(); else renderHome(); } };
+
+        // ---------- Nawigacja klawiaturą (strzałki ←/→) ----------
+        document.addEventListener('keydown', (e) => {
+            if (viewMode !== 'movie') return;
+            // Nie przechwytuj, gdy użytkownik pisze w input/textarea
+            const ae = document.activeElement;
+            if (ae) {
+                const tag = ae.tagName ? ae.tagName.toLowerCase() : '';
+                if (tag === 'input' || tag === 'textarea' || ae.isContentEditable) return;
+            }
+            // Nie przechwytuj, gdy otwarty jest jakikolwiek modal
+            if (document.querySelector('.modal.open')) return;
+            if (e.key === 'ArrowRight') { e.preventDefault(); nextSlide(); }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+        });
 
         const defaultMoviesData = [
             {
