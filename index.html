@@ -645,7 +645,7 @@
                     const rawCount = countApprovedReviews(m);
                     const ratingTxt = enough ? (rating !== '-' ? `${rating} ★` : '- ★') : '-';
                     const badge = !enough ? '<span style="font-size:0.7rem;color:#888;">(czeka na więcej ocen)</span>' : '';
-                    const newBadge = isNewMovie(m) ? '<span class="new-badge" title="Dodany w ostatnim tygodniu">Nowy</span>' : '';
+                    const newBadge = isNewMovie(m) ? '<span class="new-badge" title="Dodany w ostatnim tygodniu">N</span>' : '';
                     const pendingDot = hasUnapprovedReviews(m) ? '<span class="unapproved-dot" title="Oczekuje na akceptację ocen"></span>' : '';
                     const ratingTitle = enough
                         ? `Średnia ważona: ${rating} (z ${rawCount} zatwierdzonych ocen)`
