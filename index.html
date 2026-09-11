@@ -73,6 +73,25 @@
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none; }
         :focus-visible { outline: 1.5px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+
+        /* Wskaźnik koloru dla Safari 26 – niewidzialny pasek na samej górze */
+        #ios-theme-color {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            pointer-events: none;
+            z-index: 9999;
+            background-color: #08080b;
+        }
+        body.anime-mode:not(.grave-mode) #ios-theme-color {
+            background-color: #e8e0c8;
+        }
+        body.anime-mode.grave-mode #ios-theme-color {
+            background-color: #08080b;
+        }
+
         .global-bg {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100%;
             background-size: cover; background-position: center;
@@ -479,7 +498,6 @@
                 linear-gradient(180deg, #a8c8dc 0%, #c8dcc8 28%, #e8e0c8 62%, #f0e6c8 100%);
         }
 
-        /* color-scheme dla trybu Ghibli (jasny) i Grobowca (ciemny) */
         body.anime-mode:not(.grave-mode) { color-scheme: light; }
         body.anime-mode.grave-mode { color-scheme: dark; }
 
@@ -811,6 +829,9 @@
     </style>
 </head>
 <body>
+<!-- Wskaźnik koloru dla Safari 26 – niewidzialny pasek na samej górze -->
+<div id="ios-theme-color" aria-hidden="true"></div>
+
 <div class="global-bg" id="globalBg"></div>
 <div class="anime-decor" id="animeDecor" aria-hidden="true"></div>
 <div class="anime-grave-effects" id="animeGraveEffects" aria-hidden="true"></div>
@@ -861,12 +882,10 @@
         let touchStartY = 0;
         window.currentEditMovieId = null;
 
-        // ---- Śledzimy ID aktualnie oglądanego filmu (niezależnie od indeksu) ----
         let activeMovieId = null;
         let justSubmittedReviewId = null;
         let justSubmittedReviewTimestamp = 0;
 
-        // ----- TRYB GHIBLI -----
         let animeMode = false;
         let scWidget = null;
         let scWidgetReady = false;
@@ -1378,13 +1397,23 @@
             if (frontContainer) frontContainer.innerHTML = '';
         }
 
-        // ---- Aktualizacja koloru paska przeglądarki + color-scheme ----
+        // ---- Aktualizacja koloru paska przeglądarki (Safari + Chrome) ----
         function updateThemeColor() {
             const meta = document.querySelector('meta[name="theme-color"]');
             const isLight = animeMode && !document.body.classList.contains('grave-mode');
-            if (meta) {
-                meta.setAttribute('content', isLight ? '#e8e0c8' : '#08080b');
-            }
+            const color = isLight ? '#e8e0c8' : '#08080b';
+
+            // 1. Klasyczny meta tag (Chrome, Android)
+            if (meta) meta.setAttribute('content', color);
+
+            // 2. Kolor tła body – Safari 26 to odczytuje
+            document.body.style.backgroundColor = color;
+
+            // 3. Niewidzialny pasek na samej górze – dodatkowy wskaźnik dla Safari
+            const fixedEl = document.getElementById('ios-theme-color');
+            if (fixedEl) fixedEl.style.backgroundColor = color;
+
+            // 4. color-scheme dla kontrolek / scrollbarów
             document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
         }
 
