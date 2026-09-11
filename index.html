@@ -48,7 +48,6 @@
             --font-md: 0.88rem;
             --font-lg: 1.05rem;
             --font-xl: 1.3rem;
-            /* Wskaźnik koloru paska Safari – domyślnie ciemny */
             --ios-theme-bg: #08080b;
         }
 
@@ -80,21 +79,20 @@
         *::-webkit-scrollbar { display: none; }
         :focus-visible { outline: 1.5px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
 
-        /* ---- Wskaźniki koloru dla Safari 26 – kolor na pseudoelemencie ::before ---- */
-        #ios-theme-color,
-        #ios-theme-color-bottom {
+        /* Wskaźnik koloru dla Safari 26 – TYLKO górny pasek.
+           Dolny pasek jest pozostawiony sam sobie – Safari próbkuje kolor
+           z tła strony (rozmyty plakat), które i tak zmienia się z motywem. */
+        #ios-theme-color {
             position: fixed;
+            top: 0;
             left: 0;
             right: 0;
             height: 2px;
             pointer-events: none;
             z-index: 9999;
-            background: transparent; /* brak bezpośredniego tła – Safari próbkuje ::before */
+            background: transparent;
         }
-        #ios-theme-color { top: 0; }
-        #ios-theme-color-bottom { bottom: 0; }
-        #ios-theme-color::before,
-        #ios-theme-color-bottom::before {
+        #ios-theme-color::before {
             content: '';
             position: absolute;
             inset: 0;
@@ -840,9 +838,10 @@
     </style>
 </head>
 <body>
-<!-- Wskaźniki koloru dla Safari 26 – górny i dolny pasek (kolor przez ::before) -->
+<!-- Wskaźnik koloru dla Safari 26 – tylko górny pasek.
+     Dolny pasek celowo pozostawiony bez wskaźnika – Safari próbkuje
+     kolor z tła strony (rozmyty plakat), które zmienia się z motywem. -->
 <div id="ios-theme-color" aria-hidden="true"></div>
-<div id="ios-theme-color-bottom" aria-hidden="true"></div>
 
 <div class="global-bg" id="globalBg"></div>
 <div class="anime-decor" id="animeDecor" aria-hidden="true"></div>
@@ -881,7 +880,6 @@
 
 <script>
     (function() {
-        // ---- Blokada pinch-zoom w Safari iOS ----
         ['gesturestart', 'gesturechange', 'gestureend'].forEach(function(evt) {
             document.addEventListener(evt, function(e) { e.preventDefault(); }, { passive: false });
         });
@@ -1417,16 +1415,13 @@
             if (frontContainer) frontContainer.innerHTML = '';
         }
 
-        // ---- Aktualizacja koloru paska przeglądarki (Safari 26 + Chrome + Android) ----
-        // Kolor pasków jest teraz przekazywany przez zmienną CSS --ios-theme-bg,
-        // którą odczytują pseudoelementy ::before obu wskaźników. Dzięki temu
-        // Safari widzi "pusty" fixed element z tłem ustawionym przez pseudoelement
-        // i potrafi poprawnie próbkować kolor dla dolnego paska.
+        // ---- Aktualizacja koloru paska przeglądarki (Safari 26 + Chrome) ----
+        // Dolny pasek jest teraz pozostawiony bez własnego wskaźnika – Safari próbkuje
+        // kolor z tła strony (rozmyty plakat), które zmienia się razem z motywem.
         function updateThemeColor() {
             const isLight = animeMode && !document.body.classList.contains('grave-mode');
             const color = isLight ? '#e8e0c8' : '#08080b';
 
-            // 1. Meta theme-color – Chrome, Android, częściowo Safari
             let meta = document.querySelector('meta[name="theme-color"]');
             if (!meta) {
                 meta = document.createElement('meta');
@@ -1435,22 +1430,15 @@
             }
             meta.setAttribute('content', color);
 
-            // 2. Meta color-scheme
             let metaCS = document.querySelector('meta[name="color-scheme"]');
             if (metaCS) metaCS.setAttribute('content', isLight ? 'light' : 'dark');
 
-            // 3. Kolor tła <html> i <body> – dodatkowe wskazówki dla Safari
             document.documentElement.style.backgroundColor = color;
             document.body.style.backgroundColor = color;
-
-            // 4. color-scheme na <html>
             document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
 
-            // 5. KLUCZOWE: kolor obu pasków idzie przez zmienną CSS,
-            //    ustawioną na <html>, odczytywaną przez ::before.
             document.documentElement.style.setProperty('--ios-theme-bg', color);
 
-            // 6. Wymuś reflow, żeby Safari zauważył zmianę
             void document.documentElement.offsetHeight;
         }
 
