@@ -73,7 +73,7 @@
             height: 100vh; height: 100dvh; width: 100%;
             overflow: hidden;
             display: flex; flex-direction: column; align-items: center;
-            padding: env(safe-area-inset-top) 0 0 0;
+            padding: 0; /* WAŻNE: brak paddingu – nagłówek sam obsłuży safe area */
             letter-spacing: -0.01em;
             touch-action: pan-y;
             position: relative; margin: 0;
@@ -250,14 +250,21 @@
         .app-container {
             width: 100%; max-width: 960px; margin: 0 auto;
             display: flex; flex-direction: column; height: 100%; height: 100dvh;
-            padding: 1rem 1rem 0.8rem 1rem; overflow: hidden; gap: 0.8rem;
+            padding: 0 1rem 0.8rem 1rem; /* GÓRA: 0 – nagłówek idzie do samej góry ekranu */
+            overflow: hidden; gap: 0.8rem;
             position: relative; z-index: 1;
         }
         .club-header {
             display: flex; justify-content: space-between; align-items: center;
-            flex-shrink: 0; padding: 0.3rem 0.6rem;
-            background: var(--bg-surface); border-radius: var(--radius-lg);
-            border: 1px solid var(--border-default); box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
+            /* GÓRA: safe-area + 0.3rem, żeby zawartość była pod notchem */
+            padding: calc(0.3rem + env(safe-area-inset-top)) 0.6rem 0.3rem 0.6rem;
+            background: var(--bg-surface);
+            /* Zaokrąglamy TYLKO dolne rogi – górne są przy samej krawędzi ekranu */
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+            border: 1px solid var(--border-default);
+            border-top: none;
+            box-shadow: var(--shadow-sm);
             gap: 0.5rem; z-index: 20; position: relative;
             transition: background 0.5s ease, border-color 0.5s ease;
         }
@@ -414,7 +421,6 @@
         .carousel-arrow:hover { opacity: 1; color: var(--gold); border-color: var(--gold); }
         .arrow-left { left: -6px; } .arrow-right { right: -6px; }
 
-        /* Wskaźnik pozycji w karuzeli – "3 / 10 ‹ ›" */
         .carousel-position-hint {
             position: absolute;
             top: 12px;
@@ -590,6 +596,11 @@
             background-size: 200% 100%;
             letter-spacing: 0.08em;
         }
+        body.anime-mode .club-header {
+            background: rgba(255, 252, 240, 0.92);
+            border-color: rgba(139, 168, 139, 0.4);
+            border-top: none;
+        }
         body.anime-mode .icon-btn {
             background: rgba(252, 247, 232, 0.88);
             color: #5c6c5c;
@@ -759,6 +770,10 @@
         }
         body.anime-mode.grave-mode::after { display: none; }
 
+        body.anime-mode.grave-mode .club-header {
+            background: rgba(16, 16, 20, 0.92);
+            border-color: var(--border-default);
+        }
         body.anime-mode.grave-mode .club-header h1 {
             background: linear-gradient(135deg, #e8e8ed 0%, #e0c56e 40%, #c9a84c 100%);
             background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -879,8 +894,11 @@
         body.anime-mode.grave-mode .loading-indicator p { color: var(--text-primary); }
 
         @media (max-width: 600px) {
-            .app-container { padding: 0.5rem 0.5rem 0.4rem 0.5rem; gap: 0.5rem; }
-            .club-header { padding: 0.2rem 0.4rem; border-radius: var(--radius-md); }
+            .app-container { padding: 0 0.5rem 0.4rem 0.5rem; }
+            .club-header {
+                padding: calc(0.2rem + env(safe-area-inset-top)) 0.4rem 0.2rem 0.4rem;
+                border-radius: 0 0 var(--radius-md) var(--radius-md);
+            }
             .club-header h1 { font-size: var(--font-md); }
             .home-container { gap: 0.6rem; margin-top: 0.1rem; }
             .next-movie-card { padding: 0.9rem; }
@@ -925,9 +943,6 @@
         <h1 id="homeLogo">JLL MOVIE CLUB<span class="admin-indicator" id="adminIndicator" title="Kliknij, aby wyłączyć tryb admina"></span></h1>
         <div class="header-buttons">
             <button class="icon-btn anime-toggle-btn" id="animeToggleBtn" title="Tryb Ghibli – Studio Ghibli">愛</button>
-            <button class="icon-btn" id="fullscreenBtn" title="Pełny ekran">
-                <svg id="fullscreenIcon" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-            </button>
             <button class="icon-btn admin-only" id="dbManageBtn" title="Zarządzanie bazą">
                 <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
             </button>
@@ -1592,54 +1607,6 @@
             }
         }
 
-        // ---- PEŁNY EKRAN ----
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-        function isFullscreenActive() {
-            return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
-        }
-
-        function updateFullscreenIcon() {
-            const icon = document.getElementById('fullscreenIcon');
-            if (!icon) return;
-            if (isFullscreenActive()) {
-                icon.innerHTML = '<polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/>';
-            } else {
-                icon.innerHTML = '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>';
-            }
-        }
-
-        function toggleFullscreen() {
-            const el = document.documentElement;
-            if (isIOS && !isStandalone) {
-                showToast('📱 Dodaj stronę do ekranu głównego (Safari → Udostępnij → Dodaj do ekranu początkowego), aby uzyskać pełny ekran jak w aplikacji.');
-                return;
-            }
-            if (!isFullscreenActive()) {
-                if (el.requestFullscreen) {
-                    el.requestFullscreen().catch(() => showToast('Nie udało się wejść w pełny ekran.'));
-                } else if (el.webkitRequestFullscreen) {
-                    el.webkitRequestFullscreen();
-                } else if (el.mozRequestFullScreen) {
-                    el.mozRequestFullScreen();
-                } else if (el.msRequestFullscreen) {
-                    el.msRequestFullscreen();
-                } else {
-                    showToast('Pełny ekran niedostępny w tej przeglądarce.');
-                }
-            } else {
-                if (document.exitFullscreen) document.exitFullscreen();
-                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-                else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-                else if (document.msExitFullscreen) document.msExitFullscreen();
-            }
-        }
-
-        ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
-            document.addEventListener(evt, updateFullscreenIcon);
-        });
-
         const ghibliMoviesData = [
             { id: 'ghibli_totoro',   title: 'Mój sąsiad Totoro',            date: '16.04.1988', poster: 'https://placehold.co/400x600/8fa88e/fffbf0.png?text=Totoro',       link: '', sentimentalValue: 'Cudowny świat natury, dzieciństwa i leśnych duszków.', reviews: [], isGhibli: true, createdAt: 1700000000001 },
             { id: 'ghibli_kiki',     title: 'Podniebna poczta Kiki',         date: '29.07.1989', poster: 'https://placehold.co/400x600/a8c5d6/364836.png?text=Kiki',         link: '', sentimentalValue: 'Latająca miotła, morze i pierwsza samodzielność.',   reviews: [], isGhibli: true, createdAt: 1700000000002 },
@@ -1997,7 +1964,6 @@
         }
 
         document.getElementById('animeToggleBtn').onclick = toggleAnimeMode;
-        document.getElementById('fullscreenBtn').onclick = toggleFullscreen;
         document.getElementById('dbManageBtn').onclick = () => { if(!isAdmin) { isAdminAction(); return; } openModal('dbManageModal'); };
         document.getElementById('proposeHeaderBtn').onclick = () => { loadProposals(); openModal('proposeModal'); };
         document.getElementById('homeBtn').onclick = () => { if(viewMode !== 'home') switchToHome(); };
@@ -2119,7 +2085,6 @@
         updateAdminIndicator();
         applyAnimeMode(false);
         updateThemeColor();
-        updateFullscreenIcon();
 
         const unlockMusicOnce = () => {
             initSoundCloudWidget();
