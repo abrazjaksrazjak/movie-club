@@ -106,7 +106,9 @@
         /* iOS 26/27 GIST FIX: stały pasek 5px na dole viewportu.
            Safari 26 próbkuje kolor pasków z 4–5px nad dolną krawędzią.
            Ten element gwarantuje, że zawsze jest tam ten sam kolor –
-           niezależnie od scrolla i aktualnego slajdu. */
+           niezależnie od scrolla i aktualnego slajdu.
+           UWAGA: w trybie anime aura została przeniesiona na body::before,
+           żeby ten pasek nie był nadpisywany. */
         body::after {
             content: "";
             position: fixed;
@@ -684,7 +686,10 @@
         body.anime-mode .loading-indicator { background: rgba(255, 252, 240, 0.96); }
         body.anime-mode .loading-indicator p { color: #364836; }
 
-        body.anime-mode::after {
+        /* ========== ZMIANA 1/2: aura anime przeniesiona na ::before ==========
+           Dzięki temu body::after (pasek próbkujący 5px) nie jest nadpisywany
+           w trybie anime i Safari zawsze ma poprawny kolor do próbkowania. */
+        body.anime-mode::before {
             content: '';
             position: fixed;
             top: 0; left: 0; right: 0;
@@ -731,7 +736,10 @@
             filter: blur(3px) brightness(0.4) saturate(0.55);
             opacity: 1;
         }
-        body.anime-mode.grave-mode::after { display: none; }
+        /* ========== ZMIANA 2/2: ukrywamy aurę (::before) w trybie grobowca.
+           Dzięki temu body::after (pasek próbkujący) pozostaje widoczny
+           i Safari próbkuje ciemny kolor #08080b. ========== */
+        body.anime-mode.grave-mode::before { display: none; }
 
         body.anime-mode.grave-mode .club-header h1 {
             background: linear-gradient(135deg, #e8e8ed 0%, #e0c56e 40%, #c9a84c 100%);
