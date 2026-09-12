@@ -53,16 +53,12 @@
             --font-lg: 1.05rem;
             --font-xl: 1.3rem;
 
-            /* --- iOS / safe-area + realny widoczny viewport --- */
             --safe-top: env(safe-area-inset-top, 0px);
             --safe-right: env(safe-area-inset-right, 0px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             --safe-left: env(safe-area-inset-left, 0px);
-            --vvh: 100svh; /* nadpisywane przez JS (visualViewport) */
-            --vlh: 100lvh; /* iOS 26/27: „large viewport” – pełna wysokość pod paskami */
-
-            /* iOS 26/27 GIST FIX: kolor stałego paska 5px na dole –
-               nadpisywany przez JS, żeby Safari miało zawsze co próbkować. */
+            --vvh: 100svh;
+            --vlh: 100lvh;
             --safari-probe-color: #08080b;
         }
 
@@ -72,10 +68,9 @@
         html {
             background: var(--bg-base);
             color-scheme: dark;
-            /* iOS 26/27: blokada pinch-zoom – zostawiamy tylko pan */
             touch-action: pan-x pan-y;
             height: 100vh;
-            height: 100lvh;                 /* iOS 26/27: rozciągnięcie pod paski Safari */
+            height: 100lvh;
             overflow: hidden;
             overscroll-behavior: none;
             -webkit-text-size-adjust: 100%;
@@ -88,14 +83,14 @@
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             color: var(--text-primary);
             height: 100vh;
-            height: 100lvh;                 /* iOS 26/27: to samo – pod paski */
+            height: 100lvh;
             width: 100%;
             overflow: hidden;
             overscroll-behavior: none;
             display: flex; flex-direction: column; align-items: center;
             padding: 0;
             letter-spacing: -0.01em;
-            touch-action: pan-x pan-y;      /* iOS 26/27: blokada pinch-zoom */
+            touch-action: pan-x pan-y;
             position: relative; margin: 0;
             transition: background-color 0.6s ease, background-image 0.6s ease, color 0.6s ease;
         }
@@ -103,12 +98,10 @@
         *::-webkit-scrollbar { display: none; }
         :focus-visible { outline: 1.5px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
 
-        /* iOS 26/27 GIST FIX: stały pasek 5px na dole viewportu.
-           Safari 26 próbkuje kolor pasków z 4–5px nad dolną krawędzią.
-           Ten element gwarantuje, że zawsze jest tam ten sam kolor –
-           niezależnie od scrolla i aktualnego slajdu. */
-        body::after {
-            content: "";
+        /* FIX GRAVE: pasek-próbka jako OSOBNY element (nie ::after) – dzięki temu
+           nie jest kasowany przez `body.anime-mode.grave-mode::after { display: none }`,
+           który wcześniej psuł ciemny pasek przy Grobowcu świetlików. */
+        .safari-probe {
             position: fixed;
             left: 0;
             bottom: 0;
@@ -124,7 +117,7 @@
             position: fixed; top: 0; left: 0; right: 0;
             width: 100%;
             height: 100vh;
-            height: 100lvh;                 /* iOS 26/27: tło pod paskami – Safari próbkuje plakat */
+            height: 100lvh;
             background-size: cover; background-position: center;
             filter: blur(28px) brightness(0.22) saturate(0.65);
             z-index: 0; pointer-events: none; transition: background-image 0.5s ease, filter 0.9s ease, opacity 0.5s ease;
@@ -366,13 +359,30 @@
             font-weight: 400;
         }
 
-        .home-container { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 0.8rem; padding: 0 0.2rem; margin-top: 0.1rem; }
+        .home-container { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 0.8rem; padding: 0 0.2rem; margin-top: 0.1rem; scroll-behavior: smooth; }
+
+        /* SCROLL ANIM: reveal on scroll – karta wjeżdża z dołu i fade-in */
+        .reveal {
+            opacity: 0;
+            transform: translate3d(0, 28px, 0) scale(0.985);
+            transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+                        transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: opacity, transform;
+        }
+        .reveal.is-visible {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1);
+        }
+        /* SCROLL ANIM: stagger przez zmienną --reveal-delay */
+        .reveal { transition-delay: var(--reveal-delay, 0s); }
+
         .next-movie-card {
             background: rgba(22,22,28,0.8); backdrop-filter: blur(16px);
             border-radius: var(--radius-xl); padding: 1.2rem; text-align: center; cursor: pointer;
             transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s, background 0.5s ease;
             border: 1px solid var(--border-default); z-index: 5;
             box-shadow: var(--shadow-md); overflow: hidden; --x: 50%; --y: 50%;
+            position: relative;
         }
         .next-movie-card::after {
             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -388,13 +398,8 @@
             padding: 0.9rem 1.2rem; display: flex; justify-content: space-between; align-items: center;
             cursor: pointer; border: 1px solid var(--border-default); overflow: hidden;
             min-height: 72px; background-size: cover; background-position: center;
-            animation: slideUp 0.3s ease-out both;
             will-change: transform, opacity;
             transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s, background 0.5s ease;
-        }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translate3d(0, 20px, 0); }
-            to   { opacity: 1; transform: translate3d(0, 0, 0); }
         }
         .ranking-item::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -408,6 +413,11 @@
         }
         .ranking-item:hover::before { filter: blur(2px); opacity: 0.32; transform: scale(1.05); }
         .ranking-item:hover { border-color: var(--border-gold); transform: translateX(4px); box-shadow: var(--shadow-md), 0 0 20px rgba(201,168,76,0.1); }
+        /* SCROLL ANIM: hover zachowuje transform z reveal */
+        .ranking-item.reveal { transform: translate3d(0, 28px, 0) scale(0.985); }
+        .ranking-item.reveal.is-visible { transform: translate3d(0, 0, 0) scale(1); }
+        .ranking-item.reveal.is-visible:hover { transform: translateX(4px); }
+
         .ranking-title { font-weight: 600; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem; z-index: 1; position: relative; }
         .ranking-rating { color: var(--gold); font-weight: 700; background: rgba(201,168,76,0.1); padding: 0.3rem 0.7rem; border-radius: 20px; z-index: 1; position: relative; display: inline-flex; align-items: center; gap: 0.4rem; }
 
@@ -878,7 +888,6 @@
             .empty-state p { font-size: 0.9rem; letter-spacing: 0.14em; }
             .toast { bottom: calc(var(--safe-bottom) + 1rem); }
 
-            /* iOS 26/27 FIX: mobile – wyłączamy kosztowne blury, żeby zlikwidować jank */
             .carousel-viewport {
                 backdrop-filter: none !important;
                 -webkit-backdrop-filter: none !important;
@@ -930,6 +939,11 @@
             .app-container { gap: 0.4rem; }
             .next-movie-card .poster { max-height: 140px; }
         }
+
+        /* SCROLL ANIM: brak animacji dla prefers-reduced-motion */
+        @media (prefers-reduced-motion: reduce) {
+            .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -938,6 +952,9 @@
 <div class="anime-grave-effects" id="animeGraveEffects" aria-hidden="true"></div>
 <div class="anime-sunflare" id="animeSunflare" aria-hidden="true"></div>
 <div class="anime-grave-effects-front" id="animeGraveEffectsFront" aria-hidden="true"></div>
+
+<!-- FIX GRAVE: pasek-próbka jako osobny element – nie koliduje z aura Ghibli -->
+<div class="safari-probe" aria-hidden="true"></div>
 
 <iframe id="sc-widget" width="0" height="0" scrolling="no" frameborder="no" allow="autoplay"
         style="position:absolute;left:-9999px;width:0;height:0;"
@@ -976,7 +993,6 @@
         const db = firebase.firestore();
         firebase.auth().signInAnonymously().catch(e => console.error("Auth error:", e));
 
-        // ===== iOS 26/27: blokada pinch-zoom i double-tap zoom =====
         ['gesturestart','gesturechange','gestureend'].forEach(ev =>
             document.addEventListener(ev, e => e.preventDefault(), { passive: false })
         );
@@ -1024,6 +1040,33 @@
         let pendingScrollTop = 0;
         let debounceRebuildTimer = null;
         let loadingTimeout = null;
+
+        // SCROLL ANIM: jeden globalny obserwator dla wszystkich .reveal
+        let revealObserver = null;
+        function setupRevealObserver() {
+            if (!('IntersectionObserver' in window)) {
+                document.querySelectorAll('.reveal').forEach(el => el.classList.add('is-visible'));
+                return;
+            }
+            if (revealObserver) revealObserver.disconnect();
+            revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.08,
+                rootMargin: '0px 0px -8% 0px'
+            });
+        }
+        function observeReveals() {
+            if (!revealObserver) setupRevealObserver();
+            document.querySelectorAll('.reveal:not(.is-visible)').forEach(el => {
+                revealObserver.observe(el);
+            });
+        }
 
         function preloadImage(url) { if (!url || preloadedImages[url]) return; preloadedImages[url] = new Promise((resolve) => { const img = new Image(); img.onload = () => { preloadedImages[url] = true; resolve(); }; img.onerror = () => { preloadedImages[url] = false; resolve(); }; img.src = url; }); }
         function showToast(m, type='') { const old = document.querySelector('.toast'); if (old) old.remove(); const t = document.createElement('div'); t.className = 'toast '+type; t.textContent = m; document.body.appendChild(t); requestAnimationFrame(()=> requestAnimationFrame(()=> t.classList.add('show'))); const hide = setTimeout(()=>{ t.classList.remove('show'); t.addEventListener('transitionend', ()=> t.remove(), {once:true}); setTimeout(()=>{ if(t.parentNode) t.remove(); }, 500); }, 2800); t._hideTimeout = hide; }
@@ -1281,7 +1324,6 @@
             document.getElementById('carouselPrevBtn').onclick = prevSlide;
             document.getElementById('carouselNextBtn').onclick = nextSlide;
             addSwipeSupport();
-            // iOS 26/27 GIST FIX: wymuś ponowne próbkowanie paska po zbudowaniu karuzeli
             resetSafariToolbarTint();
         }
 
@@ -1320,7 +1362,6 @@
             setGlobalBackground(ranked[i]?.poster);
             updateEffects();
             attachDelegatedEvents();
-            // iOS 26/27 GIST FIX: wymuś ponowne próbkowanie paska po zmianie slajdu
             resetSafariToolbarTint();
         }
 
@@ -1342,7 +1383,6 @@
                         wrapper.removeEventListener('animationend', handler);
                     }, { once: true });
                 }
-                // iOS 26/27 GIST FIX
                 resetSafariToolbarTint();
             }, 180);
         }
@@ -1355,7 +1395,6 @@
             setTimeout(() => {
                 renderHome();
                 c.classList.remove('view-fade-out');
-                // iOS 26/27 GIST FIX
                 resetSafariToolbarTint();
             }, 180);
         }
@@ -1380,7 +1419,8 @@
 
             const c = document.getElementById('mainContent');
             c.style.overflow = 'auto';
-            c.innerHTML = `<div class="home-container"><div class="next-movie-card" id="nextMovieCard">${posterHtml}<h2 style="color:var(--gold);font-size:0.7rem;text-transform:uppercase;">${animeMode?'Losowy film Ghibli':'Najbliższy seans'}</h2><div style="font-size:1.3rem;font-weight:700;">${escapeHtml(featured?.title||'Brak')}</div>${featuredDateHtml}</div><div class="ranking-section"><div class="ranking-list" id="rankingList"></div></div></div>`;
+            // SCROLL ANIM: dodajemy .reveal do featured karty
+            c.innerHTML = `<div class="home-container"><div class="next-movie-card reveal" id="nextMovieCard">${posterHtml}<h2 style="color:var(--gold);font-size:0.7rem;text-transform:uppercase;">${animeMode?'Losowy film Ghibli':'Najbliższy seans'}</h2><div style="font-size:1.3rem;font-weight:700;">${escapeHtml(featured?.title||'Brak')}</div>${featuredDateHtml}</div><div class="ranking-section"><div class="ranking-list" id="rankingList"></div></div></div>`;
             const rankingDiv = document.getElementById('rankingList');
             if(rankingDiv) {
                 const thr = getRankingThreshold();
@@ -1398,9 +1438,16 @@
                         ? `Średnia ważona: ${rating} (z ${approvedCount} zatwierdzonych ocen)`
                         : 'Za mało ocen do wyświetlenia średniej';
                     const posterStyle = m.poster ? `background-image:url('${escapeHtml(m.poster)}');background-size:cover;background-position:center;` : (animeMode ? 'background:linear-gradient(120deg, rgba(200,220,200,0.6), rgba(232,216,184,0.6));' : ' ');
-                    return `<div class="ranking-item" data-idx="${idx}" style="${posterStyle}"><span class="ranking-title">${idx+1}. ${escapeHtml(m.title)}${pendingDot}${badge}</span><span class="ranking-rating" title="${ratingTitle}">${newBadge}${ratingTxt}</span></div>`;
+                    // SCROLL ANIM: każdy ranking-item .reveal, stagger przez --reveal-delay (max 0.5s)
+                    const delay = Math.min(idx * 0.06, 0.5).toFixed(2);
+                    return `<div class="ranking-item reveal" data-idx="${idx}" style="${posterStyle}--reveal-delay:${delay}s;" data-reveal-delay="${delay}"><span class="ranking-title">${idx+1}. ${escapeHtml(m.title)}${pendingDot}${badge}</span><span class="ranking-rating" title="${ratingTitle}">${newBadge}${ratingTxt}</span></div>`;
                 }).join('');
             }
+            // SCROLL ANIM: ustaw --reveal-delay przez inline style (bezpieczniej niż w atrybucie)
+            document.querySelectorAll('.ranking-item.reveal').forEach(el => {
+                const d = el.dataset.revealDelay;
+                if (d) el.style.setProperty('--reveal-delay', d + 's');
+            });
             document.querySelectorAll('.ranking-item').forEach(el => {
                 el.onclick = () => {
                     const idx = parseInt(el.dataset.idx);
@@ -1431,6 +1478,8 @@
                 });
             }
             updateEffects();
+            // SCROLL ANIM: po renderze zarejestruj nowe elementy do obserwatora
+            observeReveals();
         }
 
         const LEAF_COLORS = ['#e8b88a', '#c88a5c', '#d4a95c', '#8fa88e', '#a8c5d6', '#e0a890', '#b895a8'];
@@ -1489,7 +1538,6 @@
             spark.style.left = (Math.random() * 100) + '%';
             const color = SPARK_COLORS[Math.floor(Math.random() * SPARK_COLORS.length)];
             spark.style.background = color;
-            // iOS 26/27 FIX: mobile bez box-shadow – oszczędza GPU
             if (window.innerWidth >= 600) {
                 spark.style.boxShadow = isBackground
                     ? `0 0 6px ${color}, 0 0 14px ${color}`
@@ -1507,7 +1555,6 @@
             if (!backContainer) return;
             if (backContainer.querySelectorAll('.smoke, .spark').length > 0) return;
 
-            // iOS 26/27 FIX: mniej cząstek na mobile
             const smokeCount = window.innerWidth < 600 ? 6 : 16;
             const sparkCount = window.innerWidth < 600 ? 8 : 22;
             for (let i = 0; i < smokeCount; i++) backContainer.appendChild(createSmoke(true));
@@ -1557,10 +1604,6 @@
         syncVisibleViewport();
         setTimeout(syncVisibleViewport, 300);
 
-        // ===== iOS 26/27 GIST FIX: wymuszenie ponownego próbkowania paska =====
-        // Safari 26 "cache'uje" kolor pasków i odświeża go tylko przy scrollu,
-        // zmianie orientacji itp. Wstrzykujemy tymczasowy element na dole ekranu
-        // i usuwamy go w dwóch klatkach – to zmusza Safari do ponownego próbkowania.
         function resetSafariToolbarTint() {
             if (document.getElementById('ios-safari-toolbar-reset-tint')) return;
             const el = document.createElement('div');
@@ -1576,18 +1619,12 @@
             });
         }
 
-        // ===== iOS 26/27 GIST FIX: aktualizacja koloru pasków =====
-        // Ustawiamy kolor w trzech miejscach:
-        //   1) background-color body (Safari 26 to czyta)
-        //   2) --safari-probe-color – kolor stałego paska 5px (body::after)
-        //   3) meta theme-color (starsze iOS 16–18)
-        // Na koniec wymuszamy ponowne próbkowanie przez resetSafariToolbarTint().
+        // FIX GRAVE: aktualizacja koloru paska-próbki + tła + theme-color.
+        // W trybie Ghibli jasny (#e8e0c8), w grave-mode ciemny (#08080b).
         function updateThemeColor() {
             const isLight = animeMode && !document.body.classList.contains('grave-mode');
             const color = isLight ? '#e8e0c8' : '#08080b';
 
-            document.body.style.backgroundColor = color;
-            document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
             document.documentElement.style.setProperty('--safari-probe-color', color);
 
             const meta = document.querySelector('meta[name="theme-color"]');
@@ -1617,7 +1654,6 @@
             updateThemeColor();
         }
 
-        // ===== ZMIANA 3: retry dla window.SC + fallback dla desktopu =====
         function initSoundCloudWidget() {
             if (scWidget) return;
             const iframe = document.getElementById('sc-widget');
@@ -1639,8 +1675,6 @@
                 }
             });
 
-            // iOS 26/27 FIX: skrócony fallback (1500 ms) – Safari na Macu
-            // potrzebuje mniej czasu niż 3 s, a dłuższe czekanie myli użytkownika.
             setTimeout(() => {
                 if (!scWidgetReady && scWidgetPendingPlay) {
                     try {
@@ -2186,7 +2220,6 @@
         applyAnimeMode(false);
         updateThemeColor();
 
-        // iOS 26/27 FIX: play() synchronicznie w geście użytkownika (Safari macOS).
         const unlockMusicOnce = () => {
             initSoundCloudWidget();
             if (animeMode) {
@@ -2214,6 +2247,9 @@
                 else spawnLeaves();
             }, 400);
         });
+
+        // SCROLL ANIM: zainicjuj obserwator
+        setupRevealObserver();
 
         startListener();
     })();
