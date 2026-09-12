@@ -53,44 +53,49 @@
             --font-lg: 1.05rem;
             --font-xl: 1.3rem;
 
+            /* --- iOS / safe-area + realny widoczny viewport --- */
             --safe-top: env(safe-area-inset-top, 0px);
             --safe-right: env(safe-area-inset-right, 0px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             --safe-left: env(safe-area-inset-left, 0px);
-            --vvh: 100svh;
+            --vvh: 100svh; /* nadpisywane przez JS (visualViewport) */
+            --vlh: 100lvh; /* iOS 26/27: „large viewport” – pełna wysokość pod paskami */
 
+            /* iOS 26/27 GIST FIX: kolor stałego paska 5px na dole –
+               nadpisywany przez JS, żeby Safari miało zawsze co próbkować. */
             --safari-probe-color: #08080b;
-            --theme-bg: #08080b;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none !important;
             -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale; }
         html {
-            background: var(--theme-bg);
+            background: var(--bg-base);
             color-scheme: dark;
+            /* iOS 26/27: blokada pinch-zoom – zostawiamy tylko pan */
             touch-action: pan-x pan-y;
-            height: 100%;
+            height: 100vh;
+            height: 100lvh;                 /* iOS 26/27: rozciągnięcie pod paski Safari */
             overflow: hidden;
             overscroll-behavior: none;
             -webkit-text-size-adjust: 100%;
-            transition: background-color 0.6s ease;
         }
         body {
-            background: var(--theme-bg);
+            background: var(--bg-base);
             background-image: radial-gradient(ellipse at 50% 0%, rgba(201, 168, 76, 0.04) 0%, transparent 55%),
             radial-gradient(ellipse at 80% 20%, rgba(120, 100, 60, 0.03) 0%, transparent 50%);
             background-attachment: fixed;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             color: var(--text-primary);
-            height: 100vh; height: 100dvh;
+            height: 100vh;
+            height: 100lvh;                 /* iOS 26/27: to samo – pod paski */
             width: 100%;
             overflow: hidden;
             overscroll-behavior: none;
             display: flex; flex-direction: column; align-items: center;
             padding: 0;
             letter-spacing: -0.01em;
-            touch-action: pan-x pan-y;
+            touch-action: pan-x pan-y;      /* iOS 26/27: blokada pinch-zoom */
             position: relative; margin: 0;
             transition: background-color 0.6s ease, background-image 0.6s ease, color 0.6s ease;
         }
@@ -98,8 +103,10 @@
         *::-webkit-scrollbar { display: none; }
         :focus-visible { outline: 1.5px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
 
-        /* iOS 26/27: stały pasek 5px na dole viewportu – Safari próbkuje jego kolor.
-           height 5px dokładnie w miejscu, gdzie Safari pobiera kolor dolnego paska. */
+        /* iOS 26/27 GIST FIX: stały pasek 5px na dole viewportu.
+           Safari 26 próbkuje kolor pasków z 4–5px nad dolną krawędzią.
+           Ten element gwarantuje, że zawsze jest tam ten sam kolor –
+           niezależnie od scrolla i aktualnego slajdu. */
         body::after {
             content: "";
             position: fixed;
@@ -116,7 +123,8 @@
         .global-bg {
             position: fixed; top: 0; left: 0; right: 0;
             width: 100%;
-            height: 100%;
+            height: 100vh;
+            height: 100lvh;                 /* iOS 26/27: tło pod paskami – Safari próbkuje plakat */
             background-size: cover; background-position: center;
             filter: blur(28px) brightness(0.22) saturate(0.65);
             z-index: 0; pointer-events: none; transition: background-image 0.5s ease, filter 0.9s ease, opacity 0.5s ease;
@@ -360,7 +368,6 @@
 
         .home-container { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 0.8rem; padding: 0 0.2rem; margin-top: 0.1rem; }
         .next-movie-card {
-            position: relative;
             background: rgba(22,22,28,0.8); backdrop-filter: blur(16px);
             border-radius: var(--radius-xl); padding: 1.2rem; text-align: center; cursor: pointer;
             transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s, background 0.5s ease;
@@ -531,7 +538,6 @@
             --shadow-md: 0 8px 24px rgba(90, 117, 88, 0.18);
             --shadow-lg: 0 16px 40px rgba(90, 117, 88, 0.22);
             --shadow-gold: 0 0 24px rgba(184, 137, 74, 0.28);
-            --theme-bg: #e8e0c8;
 
             background-color: #e8e0c8;
             background-image:
@@ -680,7 +686,10 @@
 
         body.anime-mode::after {
             content: '';
-            position: fixed; inset: 0;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 100vh;
+            height: 100lvh;
             background: radial-gradient(ellipse at 50% 100%, rgba(255, 240, 200, 0.35) 0%, transparent 60%),
                         radial-gradient(ellipse at 20% 0%, rgba(200, 230, 240, 0.2) 0%, transparent 55%);
             pointer-events: none; z-index: 0;
@@ -712,7 +721,6 @@
             --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.55);
             --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.7);
             --shadow-gold: 0 0 24px rgba(201, 168, 76, 0.18);
-            --theme-bg: #08080b;
             background-color: #08080b;
             background-image:
                 radial-gradient(ellipse at 50% 0%, rgba(201, 168, 76, 0.04) 0%, transparent 55%),
@@ -870,7 +878,7 @@
             .empty-state p { font-size: 0.9rem; letter-spacing: 0.14em; }
             .toast { bottom: calc(var(--safe-bottom) + 1rem); }
 
-            /* Mobile – redukcja kosztownych blurów (jank na iOS) */
+            /* iOS 26/27 FIX: mobile – wyłączamy kosztowne blury, żeby zlikwidować jank */
             .carousel-viewport {
                 backdrop-filter: none !important;
                 -webkit-backdrop-filter: none !important;
@@ -968,7 +976,7 @@
         const db = firebase.firestore();
         firebase.auth().signInAnonymously().catch(e => console.error("Auth error:", e));
 
-        // Blokada pinch-zoom / double-tap zoom
+        // ===== iOS 26/27: blokada pinch-zoom i double-tap zoom =====
         ['gesturestart','gesturechange','gestureend'].forEach(ev =>
             document.addEventListener(ev, e => e.preventDefault(), { passive: false })
         );
@@ -1273,6 +1281,8 @@
             document.getElementById('carouselPrevBtn').onclick = prevSlide;
             document.getElementById('carouselNextBtn').onclick = nextSlide;
             addSwipeSupport();
+            // iOS 26/27 GIST FIX: wymuś ponowne próbkowanie paska po zbudowaniu karuzeli
+            resetSafariToolbarTint();
         }
 
         function setGlobalBackground(url) {
@@ -1310,6 +1320,8 @@
             setGlobalBackground(ranked[i]?.poster);
             updateEffects();
             attachDelegatedEvents();
+            // iOS 26/27 GIST FIX: wymuś ponowne próbkowanie paska po zmianie slajdu
+            resetSafariToolbarTint();
         }
 
         function nextSlide() { goToSlide(currentSlideIndex + 1); }
@@ -1330,6 +1342,8 @@
                         wrapper.removeEventListener('animationend', handler);
                     }, { once: true });
                 }
+                // iOS 26/27 GIST FIX
+                resetSafariToolbarTint();
             }, 180);
         }
 
@@ -1341,6 +1355,8 @@
             setTimeout(() => {
                 renderHome();
                 c.classList.remove('view-fade-out');
+                // iOS 26/27 GIST FIX
+                resetSafariToolbarTint();
             }, 180);
         }
 
@@ -1473,6 +1489,7 @@
             spark.style.left = (Math.random() * 100) + '%';
             const color = SPARK_COLORS[Math.floor(Math.random() * SPARK_COLORS.length)];
             spark.style.background = color;
+            // iOS 26/27 FIX: mobile bez box-shadow – oszczędza GPU
             if (window.innerWidth >= 600) {
                 spark.style.boxShadow = isBackground
                     ? `0 0 6px ${color}, 0 0 14px ${color}`
@@ -1490,6 +1507,7 @@
             if (!backContainer) return;
             if (backContainer.querySelectorAll('.smoke, .spark').length > 0) return;
 
+            // iOS 26/27 FIX: mniej cząstek na mobile
             const smokeCount = window.innerWidth < 600 ? 6 : 16;
             const sparkCount = window.innerWidth < 600 ? 8 : 22;
             for (let i = 0; i < smokeCount; i++) backContainer.appendChild(createSmoke(true));
@@ -1539,7 +1557,10 @@
         syncVisibleViewport();
         setTimeout(syncVisibleViewport, 300);
 
-        // Reset próbki paska – tylko przy zmianie motywu
+        // ===== iOS 26/27 GIST FIX: wymuszenie ponownego próbkowania paska =====
+        // Safari 26 "cache'uje" kolor pasków i odświeża go tylko przy scrollu,
+        // zmianie orientacji itp. Wstrzykujemy tymczasowy element na dole ekranu
+        // i usuwamy go w dwóch klatkach – to zmusza Safari do ponownego próbkowania.
         function resetSafariToolbarTint() {
             if (document.getElementById('ios-safari-toolbar-reset-tint')) return;
             const el = document.createElement('div');
@@ -1555,18 +1576,19 @@
             });
         }
 
-        // Ustawia kolor tła + kolor paska dolnego + meta theme-color.
-        // Ciemny motyw → #08080b, jasny → #e8e0c8.
+        // ===== iOS 26/27 GIST FIX: aktualizacja koloru pasków =====
+        // Ustawiamy kolor w trzech miejscach:
+        //   1) background-color body (Safari 26 to czyta)
+        //   2) --safari-probe-color – kolor stałego paska 5px (body::after)
+        //   3) meta theme-color (starsze iOS 16–18)
+        // Na koniec wymuszamy ponowne próbkowanie przez resetSafariToolbarTint().
         function updateThemeColor() {
             const isLight = animeMode && !document.body.classList.contains('grave-mode');
             const color = isLight ? '#e8e0c8' : '#08080b';
 
-            document.documentElement.style.backgroundColor = color;
             document.body.style.backgroundColor = color;
-            document.documentElement.style.setProperty('--theme-bg', color);
-            document.documentElement.style.setProperty('--safari-probe-color', color);
-
             document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
+            document.documentElement.style.setProperty('--safari-probe-color', color);
 
             const meta = document.querySelector('meta[name="theme-color"]');
             if (meta) meta.setAttribute('content', color);
@@ -1595,6 +1617,7 @@
             updateThemeColor();
         }
 
+        // ===== ZMIANA 3: retry dla window.SC + fallback dla desktopu =====
         function initSoundCloudWidget() {
             if (scWidget) return;
             const iframe = document.getElementById('sc-widget');
@@ -1616,6 +1639,8 @@
                 }
             });
 
+            // iOS 26/27 FIX: skrócony fallback (1500 ms) – Safari na Macu
+            // potrzebuje mniej czasu niż 3 s, a dłuższe czekanie myli użytkownika.
             setTimeout(() => {
                 if (!scWidgetReady && scWidgetPendingPlay) {
                     try {
@@ -2161,6 +2186,7 @@
         applyAnimeMode(false);
         updateThemeColor();
 
+        // iOS 26/27 FIX: play() synchronicznie w geście użytkownika (Safari macOS).
         const unlockMusicOnce = () => {
             initSoundCloudWidget();
             if (animeMode) {
