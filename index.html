@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#08080b">
     <meta name="color-scheme" content="dark">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Movie Club">
     <title>JLL Movie Club – współdzielony ranking</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
@@ -79,9 +83,6 @@
         *::-webkit-scrollbar { display: none; }
         :focus-visible { outline: 1.5px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
 
-        /* Wskaźnik koloru dla Safari 26 – TYLKO górny pasek.
-           Dolny pasek jest pozostawiony sam sobie – Safari próbkuje kolor
-           z tła strony (rozmyty plakat), które i tak zmienia się z motywem. */
         #ios-theme-color {
             position: fixed;
             top: 0;
@@ -413,6 +414,74 @@
         .carousel-arrow:hover { opacity: 1; color: var(--gold); border-color: var(--gold); }
         .arrow-left { left: -6px; } .arrow-right { right: -6px; }
 
+        /* Wskaźnik pozycji w karuzeli – "3 / 10 ‹ ›" */
+        .carousel-position-hint {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 26;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 14px;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(201, 168, 76, 0.35);
+            border-radius: 9999px;
+            font-family: 'Inter', system-ui, sans-serif;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+        }
+        .carousel-position-hint.hidden { opacity: 0; }
+        .carousel-position-hint .cph-arrow {
+            color: var(--gold);
+            font-size: 1.05rem;
+            line-height: 1;
+            font-weight: 700;
+            animation: cphArrowPulse 1.6s ease-in-out infinite;
+        }
+        .carousel-position-hint .cph-arrow:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes cphArrowPulse {
+            0%, 100% { opacity: 0.55; transform: translateX(0); }
+            50%      { opacity: 1;    transform: translateX(var(--cph-dir, 0)); }
+        }
+        .carousel-position-hint .cph-arrow:first-child { --cph-dir: -2px; }
+        .carousel-position-hint .cph-arrow:last-child  { --cph-dir: 2px; }
+        .carousel-position-hint .cph-count {
+            color: var(--gold-light);
+            font-weight: 700;
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            font-variant-numeric: tabular-nums;
+            min-width: 44px;
+            text-align: center;
+        }
+
+        body.anime-mode .carousel-position-hint {
+            background: rgba(255, 252, 240, 0.88);
+            border-color: rgba(184, 137, 74, 0.55);
+            box-shadow: 0 4px 16px rgba(90, 117, 88, 0.2);
+        }
+        body.anime-mode .carousel-position-hint .cph-arrow { color: #b8894a; }
+        body.anime-mode .carousel-position-hint .cph-count { color: #5c6c5c; }
+
+        body.anime-mode.grave-mode .carousel-position-hint {
+            background: rgba(0, 0, 0, 0.65);
+            border-color: rgba(201, 168, 76, 0.4);
+        }
+        body.anime-mode.grave-mode .carousel-position-hint .cph-arrow { color: #c9a84c; }
+        body.anime-mode.grave-mode .carousel-position-hint .cph-count { color: #e0c56e; }
+
+        @media (max-width: 600px) {
+            .carousel-position-hint { top: 10px; padding: 4px 12px; gap: 8px; }
+            .carousel-position-hint .cph-arrow { font-size: 0.95rem; }
+            .carousel-position-hint .cph-count { font-size: 0.68rem; min-width: 40px; }
+        }
+
         .review-card { display: flex; gap: 0.7rem; padding: 0.55rem 0.65rem; border-radius: var(--radius-sm); background: transparent; border: 1px solid transparent; position: relative; align-items: flex-start; }
         .review-card:hover { background: rgba(255,255,255,0.025); border-color: rgba(255,255,255,0.06); }
         .review-card.pending { opacity: 0.65; filter: grayscale(0.2); }
@@ -467,6 +536,7 @@
             background: rgba(22,22,28,0.95); backdrop-filter: blur(12px); border: 1px solid var(--border-gold);
             border-radius: 20px; padding: 0.6rem 1.5rem; color: #eee; z-index: 2000;
             transition: transform 0.3s, background 0.5s; font-size: var(--font-sm);
+            max-width: 88vw; text-align: center;
         }
         .toast.show { transform: translateX(-50%) translateY(0); }
 
@@ -838,9 +908,6 @@
     </style>
 </head>
 <body>
-<!-- Wskaźnik koloru dla Safari 26 – tylko górny pasek.
-     Dolny pasek celowo pozostawiony bez wskaźnika – Safari próbkuje
-     kolor z tła strony (rozmyty plakat), które zmienia się z motywem. -->
 <div id="ios-theme-color" aria-hidden="true"></div>
 
 <div class="global-bg" id="globalBg"></div>
@@ -858,6 +925,9 @@
         <h1 id="homeLogo">JLL MOVIE CLUB<span class="admin-indicator" id="adminIndicator" title="Kliknij, aby wyłączyć tryb admina"></span></h1>
         <div class="header-buttons">
             <button class="icon-btn anime-toggle-btn" id="animeToggleBtn" title="Tryb Ghibli – Studio Ghibli">愛</button>
+            <button class="icon-btn" id="fullscreenBtn" title="Pełny ekran">
+                <svg id="fullscreenIcon" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
             <button class="icon-btn admin-only" id="dbManageBtn" title="Zarządzanie bazą">
                 <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
             </button>
@@ -909,6 +979,7 @@
         let scWidgetReady = false;
         let scWidgetPendingPlay = false;
         let currentFeatured = null;
+        let hintTimer = null;
 
         const RATING_PRIOR = 3.0;
         const RATING_PRIOR_WEIGHT = 1.5;
@@ -925,7 +996,7 @@
         let loadingTimeout = null;
 
         function preloadImage(url) { if (!url || preloadedImages[url]) return; preloadedImages[url] = new Promise((resolve) => { const img = new Image(); img.onload = () => { preloadedImages[url] = true; resolve(); }; img.onerror = () => { preloadedImages[url] = false; resolve(); }; img.src = url; }); }
-        function showToast(m, type='') { const old = document.querySelector('.toast'); if (old) old.remove(); const t = document.createElement('div'); t.className = 'toast '+type; t.textContent = m; document.body.appendChild(t); requestAnimationFrame(()=> requestAnimationFrame(()=> t.classList.add('show'))); const hide = setTimeout(()=>{ t.classList.remove('show'); t.addEventListener('transitionend', ()=> t.remove(), {once:true}); setTimeout(()=>{ if(t.parentNode) t.remove(); }, 500); }, 2800); t._hideTimeout = hide; }
+        function showToast(m, type='') { const old = document.querySelector('.toast'); if (old) old.remove(); const t = document.createElement('div'); t.className = 'toast '+type; t.textContent = m; document.body.appendChild(t); requestAnimationFrame(()=> requestAnimationFrame(()=> t.classList.add('show'))); const hide = setTimeout(()=>{ t.classList.remove('show'); t.addEventListener('transitionend', ()=> t.remove(), {once:true}); setTimeout(()=>{ if(t.parentNode) t.remove(); }, 500); }, 3400); t._hideTimeout = hide; }
         function openModal(id) { const m = document.getElementById(id); if(!m) return; m.style.display='flex'; requestAnimationFrame(()=> requestAnimationFrame(()=> m.classList.add('open'))); }
         function closeModal(id) { const m = document.getElementById(id); if(!m) return; m.classList.remove('open'); const h = ()=>{ m.style.display='none'; m.removeEventListener('transitionend', h); }; m.addEventListener('transitionend', h, {once:true}); setTimeout(()=>{ if(!m.classList.contains('open')) { m.style.display='none'; m.removeEventListener('transitionend', h); } }, 350); }
         function updateAdminIndicator() { const indicator = document.getElementById('adminIndicator'); if (!indicator) return; indicator.classList.toggle('active', isAdmin); }
@@ -1136,6 +1207,14 @@
             return `<div class="carousel-slide" data-movie-id="${movie.id}"><div style="display:flex;flex-direction:column;height:100%;"><div style="height:clamp(180px,30vh,280px);position:relative;overflow:hidden;flex-shrink:0;background:#1a1a20;">${posterImg}<a href="${jfUrl}" target="_blank" class="movie-title-overlay">${escapeHtml(movie.title)}</a><button class="review-action-icon edit-movie-btn${editBtnAdminVisible}" data-movie-id="${movie.id}" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);color:#ddd;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:opacity 0.2s;">${SVG_ICONS.edit}</button></div>${dateHtml}${linkHtml}<div style="flex:1;overflow-y:auto;padding:${reviewsPadding};display:flex;flex-direction:column;">${revHtml}</div>${sent}<div style="background:var(--bg-elevated);border-top:1px solid var(--border-default);padding:0.7rem 0.9rem;transition:background 0.5s;"><div style="display:flex;gap:0.55rem;align-items:stretch;"><div style="flex:0 0 88px;display:flex;flex-direction:column;gap:0.25rem;"><input type="text" class="review-author-input" placeholder="Imię" maxlength="9" style="background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.4rem;font-size:0.7rem;color:var(--text-primary);text-align:center;font-family:inherit;width:100%;"><div class="rating-input" style="display:flex;gap:0;background:var(--bg-input);padding:0.15rem 0.25rem;border-radius:20px;justify-content:center;border:1px solid var(--border-default);">${[1,2,3,4,5].map(n=>`<span class="star-select" data-value="${n}" style="font-size:0.75rem;cursor:pointer;color:var(--text-muted);">&#9733;</span>`).join('')}</div></div><div style="flex:2;min-width:0;"><textarea class="review-comment-input" placeholder="Napisz kilka słów...\nKliknij enter aby wysłać." style="width:100%;height:100%;min-height:42px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.45rem;font-size:0.7rem;color:var(--text-primary);resize:none;font-family:inherit;"></textarea></div><div class="avg-box" data-movie-id="${movie.id}" style="flex:0 0 52px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold);cursor:pointer;font-size:0.85rem;">${avgDisp} ★</div></div></div></div></div>`;
         }
 
+        function showPositionHint() {
+            const hint = document.getElementById('carouselPositionHint');
+            if (!hint) return;
+            hint.classList.remove('hidden');
+            if (hintTimer) clearTimeout(hintTimer);
+            hintTimer = setTimeout(() => { hint.classList.add('hidden'); }, 3500);
+        }
+
         function addSwipeSupport() {
             const viewport = document.getElementById('carouselViewport');
             if (!viewport) return;
@@ -1161,9 +1240,9 @@
         function buildCarousel(idx) {
             const c = document.getElementById('mainContent');
             c.style.overflow = 'visible';
-            c.innerHTML = `<div class="carousel-wrapper"><div class="carousel-viewport" id="carouselViewport"></div><button class="carousel-arrow arrow-left" id="carouselPrevBtn">&lsaquo;</button><button class="carousel-arrow arrow-right" id="carouselNextBtn">&rsaquo;</button></div>`;
-            const viewport = document.getElementById('carouselViewport');
             const ranked = getRankedMovies();
+            c.innerHTML = `<div class="carousel-wrapper"><div class="carousel-viewport" id="carouselViewport"></div><button class="carousel-arrow arrow-left" id="carouselPrevBtn">&lsaquo;</button><button class="carousel-arrow arrow-right" id="carouselNextBtn">&rsaquo;</button><div class="carousel-position-hint" id="carouselPositionHint"><span class="cph-arrow">‹</span><span class="cph-count" id="cphCount">${idx+1} / ${ranked.length}</span><span class="cph-arrow">›</span></div></div>`;
+            const viewport = document.getElementById('carouselViewport');
             ranked.forEach((m,i)=>{
                 const d = document.createElement('div');
                 d.innerHTML = generateMovieSlide(m);
@@ -1180,6 +1259,7 @@
             document.getElementById('carouselPrevBtn').onclick = prevSlide;
             document.getElementById('carouselNextBtn').onclick = nextSlide;
             addSwipeSupport();
+            showPositionHint();
         }
 
         function setGlobalBackground(url) {
@@ -1217,6 +1297,8 @@
             setGlobalBackground(ranked[i]?.poster);
             updateEffects();
             attachDelegatedEvents();
+            const cph = document.getElementById('cphCount');
+            if (cph) cph.textContent = `${i+1} / ${ranked.length}`;
         }
 
         function nextSlide() { goToSlide(currentSlideIndex + 1); }
@@ -1415,9 +1497,6 @@
             if (frontContainer) frontContainer.innerHTML = '';
         }
 
-        // ---- Aktualizacja koloru paska przeglądarki (Safari 26 + Chrome) ----
-        // Dolny pasek jest teraz pozostawiony bez własnego wskaźnika – Safari próbkuje
-        // kolor z tła strony (rozmyty plakat), które zmienia się razem z motywem.
         function updateThemeColor() {
             const isLight = animeMode && !document.body.classList.contains('grave-mode');
             const color = isLight ? '#e8e0c8' : '#08080b';
@@ -1436,7 +1515,6 @@
             document.documentElement.style.backgroundColor = color;
             document.body.style.backgroundColor = color;
             document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
-
             document.documentElement.style.setProperty('--ios-theme-bg', color);
 
             void document.documentElement.offsetHeight;
@@ -1513,6 +1591,54 @@
                 renderHome();
             }
         }
+
+        // ---- PEŁNY EKRAN ----
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+        function isFullscreenActive() {
+            return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        }
+
+        function updateFullscreenIcon() {
+            const icon = document.getElementById('fullscreenIcon');
+            if (!icon) return;
+            if (isFullscreenActive()) {
+                icon.innerHTML = '<polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/>';
+            } else {
+                icon.innerHTML = '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>';
+            }
+        }
+
+        function toggleFullscreen() {
+            const el = document.documentElement;
+            if (isIOS && !isStandalone) {
+                showToast('📱 Dodaj stronę do ekranu głównego (Safari → Udostępnij → Dodaj do ekranu początkowego), aby uzyskać pełny ekran jak w aplikacji.');
+                return;
+            }
+            if (!isFullscreenActive()) {
+                if (el.requestFullscreen) {
+                    el.requestFullscreen().catch(() => showToast('Nie udało się wejść w pełny ekran.'));
+                } else if (el.webkitRequestFullscreen) {
+                    el.webkitRequestFullscreen();
+                } else if (el.mozRequestFullScreen) {
+                    el.mozRequestFullScreen();
+                } else if (el.msRequestFullscreen) {
+                    el.msRequestFullscreen();
+                } else {
+                    showToast('Pełny ekran niedostępny w tej przeglądarce.');
+                }
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+                else if (document.msExitFullscreen) document.msExitFullscreen();
+            }
+        }
+
+        ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
+            document.addEventListener(evt, updateFullscreenIcon);
+        });
 
         const ghibliMoviesData = [
             { id: 'ghibli_totoro',   title: 'Mój sąsiad Totoro',            date: '16.04.1988', poster: 'https://placehold.co/400x600/8fa88e/fffbf0.png?text=Totoro',       link: '', sentimentalValue: 'Cudowny świat natury, dzieciństwa i leśnych duszków.', reviews: [], isGhibli: true, createdAt: 1700000000001 },
@@ -1871,6 +1997,7 @@
         }
 
         document.getElementById('animeToggleBtn').onclick = toggleAnimeMode;
+        document.getElementById('fullscreenBtn').onclick = toggleFullscreen;
         document.getElementById('dbManageBtn').onclick = () => { if(!isAdmin) { isAdminAction(); return; } openModal('dbManageModal'); };
         document.getElementById('proposeHeaderBtn').onclick = () => { loadProposals(); openModal('proposeModal'); };
         document.getElementById('homeBtn').onclick = () => { if(viewMode !== 'home') switchToHome(); };
@@ -1992,6 +2119,7 @@
         updateAdminIndicator();
         applyAnimeMode(false);
         updateThemeColor();
+        updateFullscreenIcon();
 
         const unlockMusicOnce = () => {
             initSoundCloudWidget();
