@@ -108,6 +108,20 @@
             z-index: 0; pointer-events: none; transition: background-image 0.5s ease, filter 0.9s ease, opacity 0.5s ease;
         }
 
+        /* iOS 26/27 FIX: dummy block – Safari próbkuje jego kolor dla dolnego paska */
+        .safari-bottom-probe {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 4px;
+            width: 50%;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.01;
+            background: transparent;
+        }
+
         .anime-decor {
             position: fixed; inset: 0; pointer-events: none;
             overflow: hidden; z-index: 0; display: none;
@@ -856,6 +870,44 @@
             .anime-sunflare { width: 340px; height: 340px; top: -90px; right: -90px; }
             .empty-state p { font-size: 0.9rem; letter-spacing: 0.14em; }
             .toast { bottom: calc(var(--safe-bottom) + 1rem); }
+
+            /* iOS 26/27 FIX: mobile – wyłączamy kosztowne blury, żeby zlikwidować jank */
+            .carousel-viewport {
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                background: rgba(18, 18, 24, 0.9);
+            }
+            body.anime-mode .carousel-viewport {
+                background: rgba(255, 252, 240, 0.95);
+            }
+            .next-movie-card {
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                background: rgba(22, 22, 28, 0.92);
+            }
+            body.anime-mode .next-movie-card {
+                background: rgba(255, 252, 240, 0.95);
+            }
+            .loading-indicator,
+            .modal,
+            .review-card-actions,
+            .carousel-arrow,
+            .toast {
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
+            .global-bg {
+                filter: blur(14px) brightness(0.22) saturate(0.65) !important;
+            }
+            .smoke {
+                filter: blur(10px) !important;
+            }
+            .anime-sunflare::before {
+                filter: blur(4px) !important;
+            }
+            .anime-sunflare::after {
+                filter: blur(6px) !important;
+            }
         }
 
         @media (max-width: 400px) {
@@ -875,6 +927,7 @@
 </head>
 <body>
 <div class="global-bg" id="globalBg"></div>
+<div class="safari-bottom-probe" aria-hidden="true"></div>
 <div class="anime-decor" id="animeDecor" aria-hidden="true"></div>
 <div class="anime-grave-effects" id="animeGraveEffects" aria-hidden="true"></div>
 <div class="anime-sunflare" id="animeSunflare" aria-hidden="true"></div>
@@ -931,7 +984,7 @@
             _lastTouchEnd = now;
         }, { passive: false });
         document.addEventListener('wheel', e => {
-            if (e.ctrlKey) e.preventDefault();  // Ctrl+scroll na desktopie
+            if (e.ctrlKey) e.preventDefault();
         }, { passive: false });
 
         let movies = [], currentMovieIndex = 0, viewMode = 'home', unsubscribeMovies = null, isAdmin = false, adminTimeout = null, currentSlideIndex = 0;
@@ -1422,9 +1475,12 @@
             spark.style.left = (Math.random() * 100) + '%';
             const color = SPARK_COLORS[Math.floor(Math.random() * SPARK_COLORS.length)];
             spark.style.background = color;
-            spark.style.boxShadow = isBackground
-                ? `0 0 6px ${color}, 0 0 14px ${color}`
-                : `0 0 4px ${color}, 0 0 9px ${color}`;
+            // iOS 26/27 FIX: mobile bez box-shadow – oszczędza GPU
+            if (window.innerWidth >= 600) {
+                spark.style.boxShadow = isBackground
+                    ? `0 0 6px ${color}, 0 0 14px ${color}`
+                    : `0 0 4px ${color}, 0 0 9px ${color}`;
+            }
             spark.style.animationDuration = (4 + Math.random() * 5) + 's';
             spark.style.animationDelay = (-Math.random() * 12) + 's';
             spark.style.setProperty('--sx', (Math.random() * 90 - 45) + 'px');
@@ -1437,14 +1493,15 @@
             if (!backContainer) return;
             if (backContainer.querySelectorAll('.smoke, .spark').length > 0) return;
 
-            const smokeCount = window.innerWidth < 600 ? 10 : 16;
-            const sparkCount = window.innerWidth < 600 ? 14 : 22;
+            // iOS 26/27 FIX: mniej cząstek na mobile
+            const smokeCount = window.innerWidth < 600 ? 6 : 16;
+            const sparkCount = window.innerWidth < 600 ? 8 : 22;
             for (let i = 0; i < smokeCount; i++) backContainer.appendChild(createSmoke(true));
             for (let i = 0; i < sparkCount; i++) backContainer.appendChild(createSpark(true));
 
             if (frontContainer) {
-                const frontSmokeCount = window.innerWidth < 600 ? 5 : 8;
-                const frontSparkCount = window.innerWidth < 600 ? 8 : 13;
+                const frontSmokeCount = window.innerWidth < 600 ? 3 : 8;
+                const frontSparkCount = window.innerWidth < 600 ? 4 : 13;
                 for (let i = 0; i < frontSmokeCount; i++) frontContainer.appendChild(createSmoke(false));
                 for (let i = 0; i < frontSparkCount; i++) frontContainer.appendChild(createSpark(false));
             }
@@ -1486,20 +1543,20 @@
         syncVisibleViewport();
         setTimeout(syncVisibleViewport, 300);
 
-        // ===== ZMIANA 1: Safari samo decyduje o kolorze pasków =====
-        // Usunięto ustawianie `document.documentElement.style.backgroundColor`.
-        // iOS 26/27: górny pasek słucha theme-color, dolny próbkuje zawartość pod
-        // sobą – dlatego tło (global-bg) i aura są rozciągnięte na 100lvh.
+        // ===== iOS 26/27 FIX: Safari 26 czyta kolor pasków z tła body,
+        // a nie z <meta name="theme-color">. Ustawiamy też dummy probe. =====
         function updateThemeColor() {
-            const meta = document.querySelector('meta[name="theme-color"]');
             const isLight = animeMode && !document.body.classList.contains('grave-mode');
             const color = isLight ? '#e8e0c8' : '#08080b';
-            if (meta) {
-                meta.setAttribute('content', color);
-            }
+
+            document.body.style.backgroundColor = color;
             document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
-            // Świadomie NIE ustawiamy tła <html>. Pozwalamy Safari próbkować
-            // plakat/aurę pod paskami.
+
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', color);
+
+            const probe = document.querySelector('.safari-bottom-probe');
+            if (probe) probe.style.background = color;
         }
 
         function updateEffects() {
@@ -1545,7 +1602,8 @@
                 }
             });
 
-            // Fallback: jeśli READY nie przyjdzie w 3 s, spróbuj zagrać mimo to.
+            // iOS 26/27 FIX: skrócony fallback (1500 ms) – Safari na Macu
+            // potrzebuje mniej czasu niż 3 s, a dłuższe czekanie myli użytkownika.
             setTimeout(() => {
                 if (!scWidgetReady && scWidgetPendingPlay) {
                     try {
@@ -1554,10 +1612,10 @@
                         scWidgetReady = true;
                         scWidgetPendingPlay = false;
                     } catch (e) {
-                        console.warn('SC play fallback failed:', e);
+                        console.warn('SC fallback failed:', e);
                     }
                 }
-            }, 3000);
+            }, 1500);
         }
 
         function playAnimeMusic() {
@@ -1574,7 +1632,6 @@
             if (scWidget && scWidgetReady) scWidget.pause();
         }
 
-        // ===== ZMIANA 2: muzyka pauzuje, gdy strona jest w tle / telefon zablokowany =====
         function pauseMusicSilently() {
             if (scWidget && scWidgetReady) {
                 try { scWidget.pause(); } catch (e) {}
@@ -2092,9 +2149,16 @@
         applyAnimeMode(false);
         updateThemeColor();
 
+        // iOS 26/27 FIX: play() synchronicznie w geście użytkownika (Safari macOS).
         const unlockMusicOnce = () => {
             initSoundCloudWidget();
-            if (animeMode) playAnimeMusic();
+            if (animeMode) {
+                if (scWidget && scWidgetReady) {
+                    try { scWidget.play(); } catch (e) {}
+                } else {
+                    scWidgetPendingPlay = true;
+                }
+            }
             document.removeEventListener('click', unlockMusicOnce);
             document.removeEventListener('touchstart', unlockMusicOnce);
         };
