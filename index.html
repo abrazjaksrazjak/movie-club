@@ -58,9 +58,8 @@
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             --safe-left: env(safe-area-inset-left, 0px);
             --vvh: 100svh;
-            --vlh: 100lvh;
 
-            /* iOS 26/27 LIQUID GLASS v2: kolor tła motywu – używane do html i body */
+            --safari-probe-color: #08080b;
             --theme-bg: #08080b;
         }
 
@@ -71,8 +70,7 @@
             background: var(--theme-bg);
             color-scheme: dark;
             touch-action: pan-x pan-y;
-            height: 100vh;
-            height: 100lvh;
+            height: 100%;
             overflow: hidden;
             overscroll-behavior: none;
             -webkit-text-size-adjust: 100%;
@@ -85,8 +83,7 @@
             background-attachment: fixed;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             color: var(--text-primary);
-            height: 100vh;
-            height: 100lvh;
+            height: 100vh; height: 100dvh;
             width: 100%;
             overflow: hidden;
             overscroll-behavior: none;
@@ -101,9 +98,8 @@
         *::-webkit-scrollbar { display: none; }
         :focus-visible { outline: 1.5px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
 
-        /* iOS 26/27 LIQUID GLASS v2: probe bar zostaje TYLKO jako struktura –
-           bez tła, żeby nie tworzył widocznej czarnej linii. Safari próbkuje
-           to, co jest pod nim (czyli body-bg), a nie jego własny kolor. */
+        /* iOS 26/27: stały pasek 5px na dole viewportu – Safari próbkuje jego kolor.
+           height 5px dokładnie w miejscu, gdzie Safari pobiera kolor dolnego paska. */
         body::after {
             content: "";
             position: fixed;
@@ -113,14 +109,14 @@
             height: 5px;
             z-index: 8675309;
             pointer-events: none;
-            background-color: transparent;
+            background-color: var(--safari-probe-color, transparent);
+            transition: background-color 0.6s ease;
         }
 
         .global-bg {
             position: fixed; top: 0; left: 0; right: 0;
             width: 100%;
-            height: 100vh;
-            height: 100lvh;
+            height: 100%;
             background-size: cover; background-position: center;
             filter: blur(28px) brightness(0.22) saturate(0.65);
             z-index: 0; pointer-events: none; transition: background-image 0.5s ease, filter 0.9s ease, opacity 0.5s ease;
@@ -684,10 +680,7 @@
 
         body.anime-mode::after {
             content: '';
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: 100vh;
-            height: 100lvh;
+            position: fixed; inset: 0;
             background: radial-gradient(ellipse at 50% 100%, rgba(255, 240, 200, 0.35) 0%, transparent 60%),
                         radial-gradient(ellipse at 20% 0%, rgba(200, 230, 240, 0.2) 0%, transparent 55%);
             pointer-events: none; z-index: 0;
@@ -877,7 +870,7 @@
             .empty-state p { font-size: 0.9rem; letter-spacing: 0.14em; }
             .toast { bottom: calc(var(--safe-bottom) + 1rem); }
 
-            /* iOS 26/27 FIX: mobile – wyłączamy kosztowne blury, żeby zlikwidować jank */
+            /* Mobile – redukcja kosztownych blurów (jank na iOS) */
             .carousel-viewport {
                 backdrop-filter: none !important;
                 -webkit-backdrop-filter: none !important;
@@ -929,155 +922,9 @@
             .app-container { gap: 0.4rem; }
             .next-movie-card .poster { max-height: 140px; }
         }
-
-        /* ============================================================
-           iOS 26/27 LIQUID GLASS v2: body-scroll dla home i movie view.
-           - html/body mają overflow: auto na mobile dla view-home i view-movie
-           - club-header jest sticky glass
-           - w movie: poster jest sticky pod headerem, formularz na końcu contentu
-           - na desktopie (>600px) wszystko działa jak wcześniej (internal scroll)
-           ============================================================ */
-        @media (max-width: 600px) {
-
-            /* HOME – body-scroll */
-            html:has(body.view-home),
-            html:has(body.view-movie) {
-                height: auto;
-                min-height: 100lvh;
-                overflow-y: auto;
-                overflow-x: hidden;
-            }
-            body.view-home,
-            body.view-movie {
-                height: auto;
-                min-height: 100lvh;
-                overflow-y: auto;
-                overflow-x: hidden;
-                display: block;
-                background-attachment: scroll;
-            }
-            body.view-home .app-container,
-            body.view-movie .app-container {
-                height: auto;
-                min-height: 0;
-                overflow: visible;
-                padding: 0;
-                max-width: 100%;
-                gap: 0;
-            }
-            body.view-home .club-header,
-            body.view-movie .club-header {
-                position: sticky;
-                top: 0;
-                z-index: 100;
-                border-radius: 0;
-                margin: 0;
-                padding-top: calc(var(--safe-top) + 0.5rem);
-                padding-bottom: 0.5rem;
-                padding-left: calc(var(--safe-left) + 0.7rem);
-                padding-right: calc(var(--safe-right) + 0.7rem);
-                -webkit-backdrop-filter: blur(20px) saturate(1.4);
-                backdrop-filter: blur(20px) saturate(1.4);
-                /* v2: wyższa nieprzezroczystość → stabilniejszy kolor górnego paska */
-                background: rgba(8, 8, 11, 0.94);
-                border-left: none;
-                border-right: none;
-                border-top: none;
-                border-bottom: 1px solid var(--border-default);
-                box-shadow: none;
-                transition: background 0.5s ease, border-color 0.5s ease;
-            }
-            body.view-home.anime-mode .club-header,
-            body.view-movie.anime-mode .club-header {
-                background: rgba(232, 224, 200, 0.94);
-            }
-            body.view-home.anime-mode.grave-mode .club-header,
-            body.view-movie.anime-mode.grave-mode .club-header {
-                background: rgba(8, 8, 11, 0.94);
-            }
-
-            /* HOME – treść */
-            body.view-home #mainContent {
-                border-radius: 0;
-                overflow: visible;
-                flex: 0 0 auto;
-                min-height: 0;
-            }
-            body.view-home .home-container {
-                flex: 0 0 auto;
-                overflow: visible;
-                overscroll-behavior: auto;
-                padding: 0.7rem;
-                padding-left: calc(var(--safe-left) + 0.7rem);
-                padding-right: calc(var(--safe-right) + 0.7rem);
-                padding-bottom: calc(var(--safe-bottom) + 1rem);
-                margin-top: 0;
-            }
-
-            /* MOVIE – body-scroll z sticky posterem */
-            body.view-movie #mainContent {
-                border-radius: 0;
-                overflow: visible;
-                flex: 0 0 auto;
-                min-height: 0;
-            }
-            body.view-movie .carousel-wrapper {
-                height: auto;
-                padding: 0;
-                display: block;
-            }
-            body.view-movie .carousel-viewport {
-                border-radius: 0;
-                overflow: visible;
-                height: auto;
-                backdrop-filter: none;
-                -webkit-backdrop-filter: none;
-                background: transparent;
-                border: none;
-                box-shadow: none;
-            }
-            body.view-movie .carousel-slide {
-                position: relative;
-                opacity: 1;
-                display: none;
-                height: auto;
-                pointer-events: auto;
-                overflow: visible;
-                padding-bottom: calc(var(--safe-bottom) + 0.5rem);
-                transition: none;
-            }
-            body.view-movie .carousel-slide.active {
-                display: block;
-                opacity: 1;
-            }
-            body.view-movie .carousel-arrow {
-                display: none;
-            }
-            body.view-movie .slide-inner {
-                display: block;
-                height: auto;
-            }
-            /* Sticky poster pod headerem – "zafixowana karta" */
-            body.view-movie .slide-poster {
-                position: sticky;
-                top: calc(var(--safe-top) + 46px);
-                z-index: 40;
-                height: clamp(120px, 22vh, 190px) !important;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            }
-            body.view-movie .slide-reviews {
-                overflow: visible !important;
-                flex: none !important;
-                display: block !important;
-            }
-            body.view-movie .slide-form {
-                position: relative;
-                z-index: 20;
-            }
-        }
     </style>
 </head>
-<body class="view-home">
+<body>
 <div class="global-bg" id="globalBg"></div>
 <div class="anime-decor" id="animeDecor" aria-hidden="true"></div>
 <div class="anime-grave-effects" id="animeGraveEffects" aria-hidden="true"></div>
@@ -1121,6 +968,7 @@
         const db = firebase.firestore();
         firebase.auth().signInAnonymously().catch(e => console.error("Auth error:", e));
 
+        // Blokada pinch-zoom / double-tap zoom
         ['gesturestart','gesturechange','gestureend'].forEach(ev =>
             document.addEventListener(ev, e => e.preventDefault(), { passive: false })
         );
@@ -1378,8 +1226,7 @@
             const linkHtml = movie.link ? `<div style="text-align:center;margin:0.3rem 0;"><a href="${escapeHtml(movie.link)}" target="_blank" style="color:var(--gold);font-size:0.7rem;">Link do filmu</a></div>` : '';
             const jfUrl = `https://jellyfin.shepardgepard.org/web/#/search.html?query=${encodeURIComponent(movie.title)}`;
             const editBtnAdminVisible = isAdmin ? ' admin-visible' : '';
-            // v2: klasy .slide-inner, .slide-poster, .slide-reviews, .slide-form
-            return `<div class="carousel-slide" data-movie-id="${movie.id}"><div class="slide-inner"><div class="slide-poster" style="height:clamp(180px,30vh,280px);position:relative;overflow:hidden;flex-shrink:0;background:#1a1a20;">${posterImg}<a href="${jfUrl}" target="_blank" class="movie-title-overlay">${escapeHtml(movie.title)}</a><button class="review-action-icon edit-movie-btn${editBtnAdminVisible}" data-movie-id="${movie.id}" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);color:#ddd;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:opacity 0.2s;">${SVG_ICONS.edit}</button></div>${dateHtml}${linkHtml}<div class="slide-reviews" style="flex:1;overflow-y:auto;padding:${reviewsPadding};display:flex;flex-direction:column;">${revHtml}</div>${sent}<div class="slide-form" style="background:var(--bg-elevated);border-top:1px solid var(--border-default);padding:0.7rem 0.9rem;transition:background 0.5s;"><div style="display:flex;gap:0.55rem;align-items:stretch;"><div style="flex:0 0 88px;display:flex;flex-direction:column;gap:0.25rem;"><input type="text" class="review-author-input" placeholder="Imię" maxlength="9" style="background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.4rem;font-size:0.7rem;color:var(--text-primary);text-align:center;font-family:inherit;width:100%;"><div class="rating-input" style="display:flex;gap:0;background:var(--bg-input);padding:0.15rem 0.25rem;border-radius:20px;justify-content:center;border:1px solid var(--border-default);">${[1,2,3,4,5].map(n=>`<span class="star-select" data-value="${n}" style="font-size:0.75rem;cursor:pointer;color:var(--text-muted);">&#9733;</span>`).join('')}</div></div><div style="flex:2;min-width:0;"><textarea class="review-comment-input" placeholder="Napisz kilka słów...\nKliknij enter aby wysłać." style="width:100%;height:100%;min-height:42px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.45rem;font-size:0.7rem;color:var(--text-primary);resize:none;font-family:inherit;"></textarea></div><div class="avg-box" data-movie-id="${movie.id}" style="flex:0 0 52px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold);cursor:pointer;font-size:0.85rem;">${avgDisp} ★</div></div></div></div></div>`;
+            return `<div class="carousel-slide" data-movie-id="${movie.id}"><div style="display:flex;flex-direction:column;height:100%;"><div style="height:clamp(180px,30vh,280px);position:relative;overflow:hidden;flex-shrink:0;background:#1a1a20;">${posterImg}<a href="${jfUrl}" target="_blank" class="movie-title-overlay">${escapeHtml(movie.title)}</a><button class="review-action-icon edit-movie-btn${editBtnAdminVisible}" data-movie-id="${movie.id}" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);color:#ddd;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:opacity 0.2s;">${SVG_ICONS.edit}</button></div>${dateHtml}${linkHtml}<div style="flex:1;overflow-y:auto;padding:${reviewsPadding};display:flex;flex-direction:column;">${revHtml}</div>${sent}<div style="background:var(--bg-elevated);border-top:1px solid var(--border-default);padding:0.7rem 0.9rem;transition:background 0.5s;"><div style="display:flex;gap:0.55rem;align-items:stretch;"><div style="flex:0 0 88px;display:flex;flex-direction:column;gap:0.25rem;"><input type="text" class="review-author-input" placeholder="Imię" maxlength="9" style="background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.4rem;font-size:0.7rem;color:var(--text-primary);text-align:center;font-family:inherit;width:100%;"><div class="rating-input" style="display:flex;gap:0;background:var(--bg-input);padding:0.15rem 0.25rem;border-radius:20px;justify-content:center;border:1px solid var(--border-default);">${[1,2,3,4,5].map(n=>`<span class="star-select" data-value="${n}" style="font-size:0.75rem;cursor:pointer;color:var(--text-muted);">&#9733;</span>`).join('')}</div></div><div style="flex:2;min-width:0;"><textarea class="review-comment-input" placeholder="Napisz kilka słów...\nKliknij enter aby wysłać." style="width:100%;height:100%;min-height:42px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.45rem;font-size:0.7rem;color:var(--text-primary);resize:none;font-family:inherit;"></textarea></div><div class="avg-box" data-movie-id="${movie.id}" style="flex:0 0 52px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold);cursor:pointer;font-size:0.85rem;">${avgDisp} ★</div></div></div></div></div>`;
         }
 
         function addSwipeSupport() {
@@ -1406,7 +1253,6 @@
 
         function buildCarousel(idx) {
             const c = document.getElementById('mainContent');
-            // v2: overflow sterowane CSS-em (mobile → visible, desktop → visible dla strzałek)
             c.style.overflow = 'visible';
             c.innerHTML = `<div class="carousel-wrapper"><div class="carousel-viewport" id="carouselViewport"></div><button class="carousel-arrow arrow-left" id="carouselPrevBtn">&lsaquo;</button><button class="carousel-arrow arrow-right" id="carouselNextBtn">&rsaquo;</button></div>`;
             const viewport = document.getElementById('carouselViewport');
@@ -1427,7 +1273,6 @@
             document.getElementById('carouselPrevBtn').onclick = prevSlide;
             document.getElementById('carouselNextBtn').onclick = nextSlide;
             addSwipeSupport();
-            resetSafariToolbarTint();
         }
 
         function setGlobalBackground(url) {
@@ -1465,9 +1310,6 @@
             setGlobalBackground(ranked[i]?.poster);
             updateEffects();
             attachDelegatedEvents();
-            // v2: przy zmianie slajdu przewiń na górę strony (body-scroll)
-            try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch(e) { window.scrollTo(0, 0); }
-            resetSafariToolbarTint();
         }
 
         function nextSlide() { goToSlide(currentSlideIndex + 1); }
@@ -1475,8 +1317,6 @@
 
         function switchToMovie() {
             viewMode = 'movie';
-            document.body.classList.remove('view-home');
-            document.body.classList.add('view-movie');
             const c = document.getElementById('mainContent');
             c.classList.add('view-fade-out');
             setTimeout(() => {
@@ -1490,23 +1330,17 @@
                         wrapper.removeEventListener('animationend', handler);
                     }, { once: true });
                 }
-                try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch(e) { window.scrollTo(0, 0); }
-                resetSafariToolbarTint();
             }, 180);
         }
 
         function switchToHome() {
             viewMode = 'home';
             activeMovieId = null;
-            document.body.classList.remove('view-movie');
-            document.body.classList.add('view-home');
             const c = document.getElementById('mainContent');
             c.classList.add('view-fade-out');
             setTimeout(() => {
                 renderHome();
                 c.classList.remove('view-fade-out');
-                try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch(e) { window.scrollTo(0, 0); }
-                resetSafariToolbarTint();
             }, 180);
         }
 
@@ -1529,9 +1363,7 @@
                 : '';
 
             const c = document.getElementById('mainContent');
-            // v2: NIE ustawiamy overflow inline – CSS decyduje
-            //      (mobile body-scroll: visible; desktop: base hidden + .home-container auto)
-            c.style.overflow = '';
+            c.style.overflow = 'auto';
             c.innerHTML = `<div class="home-container"><div class="next-movie-card" id="nextMovieCard">${posterHtml}<h2 style="color:var(--gold);font-size:0.7rem;text-transform:uppercase;">${animeMode?'Losowy film Ghibli':'Najbliższy seans'}</h2><div style="font-size:1.3rem;font-weight:700;">${escapeHtml(featured?.title||'Brak')}</div>${featuredDateHtml}</div><div class="ranking-section"><div class="ranking-list" id="rankingList"></div></div></div>`;
             const rankingDiv = document.getElementById('rankingList');
             if(rankingDiv) {
@@ -1707,7 +1539,7 @@
         syncVisibleViewport();
         setTimeout(syncVisibleViewport, 300);
 
-        // v2: reset probki paska – teraz mniej inwazyjny, tylko dla zmiany motywu
+        // Reset próbki paska – tylko przy zmianie motywu
         function resetSafariToolbarTint() {
             if (document.getElementById('ios-safari-toolbar-reset-tint')) return;
             const el = document.createElement('div');
@@ -1723,16 +1555,16 @@
             });
         }
 
-        // v2: ustawiamy tło na html, body i zmienną motywu. Probe bar (body::after)
-        //     jest teraz przezroczysty – nie tworzy czarnej linii.
+        // Ustawia kolor tła + kolor paska dolnego + meta theme-color.
+        // Ciemny motyw → #08080b, jasny → #e8e0c8.
         function updateThemeColor() {
             const isLight = animeMode && !document.body.classList.contains('grave-mode');
             const color = isLight ? '#e8e0c8' : '#08080b';
 
-            // Synchronizacja html + body + zmiennej CSS – tło pokrywa cały ekran
             document.documentElement.style.backgroundColor = color;
             document.body.style.backgroundColor = color;
             document.documentElement.style.setProperty('--theme-bg', color);
+            document.documentElement.style.setProperty('--safari-probe-color', color);
 
             document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
 
