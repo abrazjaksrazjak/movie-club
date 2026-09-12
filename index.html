@@ -60,6 +60,10 @@
             --safe-left: env(safe-area-inset-left, 0px);
             --vvh: 100svh; /* nadpisywane przez JS (visualViewport) */
             --vlh: 100lvh; /* iOS 26/27: „large viewport” – pełna wysokość pod paskami */
+
+            /* iOS 26/27 GIST FIX: kolor stałego paska 5px na dole –
+               nadpisywany przez JS, żeby Safari miało zawsze co próbkować. */
+            --safari-probe-color: #08080b;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none !important;
@@ -98,6 +102,24 @@
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none; }
         :focus-visible { outline: 1.5px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+
+        /* iOS 26/27 GIST FIX: stały pasek 5px na dole viewportu.
+           Safari 26 próbkuje kolor pasków z 4–5px nad dolną krawędzią.
+           Ten element gwarantuje, że zawsze jest tam ten sam kolor –
+           niezależnie od scrolla i aktualnego slajdu. */
+        body::after {
+            content: "";
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            height: 5px;
+            z-index: 8675309;
+            pointer-events: none;
+            background-color: var(--safari-probe-color, transparent);
+            transition: background-color 0.6s ease;
+        }
+
         .global-bg {
             position: fixed; top: 0; left: 0; right: 0;
             width: 100%;
@@ -106,20 +128,6 @@
             background-size: cover; background-position: center;
             filter: blur(28px) brightness(0.22) saturate(0.65);
             z-index: 0; pointer-events: none; transition: background-image 0.5s ease, filter 0.9s ease, opacity 0.5s ease;
-        }
-
-        /* iOS 26/27 FIX: dummy block – Safari próbkuje jego kolor dla dolnego paska */
-        .safari-bottom-probe {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            height: 4px;
-            width: 50%;
-            z-index: 0;
-            pointer-events: none;
-            opacity: 0.01;
-            background: transparent;
         }
 
         .anime-decor {
@@ -676,7 +684,6 @@
         body.anime-mode .loading-indicator { background: rgba(255, 252, 240, 0.96); }
         body.anime-mode .loading-indicator p { color: #364836; }
 
-        /* iOS 26/27: aura Ghibli rozciąga się pod paski, żeby Safari próbkował jej kolor */
         body.anime-mode::after {
             content: '';
             position: fixed;
@@ -927,7 +934,6 @@
 </head>
 <body>
 <div class="global-bg" id="globalBg"></div>
-<div class="safari-bottom-probe" aria-hidden="true"></div>
 <div class="anime-decor" id="animeDecor" aria-hidden="true"></div>
 <div class="anime-grave-effects" id="animeGraveEffects" aria-hidden="true"></div>
 <div class="anime-sunflare" id="animeSunflare" aria-hidden="true"></div>
@@ -1275,6 +1281,8 @@
             document.getElementById('carouselPrevBtn').onclick = prevSlide;
             document.getElementById('carouselNextBtn').onclick = nextSlide;
             addSwipeSupport();
+            // iOS 26/27 GIST FIX: wymuś ponowne próbkowanie paska po zbudowaniu karuzeli
+            resetSafariToolbarTint();
         }
 
         function setGlobalBackground(url) {
@@ -1312,6 +1320,8 @@
             setGlobalBackground(ranked[i]?.poster);
             updateEffects();
             attachDelegatedEvents();
+            // iOS 26/27 GIST FIX: wymuś ponowne próbkowanie paska po zmianie slajdu
+            resetSafariToolbarTint();
         }
 
         function nextSlide() { goToSlide(currentSlideIndex + 1); }
@@ -1332,6 +1342,8 @@
                         wrapper.removeEventListener('animationend', handler);
                     }, { once: true });
                 }
+                // iOS 26/27 GIST FIX
+                resetSafariToolbarTint();
             }, 180);
         }
 
@@ -1343,6 +1355,8 @@
             setTimeout(() => {
                 renderHome();
                 c.classList.remove('view-fade-out');
+                // iOS 26/27 GIST FIX
+                resetSafariToolbarTint();
             }, 180);
         }
 
@@ -1543,20 +1557,43 @@
         syncVisibleViewport();
         setTimeout(syncVisibleViewport, 300);
 
-        // ===== iOS 26/27 FIX: Safari 26 czyta kolor pasków z tła body,
-        // a nie z <meta name="theme-color">. Ustawiamy też dummy probe. =====
+        // ===== iOS 26/27 GIST FIX: wymuszenie ponownego próbkowania paska =====
+        // Safari 26 "cache'uje" kolor pasków i odświeża go tylko przy scrollu,
+        // zmianie orientacji itp. Wstrzykujemy tymczasowy element na dole ekranu
+        // i usuwamy go w dwóch klatkach – to zmusza Safari do ponownego próbkowania.
+        function resetSafariToolbarTint() {
+            if (document.getElementById('ios-safari-toolbar-reset-tint')) return;
+            const el = document.createElement('div');
+            el.id = 'ios-safari-toolbar-reset-tint';
+            el.setAttribute('aria-hidden', 'true');
+            el.style.cssText =
+                'position:fixed;left:0;right:0;bottom:-10px;height:20px;' +
+                'z-index:10000000;background-color:rgba(0,0,0,0.01);' +
+                'pointer-events:none;';
+            document.body.appendChild(el);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => el.remove());
+            });
+        }
+
+        // ===== iOS 26/27 GIST FIX: aktualizacja koloru pasków =====
+        // Ustawiamy kolor w trzech miejscach:
+        //   1) background-color body (Safari 26 to czyta)
+        //   2) --safari-probe-color – kolor stałego paska 5px (body::after)
+        //   3) meta theme-color (starsze iOS 16–18)
+        // Na koniec wymuszamy ponowne próbkowanie przez resetSafariToolbarTint().
         function updateThemeColor() {
             const isLight = animeMode && !document.body.classList.contains('grave-mode');
             const color = isLight ? '#e8e0c8' : '#08080b';
 
             document.body.style.backgroundColor = color;
             document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
+            document.documentElement.style.setProperty('--safari-probe-color', color);
 
             const meta = document.querySelector('meta[name="theme-color"]');
             if (meta) meta.setAttribute('content', color);
 
-            const probe = document.querySelector('.safari-bottom-probe');
-            if (probe) probe.style.background = color;
+            resetSafariToolbarTint();
         }
 
         function updateEffects() {
