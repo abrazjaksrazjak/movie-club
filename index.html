@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#08080b">
     <meta name="color-scheme" content="dark">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Movie Club">
     <title>JLL Movie Club – współdzielony ranking</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
@@ -52,17 +48,12 @@
             --font-md: 0.88rem;
             --font-lg: 1.05rem;
             --font-xl: 1.3rem;
-            --ios-theme-bg: #08080b;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none !important;
             -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale; }
-        html {
-            background: var(--bg-base);
-            color-scheme: dark;
-            touch-action: pan-y;
-        }
+        html { background: var(--bg-base); color-scheme: dark; touch-action: manipulation; }
         body {
             background: var(--bg-base);
             background-image: radial-gradient(ellipse at 50% 0%, rgba(201, 168, 76, 0.04) 0%, transparent 55%),
@@ -73,33 +64,15 @@
             height: 100vh; height: 100dvh; width: 100%;
             overflow: hidden;
             display: flex; flex-direction: column; align-items: center;
-            padding: 0;
+            padding: env(safe-area-inset-top) 0 0 0;
             letter-spacing: -0.01em;
-            touch-action: pan-y;
+            touch-action: manipulation;
             position: relative; margin: 0;
             transition: background-color 0.6s ease, background-image 0.6s ease, color 0.6s ease;
         }
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none; }
         :focus-visible { outline: 1.5px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
-
-        #ios-theme-color {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            pointer-events: none;
-            z-index: 9999;
-            background: transparent;
-        }
-        #ios-theme-color::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-color: var(--ios-theme-bg);
-        }
-
         .global-bg {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100%;
             background-size: cover; background-position: center;
@@ -250,39 +223,26 @@
         .app-container {
             width: 100%; max-width: 960px; margin: 0 auto;
             display: flex; flex-direction: column; height: 100%; height: 100dvh;
-            padding: 0 1rem 0.8rem 1rem;
-            overflow: hidden; gap: 0.8rem;
+            padding: 1rem 1rem 0.8rem 1rem; overflow: hidden; gap: 0.8rem;
             position: relative; z-index: 1;
         }
-
-        /* ============ NAGŁÓWEK – PEŁNA PRZEZROCZYSTOŚĆ ============ */
         .club-header {
             display: flex; justify-content: space-between; align-items: center;
-            flex-shrink: 0;
-            padding: calc(0.3rem + env(safe-area-inset-top)) 0.6rem 0.3rem 0.6rem;
-            background: transparent;
-            backdrop-filter: none;
-            -webkit-backdrop-filter: none;
-            border: none;
-            border-radius: 0;
-            box-shadow: none;
+            flex-shrink: 0; padding: 0.3rem 0.6rem;
+            background: var(--bg-surface); border-radius: var(--radius-lg);
+            border: 1px solid var(--border-default); box-shadow: var(--shadow-sm);
             gap: 0.5rem; z-index: 20; position: relative;
-            transition: background 0.5s ease;
+            transition: background 0.5s ease, border-color 0.5s ease;
         }
         .club-header h1 {
             font-size: var(--font-lg); font-weight: 700; letter-spacing: 0.06em;
-            cursor: pointer; 
-            transition: background-position var(--transition-smooth), filter var(--transition-fast), background 0.6s ease;
+            cursor: pointer; transition: background-position var(--transition-smooth), filter var(--transition-fast), background 0.6s ease;
             background: linear-gradient(135deg, var(--text-primary) 0%, var(--gold-light) 40%, var(--gold) 100%);
             background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             background-size: 200% 100%; background-position: 0% 50%;
-            filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.55));
             display: flex; align-items: center; gap: 0.35rem; white-space: nowrap;
         }
-        .club-header h1:hover { 
-            background-position: 100% 50%; 
-            filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.55)) brightness(1.2); 
-        }
+        .club-header h1:hover { background-position: 100% 50%; filter: brightness(1.2); }
         .admin-indicator {
             display: none; width: 9px; height: 9px; border-radius: 50%; background: var(--gold);
             box-shadow: 0 0 8px var(--gold-glow); flex-shrink: 0; cursor: pointer;
@@ -291,14 +251,8 @@
         .admin-indicator.active { display: inline-block; }
         .admin-indicator:hover { transform: scale(1.3); }
         .header-buttons { display: flex; gap: 0.35rem; align-items: center; }
-
-        /* ============ PRZYCISKI – EFEKT SZKŁA ============ */
         .icon-btn {
-            background: rgba(26, 26, 33, 0.55);
-            backdrop-filter: blur(14px) saturate(1.4);
-            -webkit-backdrop-filter: blur(14px) saturate(1.4);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: var(--text-secondary);
+            background: var(--bg-elevated); border: 1px solid var(--border-default); color: var(--text-secondary);
             cursor: pointer; width: 36px; height: 36px; border-radius: var(--radius-sm);
             transition: color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), background 0.5s ease;
             display: inline-flex; align-items: center; justify-content: center; position: relative; overflow: hidden; padding: 0;
@@ -322,9 +276,7 @@
             color: var(--gold-light);
             border-color: var(--border-gold);
             box-shadow: var(--shadow-gold);
-            background: linear-gradient(135deg, rgba(201,168,76,0.4), rgba(201,168,76,0.15));
-            backdrop-filter: blur(14px) saturate(1.5);
-            -webkit-backdrop-filter: blur(14px) saturate(1.5);
+            background: linear-gradient(135deg, rgba(201,168,76,0.18), rgba(201,168,76,0.05));
         }
         body.anime-mode .anime-toggle-btn.active {
             color: #fffbf0;
@@ -435,84 +387,6 @@
         .carousel-arrow:hover { opacity: 1; color: var(--gold); border-color: var(--gold); }
         .arrow-left { left: -6px; } .arrow-right { right: -6px; }
 
-        /* ============ WSKAŹNIK POZYCJI – SUBTELNY PILL ============ */
-        .carousel-position-hint {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            z-index: 26;
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 3px 13px;
-            background: rgba(0, 0, 0, 0.32);
-            backdrop-filter: blur(14px) saturate(1.5);
-            -webkit-backdrop-filter: blur(14px) saturate(1.5);
-            border: 1px solid rgba(201, 168, 76, 0.22);
-            border-radius: 9999px;
-            font-family: 'Inter', system-ui, sans-serif;
-            pointer-events: none;
-            opacity: 0;
-            transform: translateX(-50%) translateY(-8px) scale(0.94);
-            transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-                        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-            will-change: opacity, transform;
-        }
-        .carousel-position-hint:not(.hidden) {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0) scale(1);
-        }
-        .carousel-position-hint.hidden {
-            opacity: 0;
-            transform: translateX(-50%) translateY(-6px) scale(0.96);
-        }
-        .carousel-position-hint .cph-arrow {
-            color: var(--gold);
-            font-size: 0.9rem;
-            line-height: 1;
-            font-weight: 400;
-            opacity: 0.55;
-            animation: cphArrowPulse 2.4s ease-in-out infinite;
-        }
-        .carousel-position-hint .cph-arrow:first-child { animation-delay: 0.15s; --cph-dir: -1.5px; }
-        .carousel-position-hint .cph-arrow:last-child  { animation-delay: 0.55s; --cph-dir:  1.5px; }
-        @keyframes cphArrowPulse {
-            0%, 100% { opacity: 0.35; transform: translateX(0); }
-            50%      { opacity: 1;    transform: translateX(var(--cph-dir, 0)); }
-        }
-        .carousel-position-hint .cph-count {
-            color: var(--gold-light);
-            font-weight: 500;
-            font-size: 0.68rem;
-            letter-spacing: 0.16em;
-            font-variant-numeric: tabular-nums;
-            min-width: 42px;
-            text-align: center;
-            opacity: 0.95;
-        }
-
-        body.anime-mode .carousel-position-hint {
-            background: rgba(255, 252, 240, 0.4);
-            border-color: rgba(184, 137, 74, 0.4);
-            box-shadow: 0 4px 14px rgba(90, 117, 88, 0.15);
-        }
-        body.anime-mode .carousel-position-hint .cph-arrow { color: #b8894a; }
-        body.anime-mode .carousel-position-hint .cph-count { color: #5c6c5c; }
-
-        body.anime-mode.grave-mode .carousel-position-hint {
-            background: rgba(0, 0, 0, 0.42);
-            border-color: rgba(201, 168, 76, 0.3);
-        }
-        body.anime-mode.grave-mode .carousel-position-hint .cph-arrow { color: #c9a84c; }
-        body.anime-mode.grave-mode .carousel-position-hint .cph-count { color: #e0c56e; }
-
-        @media (max-width: 600px) {
-            .carousel-position-hint { top: 9px; padding: 2px 11px; gap: 7px; }
-            .carousel-position-hint .cph-arrow { font-size: 0.82rem; }
-            .carousel-position-hint .cph-count { font-size: 0.64rem; min-width: 38px; letter-spacing: 0.14em; }
-        }
-
         .review-card { display: flex; gap: 0.7rem; padding: 0.55rem 0.65rem; border-radius: var(--radius-sm); background: transparent; border: 1px solid transparent; position: relative; align-items: flex-start; }
         .review-card:hover { background: rgba(255,255,255,0.025); border-color: rgba(255,255,255,0.06); }
         .review-card.pending { opacity: 0.65; filter: grayscale(0.2); }
@@ -567,7 +441,6 @@
             background: rgba(22,22,28,0.95); backdrop-filter: blur(12px); border: 1px solid var(--border-gold);
             border-radius: 20px; padding: 0.6rem 1.5rem; color: #eee; z-index: 2000;
             transition: transform 0.3s, background 0.5s; font-size: var(--font-sm);
-            max-width: 88vw; text-align: center;
         }
         .toast.show { transform: translateX(-50%) translateY(0); }
 
@@ -597,7 +470,6 @@
             --shadow-md: 0 8px 24px rgba(90, 117, 88, 0.18);
             --shadow-lg: 0 16px 40px rgba(90, 117, 88, 0.22);
             --shadow-gold: 0 0 24px rgba(184, 137, 74, 0.28);
-            --ios-theme-bg: #e8e0c8;
 
             background-color: #e8e0c8;
             background-image:
@@ -607,6 +479,7 @@
                 linear-gradient(180deg, #a8c8dc 0%, #c8dcc8 28%, #e8e0c8 62%, #f0e6c8 100%);
         }
 
+        /* color-scheme dla trybu Ghibli (jasny) i Grobowca (ciemny) */
         body.anime-mode:not(.grave-mode) { color-scheme: light; }
         body.anime-mode.grave-mode { color-scheme: dark; }
 
@@ -620,24 +493,16 @@
             background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             background-size: 200% 100%;
             letter-spacing: 0.08em;
-            filter: drop-shadow(0 1px 2px rgba(255, 252, 240, 0.5));
-        }
-        /* Nagłówek Ghibli – pełna przezroczystość */
-        body.anime-mode .club-header {
-            background: transparent;
-            border: none;
         }
         body.anime-mode .icon-btn {
-            background: rgba(255, 252, 240, 0.55);
-            backdrop-filter: blur(14px) saturate(1.4);
-            -webkit-backdrop-filter: blur(14px) saturate(1.4);
+            background: rgba(252, 247, 232, 0.88);
             color: #5c6c5c;
             border-color: rgba(139, 168, 139, 0.4);
         }
         body.anime-mode .icon-btn:hover {
             color: #b8894a;
             border-color: rgba(184, 137, 74, 0.6);
-            background: rgba(255, 251, 240, 0.85);
+            background: #fffbf0;
         }
 
         body.anime-mode .next-movie-card {
@@ -785,7 +650,6 @@
             --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.55);
             --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.7);
             --shadow-gold: 0 0 24px rgba(201, 168, 76, 0.18);
-            --ios-theme-bg: #08080b;
             background-color: #08080b;
             background-image:
                 radial-gradient(ellipse at 50% 0%, rgba(201, 168, 76, 0.04) 0%, transparent 55%),
@@ -798,27 +662,21 @@
         }
         body.anime-mode.grave-mode::after { display: none; }
 
-        /* Grobowiec – nagłówek też w pełni przezroczysty */
-        body.anime-mode.grave-mode .club-header {
-            background: transparent;
-            border: none;
-        }
         body.anime-mode.grave-mode .club-header h1 {
             background: linear-gradient(135deg, #e8e8ed 0%, #e0c56e 40%, #c9a84c 100%);
             background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             background-size: 200% 100%;
             letter-spacing: 0.06em;
-            filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6));
         }
         body.anime-mode.grave-mode .icon-btn {
-            background: rgba(26, 26, 33, 0.55);
+            background: #1a1a21;
             color: #a5a5b0;
-            border-color: rgba(255, 255, 255, 0.12);
+            border-color: #25252e;
         }
         body.anime-mode.grave-mode .icon-btn:hover {
             color: #c9a84c;
             border-color: rgba(201, 168, 76, 0.25);
-            background: rgba(26, 26, 33, 0.85);
+            background: #1a1a21;
         }
 
         body.anime-mode.grave-mode .next-movie-card {
@@ -924,10 +782,8 @@
         body.anime-mode.grave-mode .loading-indicator p { color: var(--text-primary); }
 
         @media (max-width: 600px) {
-            .app-container { padding: 0 0.5rem 0.4rem 0.5rem; }
-            .club-header {
-                padding: calc(0.2rem + env(safe-area-inset-top)) 0.4rem 0.2rem 0.4rem;
-            }
+            .app-container { padding: 0.5rem 0.5rem 0.4rem 0.5rem; gap: 0.5rem; }
+            .club-header { padding: 0.2rem 0.4rem; border-radius: var(--radius-md); }
             .club-header h1 { font-size: var(--font-md); }
             .home-container { gap: 0.6rem; margin-top: 0.1rem; }
             .next-movie-card { padding: 0.9rem; }
@@ -955,8 +811,6 @@
     </style>
 </head>
 <body>
-<div id="ios-theme-color" aria-hidden="true"></div>
-
 <div class="global-bg" id="globalBg"></div>
 <div class="anime-decor" id="animeDecor" aria-hidden="true"></div>
 <div class="anime-grave-effects" id="animeGraveEffects" aria-hidden="true"></div>
@@ -994,13 +848,6 @@
 
 <script>
     (function() {
-        ['gesturestart', 'gesturechange', 'gestureend'].forEach(function(evt) {
-            document.addEventListener(evt, function(e) { e.preventDefault(); }, { passive: false });
-        });
-        document.addEventListener('touchmove', function(e) {
-            if (e.touches && e.touches.length > 1) e.preventDefault();
-        }, { passive: false });
-
         function getSessionToken() { let t = sessionStorage.getItem('reviewSessionToken'); if (!t) { t = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2,8); sessionStorage.setItem('reviewSessionToken', t); } return t; }
         function getDynamicAdminPassword() { const n = new Date(); return `admin${String(n.getDate()).padStart(2,'0')}${String(n.getMonth()+1).padStart(2,'0')}`; }
         firebase.initializeApp({ apiKey: "AIzaSyDyJDEMa0H4w8krL5vrg9C-oPCIvBDmReE", authDomain: "movie-club-f8ceb.firebaseapp.com", projectId: "movie-club-f8ceb", storageBucket: "movie-club-f8ceb.firebasestorage.app", messagingSenderId: "17251318633", appId: "1:17251318633:web:5080a0bc0243e1a91d1bf8" });
@@ -1014,16 +861,17 @@
         let touchStartY = 0;
         window.currentEditMovieId = null;
 
+        // ---- Śledzimy ID aktualnie oglądanego filmu (niezależnie od indeksu) ----
         let activeMovieId = null;
         let justSubmittedReviewId = null;
         let justSubmittedReviewTimestamp = 0;
 
+        // ----- TRYB GHIBLI -----
         let animeMode = false;
         let scWidget = null;
         let scWidgetReady = false;
         let scWidgetPendingPlay = false;
         let currentFeatured = null;
-        let hintTimer = null;
 
         const RATING_PRIOR = 3.0;
         const RATING_PRIOR_WEIGHT = 1.5;
@@ -1040,7 +888,7 @@
         let loadingTimeout = null;
 
         function preloadImage(url) { if (!url || preloadedImages[url]) return; preloadedImages[url] = new Promise((resolve) => { const img = new Image(); img.onload = () => { preloadedImages[url] = true; resolve(); }; img.onerror = () => { preloadedImages[url] = false; resolve(); }; img.src = url; }); }
-        function showToast(m, type='') { const old = document.querySelector('.toast'); if (old) old.remove(); const t = document.createElement('div'); t.className = 'toast '+type; t.textContent = m; document.body.appendChild(t); requestAnimationFrame(()=> requestAnimationFrame(()=> t.classList.add('show'))); const hide = setTimeout(()=>{ t.classList.remove('show'); t.addEventListener('transitionend', ()=> t.remove(), {once:true}); setTimeout(()=>{ if(t.parentNode) t.remove(); }, 500); }, 3400); t._hideTimeout = hide; }
+        function showToast(m, type='') { const old = document.querySelector('.toast'); if (old) old.remove(); const t = document.createElement('div'); t.className = 'toast '+type; t.textContent = m; document.body.appendChild(t); requestAnimationFrame(()=> requestAnimationFrame(()=> t.classList.add('show'))); const hide = setTimeout(()=>{ t.classList.remove('show'); t.addEventListener('transitionend', ()=> t.remove(), {once:true}); setTimeout(()=>{ if(t.parentNode) t.remove(); }, 500); }, 2800); t._hideTimeout = hide; }
         function openModal(id) { const m = document.getElementById(id); if(!m) return; m.style.display='flex'; requestAnimationFrame(()=> requestAnimationFrame(()=> m.classList.add('open'))); }
         function closeModal(id) { const m = document.getElementById(id); if(!m) return; m.classList.remove('open'); const h = ()=>{ m.style.display='none'; m.removeEventListener('transitionend', h); }; m.addEventListener('transitionend', h, {once:true}); setTimeout(()=>{ if(!m.classList.contains('open')) { m.style.display='none'; m.removeEventListener('transitionend', h); } }, 350); }
         function updateAdminIndicator() { const indicator = document.getElementById('adminIndicator'); if (!indicator) return; indicator.classList.toggle('active', isAdmin); }
@@ -1251,14 +1099,6 @@
             return `<div class="carousel-slide" data-movie-id="${movie.id}"><div style="display:flex;flex-direction:column;height:100%;"><div style="height:clamp(180px,30vh,280px);position:relative;overflow:hidden;flex-shrink:0;background:#1a1a20;">${posterImg}<a href="${jfUrl}" target="_blank" class="movie-title-overlay">${escapeHtml(movie.title)}</a><button class="review-action-icon edit-movie-btn${editBtnAdminVisible}" data-movie-id="${movie.id}" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);color:#ddd;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:opacity 0.2s;">${SVG_ICONS.edit}</button></div>${dateHtml}${linkHtml}<div style="flex:1;overflow-y:auto;padding:${reviewsPadding};display:flex;flex-direction:column;">${revHtml}</div>${sent}<div style="background:var(--bg-elevated);border-top:1px solid var(--border-default);padding:0.7rem 0.9rem;transition:background 0.5s;"><div style="display:flex;gap:0.55rem;align-items:stretch;"><div style="flex:0 0 88px;display:flex;flex-direction:column;gap:0.25rem;"><input type="text" class="review-author-input" placeholder="Imię" maxlength="9" style="background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.4rem;font-size:0.7rem;color:var(--text-primary);text-align:center;font-family:inherit;width:100%;"><div class="rating-input" style="display:flex;gap:0;background:var(--bg-input);padding:0.15rem 0.25rem;border-radius:20px;justify-content:center;border:1px solid var(--border-default);">${[1,2,3,4,5].map(n=>`<span class="star-select" data-value="${n}" style="font-size:0.75rem;cursor:pointer;color:var(--text-muted);">&#9733;</span>`).join('')}</div></div><div style="flex:2;min-width:0;"><textarea class="review-comment-input" placeholder="Napisz kilka słów...\nKliknij enter aby wysłać." style="width:100%;height:100%;min-height:42px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0.45rem;font-size:0.7rem;color:var(--text-primary);resize:none;font-family:inherit;"></textarea></div><div class="avg-box" data-movie-id="${movie.id}" style="flex:0 0 52px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold);cursor:pointer;font-size:0.85rem;">${avgDisp} ★</div></div></div></div></div>`;
         }
 
-        function showPositionHint() {
-            const hint = document.getElementById('carouselPositionHint');
-            if (!hint) return;
-            hint.classList.remove('hidden');
-            if (hintTimer) clearTimeout(hintTimer);
-            hintTimer = setTimeout(() => { hint.classList.add('hidden'); }, 3500);
-        }
-
         function addSwipeSupport() {
             const viewport = document.getElementById('carouselViewport');
             if (!viewport) return;
@@ -1284,9 +1124,9 @@
         function buildCarousel(idx) {
             const c = document.getElementById('mainContent');
             c.style.overflow = 'visible';
-            const ranked = getRankedMovies();
-            c.innerHTML = `<div class="carousel-wrapper"><div class="carousel-viewport" id="carouselViewport"></div><button class="carousel-arrow arrow-left" id="carouselPrevBtn">&lsaquo;</button><button class="carousel-arrow arrow-right" id="carouselNextBtn">&rsaquo;</button><div class="carousel-position-hint hidden" id="carouselPositionHint"><span class="cph-arrow">‹</span><span class="cph-count" id="cphCount">${idx+1} / ${ranked.length}</span><span class="cph-arrow">›</span></div></div>`;
+            c.innerHTML = `<div class="carousel-wrapper"><div class="carousel-viewport" id="carouselViewport"></div><button class="carousel-arrow arrow-left" id="carouselPrevBtn">&lsaquo;</button><button class="carousel-arrow arrow-right" id="carouselNextBtn">&rsaquo;</button></div>`;
             const viewport = document.getElementById('carouselViewport');
+            const ranked = getRankedMovies();
             ranked.forEach((m,i)=>{
                 const d = document.createElement('div');
                 d.innerHTML = generateMovieSlide(m);
@@ -1303,7 +1143,6 @@
             document.getElementById('carouselPrevBtn').onclick = prevSlide;
             document.getElementById('carouselNextBtn').onclick = nextSlide;
             addSwipeSupport();
-            requestAnimationFrame(() => requestAnimationFrame(showPositionHint));
         }
 
         function setGlobalBackground(url) {
@@ -1341,9 +1180,6 @@
             setGlobalBackground(ranked[i]?.poster);
             updateEffects();
             attachDelegatedEvents();
-            const cph = document.getElementById('cphCount');
-            if (cph) cph.textContent = `${i+1} / ${ranked.length}`;
-            showPositionHint();
         }
 
         function nextSlide() { goToSlide(currentSlideIndex + 1); }
@@ -1542,27 +1378,14 @@
             if (frontContainer) frontContainer.innerHTML = '';
         }
 
+        // ---- Aktualizacja koloru paska przeglądarki + color-scheme ----
         function updateThemeColor() {
+            const meta = document.querySelector('meta[name="theme-color"]');
             const isLight = animeMode && !document.body.classList.contains('grave-mode');
-            const color = isLight ? '#e8e0c8' : '#08080b';
-
-            let meta = document.querySelector('meta[name="theme-color"]');
-            if (!meta) {
-                meta = document.createElement('meta');
-                meta.name = 'theme-color';
-                document.head.appendChild(meta);
+            if (meta) {
+                meta.setAttribute('content', isLight ? '#e8e0c8' : '#08080b');
             }
-            meta.setAttribute('content', color);
-
-            let metaCS = document.querySelector('meta[name="color-scheme"]');
-            if (metaCS) metaCS.setAttribute('content', isLight ? 'light' : 'dark');
-
-            document.documentElement.style.backgroundColor = color;
-            document.body.style.backgroundColor = color;
             document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
-            document.documentElement.style.setProperty('--ios-theme-bg', color);
-
-            void document.documentElement.offsetHeight;
         }
 
         function updateEffects() {
