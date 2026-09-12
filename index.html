@@ -1,6 +1,23 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
+    <!--
+      FIX iOS Safari "liquid glass":
+      1) viewport-fit=cover -> treść sięga pod paski Safari.
+      2) Safari 26 IGNORUJE theme-color do barwienia pasków - zamiast tego skanuje
+         elementy position:fixed/sticky przy krawędziach viewportu (<=4px od góry,
+         <=3px od dołu, >=80% szer., >=3px wys.) i czyta ich background-color +
+         backdrop-filter. Dlatego dodane sa paski .chrome-tint (gora/dol), ktorych
+         kolor jest liczony JS-em jako sredni kolor aktualnego, zblurowanego tla
+         (plakatu) po zastosowaniu tych samych filtrow co .global-bg -> paski
+         przeglądarki zlewają się ze zblurowanym tłem strony.
+      3) "Scroll runway" (tylko iOS Safari): dokument jest o 2px wyższy i auto-
+         scrolluje się o 2px, dzieki czemu Safari kompozytuje PRAWDZIWE piksele
+         strony (zblurowane tło) za górnym paskiem statusu zamiast pełnego koloru.
+      4) html/body background-color zsynchronizowane jako fallback + overscroll.
+      Pelny fullscreen bez żadnych pasków: Safari -> Udostępnij -> Dodaj do
+      ekranu początkowego (meta apple-mobile-web-app-capable + black-translucent).
+    -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="theme-color" content="#08080b">
@@ -59,6 +76,8 @@
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             --safe-left: env(safe-area-inset-left, 0px);
             --vvh: 100svh; /* nadpisywane przez JS (visualViewport) */
+            --chrome-top: #08080b;   /* kolor górnej krawędzi zblurowanego tła */
+            --chrome-bottom: #08080b;/* kolor dolnej krawędzi zblurowanego tła */
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none !important;
@@ -72,7 +91,12 @@
             overflow: hidden;
             overscroll-behavior: none;
             -webkit-text-size-adjust: 100%;
+            transition: background-color 0.5s ease;
         }
+        /* Runway tylko na iOS Safari: +2px wysokości i wymuszony scroll,
+           żeby Safari rysowało prawdziwe piksele strony za górnym paskiem. */
+        html.ios-runway { overflow: visible; }
+        html.ios-runway body { height: calc(100dvh + 2px); overflow: visible; }
         body {
             background: var(--bg-base);
             background-image: radial-gradient(ellipse at 50% 0%, rgba(201, 168, 76, 0.04) 0%, transparent 55%),
@@ -80,8 +104,6 @@
             background-attachment: fixed;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             color: var(--text-primary);
-            /* tło rozciąga się na CAŁY ekran (wchodzi pod pływające elementy Safari),
-               a treść jest ograniczona przez .app-container */
             height: 100vh; height: 100dvh;
             width: 100%;
             overflow: hidden;
@@ -96,6 +118,7 @@
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none; }
         :focus-visible { outline: 1.5px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+
         .global-bg {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             width: 100%; height: 100%;
@@ -103,6 +126,20 @@
             filter: blur(28px) brightness(0.22) saturate(0.65);
             z-index: 0; pointer-events: none; transition: background-image 0.5s ease, filter 0.9s ease, opacity 0.5s ease;
         }
+
+        /* Paski "chrome-tint": elementy fixed przy samych krawędziach viewportu.
+           Safari 26 czyta ich background-color + backdrop-filter i barwi nimi
+           górny pasek statusu oraz dolny pasek narzędzi -> zlewają się ze
+           zblurowanym tłem strony zamiast być jednolitymi belkami. */
+        .chrome-tint {
+            position: fixed; left: 0; width: 100%; height: 4px;
+            z-index: 0; pointer-events: none;
+            -webkit-backdrop-filter: blur(24px) saturate(1.1);
+            backdrop-filter: blur(24px) saturate(1.1);
+            transition: background-color 0.5s ease;
+        }
+        .chrome-tint-top { top: 0; background-color: var(--chrome-top); }
+        .chrome-tint-bottom { bottom: 0; background-color: var(--chrome-bottom); }
 
         .anime-decor {
             position: fixed; inset: 0; pointer-events: none;
@@ -180,7 +217,7 @@
             border-radius: 50%;
             opacity: 0;
             animation-name: sparkRise;
-            animation-timing-function: cubic-bezier(0.4, 0.6, 1, 1);
+            animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
             animation-iteration-count: infinite;
             will-change: transform, opacity;
             pointer-events: none;
@@ -247,7 +284,6 @@
         .app-container {
             width: 100%; max-width: 960px; margin: 0 auto;
             display: flex; flex-direction: column;
-            /* wysokość = realnie widoczny obszar (bez pasków Safari), nigdy więcej */
             height: 100vh;
             height: min(var(--vvh), 100svh);
             flex: 0 0 auto;
@@ -522,11 +558,8 @@
                 linear-gradient(180deg, #a8c8dc 0%, #c8dcc8 28%, #e8e0c8 62%, #f0e6c8 100%);
         }
 
-        /* color-scheme dla trybu Ghibli (jasny) i Grobowca (ciemny) */
         body.anime-mode:not(.grave-mode) { color-scheme: light; }
         body.anime-mode.grave-mode { color-scheme: dark; }
-        html { transition: background-color 0.6s ease; }
-        body.anime-mode ~ * , body.anime-mode { }
 
         body.anime-mode .global-bg {
             filter: blur(3px) brightness(1.02) saturate(1.05);
@@ -862,7 +895,6 @@
             .empty-state p { font-size: 0.82rem; letter-spacing: 0.12em; }
         }
 
-        /* Orientacja pozioma na iOS – mniej miejsca, więc mniejsze odstępy */
         @media (orientation: landscape) and (max-height: 520px) {
             .app-container { gap: 0.4rem; }
             .next-movie-card .poster { max-height: 140px; }
@@ -871,6 +903,8 @@
 </head>
 <body>
 <div class="global-bg" id="globalBg"></div>
+<div class="chrome-tint chrome-tint-top" id="chromeTintTop" aria-hidden="true"></div>
+<div class="chrome-tint chrome-tint-bottom" id="chromeTintBottom" aria-hidden="true"></div>
 <div class="anime-decor" id="animeDecor" aria-hidden="true"></div>
 <div class="anime-grave-effects" id="animeGraveEffects" aria-hidden="true"></div>
 <div class="anime-sunflare" id="animeSunflare" aria-hidden="true"></div>
@@ -920,12 +954,10 @@
         let touchStartY = 0;
         window.currentEditMovieId = null;
 
-        // ---- Śledzimy ID aktualnie oglądanego filmu (niezależnie od indeksu) ----
         let activeMovieId = null;
         let justSubmittedReviewId = null;
         let justSubmittedReviewTimestamp = 0;
 
-        // ----- TRYB GHIBLI -----
         let animeMode = false;
         let scWidget = null;
         let scWidgetReady = false;
@@ -945,6 +977,143 @@
         let pendingScrollTop = 0;
         let debounceRebuildTimer = null;
         let loadingTimeout = null;
+
+        /* ================= iOS SAFARI: CHROME TINT (kolor pasków = kolor zblurowanego tła) ================= */
+        let currentPosterUrl = null;
+        const edgeSampleCache = {};
+        let chromePending = false;
+
+        function clamp255(v) { return Math.max(0, Math.min(255, Math.round(v))); }
+
+        /* Te same filtry co .global-bg, żeby kolor pasków = kolor widocznego bluru */
+        function filterEdgeColor(c) {
+            const grave = document.body.classList.contains('grave-mode');
+            let sat, bri;
+            if (!animeMode) { sat = 0.65; bri = 0.22; }
+            else if (grave) { sat = 0.55; bri = 0.4; }
+            else { sat = 1.05; bri = 1.02; }
+            const lum = 0.2126*c[0] + 0.7152*c[1] + 0.0722*c[2];
+            const r = clamp255((lum + (c[0]-lum)*sat) * bri);
+            const g = clamp255((lum + (c[1]-lum)*sat) * bri);
+            const b = clamp255((lum + (c[2]-lum)*sat) * bri);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        function fallbackEdgeColors() {
+            const grave = document.body.classList.contains('grave-mode');
+            if (!animeMode) return ['#08080b', '#08080b'];
+            if (grave) return ['#08080b', '#08080b'];
+            return ['#a8c8dc', '#f0e6c8']; /* góra/dół gradientu trybu Ghibli */
+        }
+
+        function applyChromeColors(topCss, bottomCss) {
+            const root = document.documentElement;
+            root.style.setProperty('--chrome-top', topCss);
+            root.style.setProperty('--chrome-bottom', bottomCss);
+            const t = document.getElementById('chromeTintTop');
+            const b = document.getElementById('chromeTintBottom');
+            if (t) t.style.backgroundColor = topCss;
+            if (b) b.style.backgroundColor = bottomCss;
+            /* fallback: canvas (html/body) + theme-color dla Safari <= 18.6 */
+            root.style.backgroundColor = topCss;
+            document.body.style.backgroundColor = bottomCss;
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', topCss);
+        }
+
+        function computeChromeColors() {
+            chromePending = false;
+            const url = currentPosterUrl;
+            const fb = fallbackEdgeColors();
+            if (!url) { applyChromeColors(fb[0], fb[1]); return; }
+            const cached = edgeSampleCache[url];
+            if (cached) { applyChromeColors(filterEdgeColor(cached.top), filterEdgeColor(cached.bottom)); return; }
+            applyChromeColors(fb[0], fb[1]);
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                try {
+                    const S = 24;
+                    const cv = document.createElement('canvas');
+                    cv.width = S; cv.height = S;
+                    const ctx = cv.getContext('2d', { willReadFrequently: true });
+                    ctx.drawImage(img, 0, 0, S, S);
+                    const d = ctx.getImageData(0, 0, S, S).data;
+                    let tr=0,tg=0,tb=0,tn=0, br=0,bg=0,bb=0,bn=0;
+                    for (let y = 0; y < S; y++) {
+                        for (let x = 0; x < S; x++) {
+                            const i = (y*S + x) * 4;
+                            if (y < S*0.25) { tr+=d[i]; tg+=d[i+1]; tb+=d[i+2]; tn++; }
+                            else if (y >= S*0.75) { br+=d[i]; bg+=d[i+1]; bb+=d[i+2]; bn++; }
+                        }
+                    }
+                    edgeSampleCache[url] = {
+                        top: [tr/tn, tg/tn, tb/tn],
+                        bottom: [br/bn, bg/bn, bb/bn]
+                    };
+                    if (currentPosterUrl === url) {
+                        applyChromeColors(filterEdgeColor(edgeSampleCache[url].top), filterEdgeColor(edgeSampleCache[url].bottom));
+                    }
+                } catch (e) { edgeSampleCache[url] = null; }
+            };
+            img.onerror = () => { edgeSampleCache[url] = null; };
+            img.src = url;
+        }
+
+        function requestChromeUpdate() {
+            if (!chromePending) { chromePending = true; requestAnimationFrame(computeChromeColors); }
+        }
+
+        /* ================= iOS SAFARI: SCROLL RUNWAY (piksele strony za górnym paskiem) ================= */
+        const ua = navigator.userAgent || '';
+        const isIOSDevice = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isWebKitIOS = isIOSDevice && !/FxiOS|EdgiOS/.test(ua);
+        const isStandalone = window.navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+        if (isWebKitIOS && !isStandalone) {
+            document.documentElement.classList.add('ios-runway');
+            const enforceRunway = () => { if (window.scrollY < 1) window.scrollTo(0, 2); };
+            window.addEventListener('load', enforceRunway);
+            setTimeout(enforceRunway, 300);
+            setTimeout(enforceRunway, 1200);
+            window.addEventListener('resize', () => setTimeout(enforceRunway, 250));
+            window.addEventListener('orientationchange', () => setTimeout(enforceRunway, 300));
+        }
+
+        /* ================= iOS SAFARI: realny widoczny viewport (--vvh) ================= */
+        const viewportRoot = document.documentElement;
+        let viewportSyncPending = false;
+        function isTypingInField() {
+            const el = document.activeElement;
+            if (!el) return false;
+            const tag = (el.tagName || '').toLowerCase();
+            return tag === 'input' || tag === 'textarea' || el.isContentEditable === true;
+        }
+        function syncVisibleViewport() {
+            viewportSyncPending = false;
+            if (isTypingInField()) return;
+            const vv = window.visualViewport;
+            if (!vv) return;
+            const h = Math.round(vv.height);
+            if (h > 0) viewportRoot.style.setProperty('--vvh', h + 'px');
+        }
+        function requestViewportSync() {
+            if (!viewportSyncPending) { viewportSyncPending = true; requestAnimationFrame(syncVisibleViewport); }
+        }
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', requestViewportSync);
+            window.visualViewport.addEventListener('scroll', requestViewportSync);
+        }
+        window.addEventListener('resize', requestViewportSync);
+        window.addEventListener('orientationchange', () => setTimeout(requestViewportSync, 250));
+        document.addEventListener('focusout', () => setTimeout(requestViewportSync, 120));
+        syncVisibleViewport();
+        setTimeout(syncVisibleViewport, 300);
+
+        function updateThemeColor() {
+            const isLight = animeMode && !document.body.classList.contains('grave-mode');
+            document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
+            requestChromeUpdate();
+        }
 
         function preloadImage(url) { if (!url || preloadedImages[url]) return; preloadedImages[url] = new Promise((resolve) => { const img = new Image(); img.onload = () => { preloadedImages[url] = true; resolve(); }; img.onerror = () => { preloadedImages[url] = false; resolve(); }; img.src = url; }); }
         function showToast(m, type='') { const old = document.querySelector('.toast'); if (old) old.remove(); const t = document.createElement('div'); t.className = 'toast '+type; t.textContent = m; document.body.appendChild(t); requestAnimationFrame(()=> requestAnimationFrame(()=> t.classList.add('show'))); const hide = setTimeout(()=>{ t.classList.remove('show'); t.addEventListener('transitionend', ()=> t.remove(), {once:true}); setTimeout(()=>{ if(t.parentNode) t.remove(); }, 500); }, 2800); t._hideTimeout = hide; }
@@ -1209,6 +1378,8 @@
             if (!bg) return;
             bg.style.filter = '';
             bg.style.opacity = '';
+            currentPosterUrl = url || null;
+            requestChromeUpdate();
             if (!url) { bg.style.backgroundImage = 'none'; return; }
             if (preloadedImages[url] === true) {
                 bg.style.backgroundImage = `url('${url}')`;
@@ -1435,53 +1606,6 @@
             const frontContainer = document.getElementById('animeGraveEffectsFront');
             if (backContainer) backContainer.innerHTML = '';
             if (frontContainer) frontContainer.innerHTML = '';
-        }
-
-        // ---- iOS Safari: synchronizacja realnie widocznego obszaru ----
-        // Tło (body / global-bg / efekty) pokrywa CAŁY ekran -> widoczne pod
-        // pływającymi elementami "liquid glass", ale kontener aplikacji ma
-        // wysokość faktycznego viewportu, więc nic nie jest zasłonięte.
-        const viewportRoot = document.documentElement;
-        let viewportSyncPending = false;
-        function isTypingInField() {
-            const el = document.activeElement;
-            if (!el) return false;
-            const tag = (el.tagName || '').toLowerCase();
-            return tag === 'input' || tag === 'textarea' || el.isContentEditable === true;
-        }
-        function syncVisibleViewport() {
-            viewportSyncPending = false;
-            if (isTypingInField()) return; // nie zwężaj layoutu przy otwartej klawiaturze
-            const vv = window.visualViewport;
-            if (!vv) return;
-            const h = Math.round(vv.height);
-            if (h > 0) viewportRoot.style.setProperty('--vvh', h + 'px');
-        }
-        function requestViewportSync() {
-            if (!viewportSyncPending) { viewportSyncPending = true; requestAnimationFrame(syncVisibleViewport); }
-        }
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', requestViewportSync);
-            window.visualViewport.addEventListener('scroll', requestViewportSync);
-        }
-        window.addEventListener('resize', requestViewportSync);
-        window.addEventListener('orientationchange', () => setTimeout(requestViewportSync, 250));
-        document.addEventListener('focusout', () => setTimeout(requestViewportSync, 120));
-        syncVisibleViewport();
-        setTimeout(syncVisibleViewport, 300);
-
-        // ---- Aktualizacja koloru paska przeglądarki + color-scheme ----
-        function updateThemeColor() {
-            const meta = document.querySelector('meta[name="theme-color"]');
-            const isLight = animeMode && !document.body.classList.contains('grave-mode');
-            const color = isLight ? '#e8e0c8' : '#08080b';
-            if (meta) {
-                meta.setAttribute('content', color);
-            }
-            document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
-            // tło html musi zawsze pokrywać się z motywem, żeby przy "odbiciu"
-            // (rubber-band) i pod półprzezroczystymi paskami nie było białych pasów
-            document.documentElement.style.backgroundColor = color;
         }
 
         function updateEffects() {
@@ -1844,7 +1968,7 @@
         async function exportJSON() {
             try {
                 const data = movies;
-                const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+                const blob = new Blob([JSON.stringify(data, null, 2), {type: 'application/json'}]);
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -2034,6 +2158,7 @@
         updateAdminIndicator();
         applyAnimeMode(false);
         updateThemeColor();
+        requestChromeUpdate();
 
         const unlockMusicOnce = () => {
             initSoundCloudWidget();
