@@ -73,7 +73,7 @@
             height: 100vh; height: 100dvh; width: 100%;
             overflow: hidden;
             display: flex; flex-direction: column; align-items: center;
-            padding: 0; /* WAŻNE: brak paddingu – nagłówek sam obsłuży safe area */
+            padding: 0;
             letter-spacing: -0.01em;
             touch-action: pan-y;
             position: relative; margin: 0;
@@ -250,21 +250,24 @@
         .app-container {
             width: 100%; max-width: 960px; margin: 0 auto;
             display: flex; flex-direction: column; height: 100%; height: 100dvh;
-            padding: 0 1rem 0.8rem 1rem; /* GÓRA: 0 – nagłówek idzie do samej góry ekranu */
+            padding: 0 1rem 0.8rem 1rem;
             overflow: hidden; gap: 0.8rem;
             position: relative; z-index: 1;
         }
+
+        /* ============ NAGŁÓWEK – EFEKT SZKŁA ============ */
         .club-header {
             display: flex; justify-content: space-between; align-items: center;
             flex-shrink: 0;
-            /* GÓRA: safe-area + 0.3rem, żeby zawartość była pod notchem */
             padding: calc(0.3rem + env(safe-area-inset-top)) 0.6rem 0.3rem 0.6rem;
-            background: var(--bg-surface);
-            /* Zaokrąglamy TYLKO dolne rogi – górne są przy samej krawędzi ekranu */
-            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-            border: 1px solid var(--border-default);
-            border-top: none;
-            box-shadow: var(--shadow-sm);
+            /* Efekt szkła – tło półprzezroczyste, pod spodem rozmyty plakat */
+            background: rgba(10, 10, 14, 0.45);
+            backdrop-filter: blur(24px) saturate(1.6);
+            -webkit-backdrop-filter: blur(24px) saturate(1.6);
+            border: none;
+            border-bottom: 1px solid var(--border-default);
+            border-radius: 0;
+            box-shadow: none;
             gap: 0.5rem; z-index: 20; position: relative;
             transition: background 0.5s ease, border-color 0.5s ease;
         }
@@ -421,71 +424,82 @@
         .carousel-arrow:hover { opacity: 1; color: var(--gold); border-color: var(--gold); }
         .arrow-left { left: -6px; } .arrow-right { right: -6px; }
 
+        /* ============ WSKAŹNIK POZYCJI – SUBTELNY PILL ============ */
         .carousel-position-hint {
             position: absolute;
-            top: 12px;
+            top: 10px;
             left: 50%;
-            transform: translateX(-50%);
             z-index: 26;
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 5px 14px;
-            background: rgba(0, 0, 0, 0.55);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(201, 168, 76, 0.35);
+            gap: 9px;
+            padding: 3px 13px;
+            background: rgba(0, 0, 0, 0.32);
+            backdrop-filter: blur(14px) saturate(1.5);
+            -webkit-backdrop-filter: blur(14px) saturate(1.5);
+            border: 1px solid rgba(201, 168, 76, 0.22);
             border-radius: 9999px;
             font-family: 'Inter', system-ui, sans-serif;
             pointer-events: none;
-            opacity: 1;
-            transition: opacity 0.5s ease;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+            opacity: 0;
+            transform: translateX(-50%) translateY(-8px) scale(0.94);
+            transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+            will-change: opacity, transform;
         }
-        .carousel-position-hint.hidden { opacity: 0; }
+        .carousel-position-hint:not(.hidden) {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0) scale(1);
+        }
+        .carousel-position-hint.hidden {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-6px) scale(0.96);
+        }
         .carousel-position-hint .cph-arrow {
             color: var(--gold);
-            font-size: 1.05rem;
+            font-size: 0.9rem;
             line-height: 1;
-            font-weight: 700;
-            animation: cphArrowPulse 1.6s ease-in-out infinite;
+            font-weight: 400;
+            opacity: 0.55;
+            animation: cphArrowPulse 2.4s ease-in-out infinite;
         }
-        .carousel-position-hint .cph-arrow:nth-child(3) { animation-delay: 0.4s; }
+        .carousel-position-hint .cph-arrow:first-child { animation-delay: 0.15s; --cph-dir: -1.5px; }
+        .carousel-position-hint .cph-arrow:last-child  { animation-delay: 0.55s; --cph-dir:  1.5px; }
         @keyframes cphArrowPulse {
-            0%, 100% { opacity: 0.55; transform: translateX(0); }
+            0%, 100% { opacity: 0.35; transform: translateX(0); }
             50%      { opacity: 1;    transform: translateX(var(--cph-dir, 0)); }
         }
-        .carousel-position-hint .cph-arrow:first-child { --cph-dir: -2px; }
-        .carousel-position-hint .cph-arrow:last-child  { --cph-dir: 2px; }
         .carousel-position-hint .cph-count {
             color: var(--gold-light);
-            font-weight: 700;
-            font-size: 0.72rem;
-            letter-spacing: 0.08em;
+            font-weight: 500;
+            font-size: 0.68rem;
+            letter-spacing: 0.16em;
             font-variant-numeric: tabular-nums;
-            min-width: 44px;
+            min-width: 42px;
             text-align: center;
+            opacity: 0.95;
         }
 
         body.anime-mode .carousel-position-hint {
-            background: rgba(255, 252, 240, 0.88);
-            border-color: rgba(184, 137, 74, 0.55);
-            box-shadow: 0 4px 16px rgba(90, 117, 88, 0.2);
+            background: rgba(255, 252, 240, 0.4);
+            border-color: rgba(184, 137, 74, 0.4);
+            box-shadow: 0 4px 14px rgba(90, 117, 88, 0.15);
         }
         body.anime-mode .carousel-position-hint .cph-arrow { color: #b8894a; }
         body.anime-mode .carousel-position-hint .cph-count { color: #5c6c5c; }
 
         body.anime-mode.grave-mode .carousel-position-hint {
-            background: rgba(0, 0, 0, 0.65);
-            border-color: rgba(201, 168, 76, 0.4);
+            background: rgba(0, 0, 0, 0.42);
+            border-color: rgba(201, 168, 76, 0.3);
         }
         body.anime-mode.grave-mode .carousel-position-hint .cph-arrow { color: #c9a84c; }
         body.anime-mode.grave-mode .carousel-position-hint .cph-count { color: #e0c56e; }
 
         @media (max-width: 600px) {
-            .carousel-position-hint { top: 10px; padding: 4px 12px; gap: 8px; }
-            .carousel-position-hint .cph-arrow { font-size: 0.95rem; }
-            .carousel-position-hint .cph-count { font-size: 0.68rem; min-width: 40px; }
+            .carousel-position-hint { top: 9px; padding: 2px 11px; gap: 7px; }
+            .carousel-position-hint .cph-arrow { font-size: 0.82rem; }
+            .carousel-position-hint .cph-count { font-size: 0.64rem; min-width: 38px; letter-spacing: 0.14em; }
         }
 
         .review-card { display: flex; gap: 0.7rem; padding: 0.55rem 0.65rem; border-radius: var(--radius-sm); background: transparent; border: 1px solid transparent; position: relative; align-items: flex-start; }
@@ -596,10 +610,10 @@
             background-size: 200% 100%;
             letter-spacing: 0.08em;
         }
+        /* Nagłówek Ghibli – jasna mgiełka szkła */
         body.anime-mode .club-header {
-            background: rgba(255, 252, 240, 0.92);
-            border-color: rgba(139, 168, 139, 0.4);
-            border-top: none;
+            background: rgba(255, 252, 240, 0.42);
+            border-bottom-color: rgba(139, 168, 139, 0.4);
         }
         body.anime-mode .icon-btn {
             background: rgba(252, 247, 232, 0.88);
@@ -771,8 +785,8 @@
         body.anime-mode.grave-mode::after { display: none; }
 
         body.anime-mode.grave-mode .club-header {
-            background: rgba(16, 16, 20, 0.92);
-            border-color: var(--border-default);
+            background: rgba(8, 8, 11, 0.5);
+            border-bottom-color: var(--border-default);
         }
         body.anime-mode.grave-mode .club-header h1 {
             background: linear-gradient(135deg, #e8e8ed 0%, #e0c56e 40%, #c9a84c 100%);
@@ -897,7 +911,6 @@
             .app-container { padding: 0 0.5rem 0.4rem 0.5rem; }
             .club-header {
                 padding: calc(0.2rem + env(safe-area-inset-top)) 0.4rem 0.2rem 0.4rem;
-                border-radius: 0 0 var(--radius-md) var(--radius-md);
             }
             .club-header h1 { font-size: var(--font-md); }
             .home-container { gap: 0.6rem; margin-top: 0.1rem; }
@@ -1256,7 +1269,7 @@
             const c = document.getElementById('mainContent');
             c.style.overflow = 'visible';
             const ranked = getRankedMovies();
-            c.innerHTML = `<div class="carousel-wrapper"><div class="carousel-viewport" id="carouselViewport"></div><button class="carousel-arrow arrow-left" id="carouselPrevBtn">&lsaquo;</button><button class="carousel-arrow arrow-right" id="carouselNextBtn">&rsaquo;</button><div class="carousel-position-hint" id="carouselPositionHint"><span class="cph-arrow">‹</span><span class="cph-count" id="cphCount">${idx+1} / ${ranked.length}</span><span class="cph-arrow">›</span></div></div>`;
+            c.innerHTML = `<div class="carousel-wrapper"><div class="carousel-viewport" id="carouselViewport"></div><button class="carousel-arrow arrow-left" id="carouselPrevBtn">&lsaquo;</button><button class="carousel-arrow arrow-right" id="carouselNextBtn">&rsaquo;</button><div class="carousel-position-hint hidden" id="carouselPositionHint"><span class="cph-arrow">‹</span><span class="cph-count" id="cphCount">${idx+1} / ${ranked.length}</span><span class="cph-arrow">›</span></div></div>`;
             const viewport = document.getElementById('carouselViewport');
             ranked.forEach((m,i)=>{
                 const d = document.createElement('div');
@@ -1274,7 +1287,8 @@
             document.getElementById('carouselPrevBtn').onclick = prevSlide;
             document.getElementById('carouselNextBtn').onclick = nextSlide;
             addSwipeSupport();
-            showPositionHint();
+            // Krótkie opóźnienie, żeby animacja wejścia była płynna
+            requestAnimationFrame(() => requestAnimationFrame(showPositionHint));
         }
 
         function setGlobalBackground(url) {
@@ -1314,6 +1328,8 @@
             attachDelegatedEvents();
             const cph = document.getElementById('cphCount');
             if (cph) cph.textContent = `${i+1} / ${ranked.length}`;
+            // Pokaż pill ponownie przy nawigacji
+            showPositionHint();
         }
 
         function nextSlide() { goToSlide(currentSlideIndex + 1); }
