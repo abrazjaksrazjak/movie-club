@@ -465,9 +465,33 @@
             pointer-events: none; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; display: flex; flex-direction: column;
         }
         .carousel-slide.active { opacity: 1; pointer-events: auto; z-index: 1; }
-        .carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(20,20,25,0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 25; transition: all 0.2s; opacity: 0.8; font-size: 1.4rem; }
-        .carousel-arrow:hover { opacity: 1; color: var(--gold); border-color: var(--gold); }
-        .arrow-left { left: -6px; } .arrow-right { right: -6px; }
+
+        /* ========== FIX: strzałki karuzeli – pełne, nieucięte ==========
+           Wcześniej left/right: -6px wychodziło poza .carousel-wrapper
+           i #mainContent (overflow-x: hidden) przycinało kółka.
+           Teraz 10px od krawędzi, wyżej w z-index i z cieniem. */
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(20,20,25,0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.18);
+            color: #fff;
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            z-index: 30;                /* było 25 – wyżej niż viewport */
+            transition: opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            opacity: 0.92;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.5);   /* odcina od tła */
+        }
+        .carousel-arrow:hover { opacity: 1; color: var(--gold); border-color: var(--gold); box-shadow: 0 4px 22px rgba(201,168,76,0.35); }
+        .arrow-left { left: 10px; }      /* było -6px → ucinało się na overflow-x: hidden */
+        .arrow-right { right: 10px; }    /* było -6px */
 
         .review-card { display: flex; gap: 0.7rem; padding: 0.55rem 0.65rem; border-radius: var(--radius-sm); background: transparent; border: 1px solid transparent; position: relative; align-items: flex-start; }
         .review-card:hover { background: rgba(255,255,255,0.025); border-color: rgba(255,255,255,0.06); }
@@ -877,6 +901,37 @@
         body.anime-mode.grave-mode .loading-indicator { background: var(--bg-elevated); }
         body.anime-mode.grave-mode .loading-indicator p { color: var(--text-primary); }
 
+        /* ========== Płynne przejście trybu Ghibli – nakładka zakrywa lag repaintu ========== */
+        .mode-transition {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 500;
+            opacity: 0;
+            background: radial-gradient(circle at var(--tx, 50%) var(--ty, 50%),
+                        rgba(232, 224, 200, 0.98) 0%,
+                        rgba(201, 168, 76, 0.88) 45%,
+                        rgba(8, 8, 11, 0.94) 100%);
+            transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: opacity;
+            backface-visibility: hidden;
+            transform: translateZ(0);   /* własna warstwa GPU – brak migotania */
+        }
+        .mode-transition.active { opacity: 1; }
+
+        /* Gdy przełączamy na ciemny (grave-mode), gradient idzie od złota w czerń.
+           Gdy wracamy z Ghibli do dark, wolimy ciemniejszy środek – bez białego błysku. */
+        .mode-transition.to-dark {
+            background: radial-gradient(circle at var(--tx, 50%) var(--ty, 50%),
+                        rgba(20, 20, 25, 0.98) 0%,
+                        rgba(120, 100, 60, 0.9) 45%,
+                        rgba(8, 8, 11, 0.96) 100%);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .mode-transition { transition: opacity 0.15s ease; }
+        }
+
         @media (max-width: 600px) {
             .app-container {
                 padding: calc(var(--safe-top) + 0.5rem)
@@ -962,6 +1017,7 @@
 <div class="anime-grave-effects" id="animeGraveEffects" aria-hidden="true"></div>
 <div class="anime-sunflare" id="animeSunflare" aria-hidden="true"></div>
 <div class="anime-grave-effects-front" id="animeGraveEffectsFront" aria-hidden="true"></div>
+<div class="mode-transition" id="modeTransition" aria-hidden="true"></div>
 
 <iframe id="sc-widget" width="0" height="0" scrolling="no" frameborder="no" allow="autoplay"
         style="position:absolute;left:-9999px;width:0;height:0;"
@@ -1751,14 +1807,43 @@
             updateThemeColor();
         }
 
+        // ===== FIX: płynne przejście trybu Ghibli – nakładka kryje lag repaintu =====
         function toggleAnimeMode() {
             const goingOn = !animeMode;
-            applyAnimeMode(goingOn);
-            if (viewMode !== 'home') {
-                switchToHome();
-            } else {
-                renderHome();
+            const overlay = document.getElementById('modeTransition');
+            const btn = document.getElementById('animeToggleBtn');
+
+            // Kierunek: do Ghibli (jasne) vs do dark (ciemne)
+            if (overlay) {
+                overlay.classList.toggle('to-dark', !goingOn);
+                if (btn) {
+                    const rect = btn.getBoundingClientRect();
+                    overlay.style.setProperty('--tx', (rect.left + rect.width / 2) + 'px');
+                    overlay.style.setProperty('--ty', (rect.top + rect.height / 2) + 'px');
+                }
+                // 1) Nakładka zasłania ekran (fade-in radialny z przycisku 愛)
+                overlay.classList.add('active');
             }
+
+            const COVER_MS = overlay ? 300 : 0;
+
+            setTimeout(() => {
+                // 2) Pod nakładką zmieniamy tryb i przerenderowujemy widok.
+                //    Wszystkie kosztowne repainty (tło body, filter global-bg,
+                //    spawn liści/iskier, sunflare) dzieją się poza oczami użytkownika.
+                applyAnimeMode(goingOn);
+                if (viewMode !== 'home') {
+                    switchToHome();
+                } else {
+                    renderHome();
+                }
+
+                // 3) Dwie klatki – gwarancja, że przeglądarka zdążyła namalować nowy stan.
+                //    Dopiero potem zdejmujemy nakładkę.
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    setTimeout(() => overlay && overlay.classList.remove('active'), 140);
+                }));
+            }, COVER_MS);
         }
 
         const ghibliMoviesData = [
