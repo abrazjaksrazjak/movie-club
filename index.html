@@ -15,7 +15,6 @@
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-auth-compat.js"></script>
-    <script src="https://w.soundcloud.com/player/api.js"></script>
     <style>
         :root {
             --gold: #c9a84c;
@@ -341,9 +340,7 @@
         }
         .anime-toggle-btn::after { display: none; }
 
-        /* ========== FIX SCROLL (Chrome) ==========
-           #mainContent jest teraz jedynym kontenerem scrolla w trybie home.
-           W trybie karuzeli klasa .carousel-mode włącza overflow: hidden. */
+        /* ========== FIX SCROLL (Chrome) ========== */
         #mainContent {
             flex: 1;
             min-height: 0;
@@ -383,7 +380,6 @@
             font-weight: 400;
         }
 
-        /* ========== .home-container NIE jest już osobnym scrollerem ========== */
         .home-container {
             display: flex;
             flex-direction: column;
@@ -466,10 +462,7 @@
         }
         .carousel-slide.active { opacity: 1; pointer-events: auto; z-index: 1; }
 
-        /* ========== FIX: strzałki karuzeli – pełne, nieucięte ==========
-           Wcześniej left/right: -6px wychodziło poza .carousel-wrapper
-           i #mainContent (overflow-x: hidden) przycinało kółka.
-           Teraz 10px od krawędzi, wyżej w z-index i z cieniem. */
+        /* ========== FIX: strzałki karuzeli – pełne, nieucięte ========== */
         .carousel-arrow {
             position: absolute;
             top: 50%;
@@ -483,15 +476,15 @@
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer;
-            z-index: 30;                /* było 25 – wyżej niż viewport */
+            z-index: 30;
             transition: opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
             opacity: 0.92;
             font-size: 1.4rem;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.5);   /* odcina od tła */
+            box-shadow: 0 4px 18px rgba(0,0,0,0.5);
         }
         .carousel-arrow:hover { opacity: 1; color: var(--gold); border-color: var(--gold); box-shadow: 0 4px 22px rgba(201,168,76,0.35); }
-        .arrow-left { left: 10px; }      /* było -6px → ucinało się na overflow-x: hidden */
-        .arrow-right { right: 10px; }    /* było -6px */
+        .arrow-left { left: 10px; }
+        .arrow-right { right: 10px; }
 
         .review-card { display: flex; gap: 0.7rem; padding: 0.55rem 0.65rem; border-radius: var(--radius-sm); background: transparent; border: 1px solid transparent; position: relative; align-items: flex-start; }
         .review-card:hover { background: rgba(255,255,255,0.025); border-color: rgba(255,255,255,0.06); }
@@ -901,7 +894,9 @@
         body.anime-mode.grave-mode .loading-indicator { background: var(--bg-elevated); }
         body.anime-mode.grave-mode .loading-indicator p { color: var(--text-primary); }
 
-        /* ========== Płynne przejście trybu Ghibli – nakładka zakrywa lag repaintu ========== */
+        /* ========== Płynne przejście trybu Ghibli – nakładka zakrywa lag repaintu ==========
+           Wersja UPŁYNNIONA: dłuższe czasy, łagodniejsza krzywa easing,
+           delikatna „mgiełka” na krawędzi radialnego gradientu. */
         .mode-transition {
             position: fixed;
             inset: 0;
@@ -910,26 +905,30 @@
             opacity: 0;
             background: radial-gradient(circle at var(--tx, 50%) var(--ty, 50%),
                         rgba(232, 224, 200, 0.98) 0%,
-                        rgba(201, 168, 76, 0.88) 45%,
-                        rgba(8, 8, 11, 0.94) 100%);
-            transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+                        rgba(220, 200, 150, 0.94) 18%,
+                        rgba(201, 168, 76, 0.86) 48%,
+                        rgba(90, 80, 60, 0.92) 78%,
+                        rgba(8, 8, 11, 0.96) 100%);
+            /* Dłuższe, łagodniejsze przejście + dwie fazy easing */
+            transition: opacity 0.6s cubic-bezier(0.65, 0, 0.35, 1);
             will-change: opacity;
             backface-visibility: hidden;
             transform: translateZ(0);   /* własna warstwa GPU – brak migotania */
         }
         .mode-transition.active { opacity: 1; }
 
-        /* Gdy przełączamy na ciemny (grave-mode), gradient idzie od złota w czerń.
-           Gdy wracamy z Ghibli do dark, wolimy ciemniejszy środek – bez białego błysku. */
+        /* Do ciemnego (grave-mode): gradient od złota w czerń, ale łagodniejszy */
         .mode-transition.to-dark {
             background: radial-gradient(circle at var(--tx, 50%) var(--ty, 50%),
-                        rgba(20, 20, 25, 0.98) 0%,
-                        rgba(120, 100, 60, 0.9) 45%,
-                        rgba(8, 8, 11, 0.96) 100%);
+                        rgba(40, 36, 30, 0.98) 0%,
+                        rgba(80, 70, 50, 0.94) 18%,
+                        rgba(120, 100, 60, 0.88) 48%,
+                        rgba(60, 55, 45, 0.94) 78%,
+                        rgba(8, 8, 11, 0.98) 100%);
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .mode-transition { transition: opacity 0.15s ease; }
+            .mode-transition { transition: opacity 0.25s ease; }
         }
 
         @media (max-width: 600px) {
@@ -1019,10 +1018,6 @@
 <div class="anime-grave-effects-front" id="animeGraveEffectsFront" aria-hidden="true"></div>
 <div class="mode-transition" id="modeTransition" aria-hidden="true"></div>
 
-<iframe id="sc-widget" width="0" height="0" scrolling="no" frameborder="no" allow="autoplay"
-        style="position:absolute;left:-9999px;width:0;height:0;"
-        src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fxijin%2Fsailboat-in-the-sky-studio-ghibli-tribute&color=%23b8894a&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"></iframe>
-
 <div class="app-container">
     <div class="club-header">
         <h1 id="homeLogo">JLL MOVIE CLUB<span class="admin-indicator" id="adminIndicator" title="Kliknij, aby wyłączyć tryb admina"></span></h1>
@@ -1082,7 +1077,6 @@
             if (now - _lastTouchEnd <= 300) e.preventDefault();
             _lastTouchEnd = now;
         }, { passive: false });
-        // FIX: blokuj tylko pinch-zoom (ctrl+wheel), nie zwykły scroll
         document.addEventListener('wheel', e => {
             if (e.ctrlKey && Math.abs(e.deltaY) > 0) e.preventDefault();
         }, { passive: false });
@@ -1100,10 +1094,6 @@
         let justSubmittedReviewTimestamp = 0;
 
         let animeMode = false;
-        let scWidget = null;
-        let scWidgetReady = false;
-        let scWidgetPendingPlay = false;
-        let scWidgetRetries = 0;
         let currentFeatured = null;
 
         const RATING_PRIOR = 3.0;
@@ -1117,7 +1107,6 @@
         let pendingComment = '';
         let pendingStars = 0;
         let pendingScrollTop = 0;
-        let debounceRebuildTimer = null;
         let loadingTimeout = null;
 
         function preloadImage(url) { if (!url || preloadedImages[url]) return; preloadedImages[url] = new Promise((resolve) => { const img = new Image(); img.onload = () => { preloadedImages[url] = true; resolve(); }; img.onerror = () => { preloadedImages[url] = false; resolve(); }; img.src = url; }); }
@@ -1129,7 +1118,6 @@
         function checkAdminFromStorage() { if(sessionStorage.getItem('movieclub_admin')==='true') setAdminMode(true); }
         function isAdminAction() { if(isAdmin) return true; showToast("Wymagany tryb admina.", 'warning'); return false; }
 
-        // ===== FIX: escapeHtml escapuje też cudzysłowy (atrybuty) =====
         function escapeHtml(s) {
             if (s == null) return '';
             return String(s).replace(/[&<>"']/g, m => ({
@@ -1240,7 +1228,6 @@
             spoiler: '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
         };
 
-        // ===== FIX: transakcja na recenzjach – koniec z nadpisywaniem cudzych zmian =====
         async function mutateMovieReviews(movieId, mutator) {
             const ref = db.collection("movies").doc(movieId);
             return db.runTransaction(async (tx) => {
@@ -1342,7 +1329,6 @@
                     }
                 }
                 const commentClass = r.spoiler ? 'review-comment spoiler-text' : 'review-comment';
-                // FIX: review-card-right-col z flex:1;min-width:0 – zajmuje resztę szerokości
                 revHtml += `<div class="review-card ${pending}"><div class="review-card-left-col" style="flex:0 0 75px;">${renderStars(r.stars)}<div style="font-size:0.7rem;color:var(--text-muted);">${escapeHtml(r.author)}${verifiedMark}</div></div><div class="review-card-right-col" style="flex:1;min-width:0;"><div class="${commentClass}" onclick="if(this.classList.contains('spoiler-text')) this.classList.toggle('revealed')" style="font-size:0.78rem;line-height:1.5;">${escapeHtml(r.comment)}</div></div><div class="review-card-actions">${btns}</div></div>`;
             });
             const sent = movie.sentimentalValue ? `<div style="margin:0.5rem;padding:0.5rem;background:rgba(201,168,76,0.05);border-left:2px solid var(--gold);font-size:0.7rem;color:var(--text-secondary);">${escapeHtml(movie.sentimentalValue)}</div>` : '';
@@ -1382,7 +1368,6 @@
             });
         }
 
-        // ===== FIX: #mainContent w trybie karuzeli ma overflow: hidden (klasa .carousel-mode) =====
         function buildCarousel(idx) {
             const c = document.getElementById('mainContent');
             c.classList.add('carousel-mode');
@@ -1425,7 +1410,6 @@
             }
         }
 
-        // ===== FIX: usunięte attachDelegatedEvents() – DOM się nie zmienia =====
         function goToSlide(i) {
             const ranked = getRankedMovies();
             if(i < 0) i = ranked.length - 1;
@@ -1481,7 +1465,6 @@
             }, 180);
         }
 
-        // ===== FIX: renderHome zdejmuje klasę .carousel-mode i resetuje scroll =====
         function renderHome() {
             let featured;
             if (animeMode) {
@@ -1728,92 +1711,28 @@
             updateThemeColor();
         }
 
-        // ===== FIX: limit retry (koniec nieskończonej pętli przy adblocku) =====
-        function initSoundCloudWidget() {
-            if (scWidget) return;
-            const iframe = document.getElementById('sc-widget');
-            if (!iframe) return;
-
-            if (!window.SC) {
-                if (++scWidgetRetries > 20) return;
-                setTimeout(initSoundCloudWidget, 150);
-                return;
-            }
-
-            scWidget = SC.Widget(iframe);
-
-            scWidget.bind(SC.Widget.Events.READY, () => {
-                scWidget.setVolume(0.28);
-                scWidgetReady = true;
-                if (scWidgetPendingPlay) {
-                    try { scWidget.play(); } catch (e) {}
-                    scWidgetPendingPlay = false;
-                }
-            });
-
-            setTimeout(() => {
-                if (!scWidgetReady && scWidgetPendingPlay) {
-                    try {
-                        scWidget.setVolume(0.28);
-                        scWidget.play();
-                        scWidgetReady = true;
-                        scWidgetPendingPlay = false;
-                    } catch (e) {
-                        console.warn('SC fallback failed:', e);
-                    }
-                }
-            }, 1500);
-        }
-
-        function playAnimeMusic() {
-            initSoundCloudWidget();
-            if (scWidget && scWidgetReady) {
-                scWidget.play();
-            } else {
-                scWidgetPendingPlay = true;
-            }
-        }
-
-        function stopAnimeMusic() {
-            scWidgetPendingPlay = false;
-            if (scWidget && scWidgetReady) scWidget.pause();
-        }
-
-        function pauseMusicSilently() {
-            if (scWidget && scWidgetReady) {
-                try { scWidget.pause(); } catch (e) {}
-            }
-        }
-        function resumeMusicIfNeeded() {
-            if (animeMode && scWidget && scWidgetReady) {
-                try { scWidget.play(); } catch (e) {}
-            }
-        }
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) pauseMusicSilently();
-            else resumeMusicIfNeeded();
-        });
-        window.addEventListener('pagehide', pauseMusicSilently);
-        window.addEventListener('freeze', pauseMusicSilently);
-
         function applyAnimeMode(on) {
             animeMode = !!on;
             document.body.classList.toggle('anime-mode', animeMode);
             const btn = document.getElementById('animeToggleBtn');
             if (btn) btn.classList.toggle('active', animeMode);
-            if (animeMode) playAnimeMusic();
-            else stopAnimeMusic();
             updateEffects();
             updateThemeColor();
         }
 
-        // ===== FIX: płynne przejście trybu Ghibli – nakładka kryje lag repaintu =====
+        // ===== UPŁYNNIONE przejście trybu Ghibli =====
+        // Nakładka kryje lag repaintu (tło body, global-bg filter, liście/sunflare).
+        // Czasy dobrane tak, żeby krycie i odsłanianie było ledwo zauważalne,
+        // ale wciąż maskowało cały kosztowny reflow.
+        const MODE_TRANSITION_COVER_MS = 620;   // ile trwa krycie (zsynchronizowane z CSS transition)
+        const MODE_TRANSITION_HOLD_MS  = 260;   // chwila trzymania pełnego krycia pod spodem
+        const MODE_TRANSITION_FADE_MS  = 620;   // czas odsłaniania (CSS transition)
+
         function toggleAnimeMode() {
             const goingOn = !animeMode;
             const overlay = document.getElementById('modeTransition');
             const btn = document.getElementById('animeToggleBtn');
 
-            // Kierunek: do Ghibli (jasne) vs do dark (ciemne)
             if (overlay) {
                 overlay.classList.toggle('to-dark', !goingOn);
                 if (btn) {
@@ -1821,16 +1740,12 @@
                     overlay.style.setProperty('--tx', (rect.left + rect.width / 2) + 'px');
                     overlay.style.setProperty('--ty', (rect.top + rect.height / 2) + 'px');
                 }
-                // 1) Nakładka zasłania ekran (fade-in radialny z przycisku 愛)
                 overlay.classList.add('active');
             }
 
-            const COVER_MS = overlay ? 300 : 0;
+            const coverMs = overlay ? MODE_TRANSITION_COVER_MS : 0;
 
             setTimeout(() => {
-                // 2) Pod nakładką zmieniamy tryb i przerenderowujemy widok.
-                //    Wszystkie kosztowne repainty (tło body, filter global-bg,
-                //    spawn liści/iskier, sunflare) dzieją się poza oczami użytkownika.
                 applyAnimeMode(goingOn);
                 if (viewMode !== 'home') {
                     switchToHome();
@@ -1838,12 +1753,10 @@
                     renderHome();
                 }
 
-                // 3) Dwie klatki – gwarancja, że przeglądarka zdążyła namalować nowy stan.
-                //    Dopiero potem zdejmujemy nakładkę.
                 requestAnimationFrame(() => requestAnimationFrame(() => {
-                    setTimeout(() => overlay && overlay.classList.remove('active'), 140);
+                    setTimeout(() => overlay && overlay.classList.remove('active'), MODE_TRANSITION_HOLD_MS);
                 }));
-            }, COVER_MS);
+            }, coverMs);
         }
 
         const ghibliMoviesData = [
@@ -1904,7 +1817,6 @@
             }
         }
 
-        // ===== FIX: transakcje w handlerach akcji na recenzjach =====
         function attachDelegatedEvents() {
             document.querySelectorAll('.rating-input').forEach(container => setupStarSelector(container));
             document.querySelectorAll('.review-author-input').forEach(input => {
@@ -2044,7 +1956,6 @@
             });
         }
 
-        // ===== FIX: użycie transakcji zamiast pełnego zapisu tablicy =====
         async function submitReview(movieId, slide) {
             const author = slide.querySelector('.review-author-input').value.trim();
             const comment = slide.querySelector('.review-comment-input').value.trim();
@@ -2059,7 +1970,6 @@
 
             const newReview = {author, stars, comment, spoiler: false, approved: false, verified: false, timestamp: Date.now(), sessionToken: getSessionToken()};
 
-            // Natychmiastowy feedback lokalny
             movie.reviews.push(newReview);
 
             slide.querySelector('.review-author-input').value = '';
@@ -2359,21 +2269,6 @@
         updateAdminIndicator();
         applyAnimeMode(false);
         updateThemeColor();
-
-        const unlockMusicOnce = () => {
-            initSoundCloudWidget();
-            if (animeMode) {
-                if (scWidget && scWidgetReady) {
-                    try { scWidget.play(); } catch (e) {}
-                } else {
-                    scWidgetPendingPlay = true;
-                }
-            }
-            document.removeEventListener('click', unlockMusicOnce);
-            document.removeEventListener('touchstart', unlockMusicOnce);
-        };
-        document.addEventListener('click', unlockMusicOnce);
-        document.addEventListener('touchstart', unlockMusicOnce);
 
         let resizeTimer = null;
         window.addEventListener('resize', () => {
